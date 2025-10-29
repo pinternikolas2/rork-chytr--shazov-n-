@@ -44,7 +44,7 @@ export default function DashboardScreen() {
   }, [weightLogs]);
 
   const weightProgress = useMemo(() => {
-    if (!profile) return 0;
+    if (!profile || profile.role !== 'fighter') return 0;
     const total = profile.currentWeight - profile.targetWeight;
     if (total <= 0) return 100;
     const current = profile.currentWeight - profile.targetWeight;
@@ -87,21 +87,21 @@ export default function DashboardScreen() {
               <View style={styles.statItem}>
                 <Text style={styles.statLabel}>{t.dashboard.currentWeight}</Text>
                 <Text style={styles.statValue}>
-                  {profile?.currentWeight.toFixed(1)} {t.common.kg}
+                  {profile && profile.role === 'fighter' ? profile.currentWeight.toFixed(1) : '0.0'} {t.common.kg}
                 </Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
                 <Text style={styles.statLabel}>{t.dashboard.targetWeight}</Text>
                 <Text style={styles.statValue}>
-                  {profile?.targetWeight.toFixed(1)} {t.common.kg}
+                  {profile && profile.role === 'fighter' ? profile.targetWeight.toFixed(1) : '0.0'} {t.common.kg}
                 </Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
                 <Text style={styles.statLabel}>{t.dashboard.remaining}</Text>
                 <Text style={[styles.statValue, styles.statValueGold]}>
-                  {profile ? (profile.currentWeight - profile.targetWeight).toFixed(1) : '0.0'}{' '}
+                  {profile && profile.role === 'fighter' ? (profile.currentWeight - profile.targetWeight).toFixed(1) : '0.0'}{' '}
                   {t.common.kg}
                 </Text>
               </View>
@@ -125,7 +125,7 @@ export default function DashboardScreen() {
           <View style={styles.progressBarContainer}>
             <View style={[styles.progressBar, { width: `${weightProgress}%` }]} />
           </View>
-          <Text style={styles.progressText}>{weightProgress.toFixed(0)}% to target</Text>
+          <Text style={styles.progressText}>{weightProgress.toFixed(0)}% {t.dashboard.toTarget}</Text>
         </View>
 
         <View style={styles.hydrationSection}>
@@ -193,8 +193,8 @@ export default function DashboardScreen() {
                 safetyStatus.level === 'danger' && styles.safetyTitleDanger,
                 safetyStatus.level === 'caution' && styles.safetyTitleCaution,
               ]}>
-                {safetyStatus.level === 'safe' ? 'Weight Cut Status: Safe' : 
-                 safetyStatus.level === 'caution' ? 'Caution Required' : 'Danger - Immediate Action Needed'}
+                {safetyStatus.level === 'safe' ? t.dashboard.weightCutStatus : 
+                 safetyStatus.level === 'caution' ? t.dashboard.cautionRequired : t.dashboard.dangerAction}
               </Text>
             </View>
             <Text style={styles.safetyMessage}>{safetyStatus.message}</Text>
@@ -210,24 +210,24 @@ export default function DashboardScreen() {
           <View style={styles.scientificDataSection}>
             <View style={styles.dataHeader}>
               <Activity size={20} color={Colors.gold} />
-              <Text style={styles.dataTitle}>Body Composition & Metabolism</Text>
+              <Text style={styles.dataTitle}>{t.dashboard.bodyComposition}</Text>
             </View>
             <View style={styles.dataGrid}>
               <View style={styles.dataBox}>
                 <Text style={styles.dataValue}>{bodyComposition.bodyFatPercentage}%</Text>
-                <Text style={styles.dataLabel}>Body Fat</Text>
+                <Text style={styles.dataLabel}>{t.dashboard.bodyFat}</Text>
               </View>
               <View style={styles.dataBox}>
                 <Text style={styles.dataValue}>{bodyComposition.leanMass.toFixed(1)}</Text>
-                <Text style={styles.dataLabel}>Lean Mass (kg)</Text>
+                <Text style={styles.dataLabel}>{t.dashboard.leanMass}</Text>
               </View>
               <View style={styles.dataBox}>
                 <Text style={styles.dataValue}>{Math.round(metabolicData.bmr)}</Text>
-                <Text style={styles.dataLabel}>BMR (cal)</Text>
+                <Text style={styles.dataLabel}>{t.dashboard.bmr}</Text>
               </View>
               <View style={styles.dataBox}>
                 <Text style={styles.dataValue}>{Math.round(metabolicData.tdee)}</Text>
-                <Text style={styles.dataLabel}>TDEE (cal)</Text>
+                <Text style={styles.dataLabel}>{t.dashboard.tdee}</Text>
               </View>
             </View>
           </View>
@@ -237,23 +237,23 @@ export default function DashboardScreen() {
           <View style={styles.todayPlanSection}>
             <View style={styles.planHeader}>
               <BrainIcon size={20} color={Colors.gold} />
-              <Text style={styles.planTitle}>Today&apos;s Weight Cut Plan</Text>
+              <Text style={styles.planTitle}>{t.dashboard.todaysPlan}</Text>
             </View>
             <View style={styles.planDetails}>
               <View style={styles.planRow}>
-                <Text style={styles.planLabel}>Target Weight:</Text>
+                <Text style={styles.planLabel}>{t.dashboard.targetWeightLabel}</Text>
                 <Text style={styles.planValue}>{weightCutPlan[0].targetWeight.toFixed(1)} kg</Text>
               </View>
               <View style={styles.planRow}>
-                <Text style={styles.planLabel}>Water Intake:</Text>
+                <Text style={styles.planLabel}>{t.dashboard.waterIntakeLabel}</Text>
                 <Text style={styles.planValue}>{weightCutPlan[0].waterIntake} ml</Text>
               </View>
               <View style={styles.planRow}>
-                <Text style={styles.planLabel}>Sodium Limit:</Text>
+                <Text style={styles.planLabel}>{t.dashboard.sodiumLimitLabel}</Text>
                 <Text style={styles.planValue}>{weightCutPlan[0].sodiumLimit} mg</Text>
               </View>
               <View style={styles.planRow}>
-                <Text style={styles.planLabel}>Calories:</Text>
+                <Text style={styles.planLabel}>{t.dashboard.calorieTargetLabel}</Text>
                 <Text style={styles.planValue}>{weightCutPlan[0].calorieTarget} kcal</Text>
               </View>
             </View>
@@ -266,14 +266,14 @@ export default function DashboardScreen() {
         )}
 
         <View style={styles.aiTipSection}>
-          <Text style={styles.aiTipTitle}>AI Coach Insight</Text>
+          <Text style={styles.aiTipTitle}>{t.dashboard.aiCoachInsight}</Text>
           <Text style={styles.aiTipText}>
             {daysUntilFight && daysUntilFight <= 7
               ? `Day ${daysUntilFight} of cut: Focus on water manipulation and sodium control. Your body is in the critical phase.`
               : 'Maintain consistent training and nutrition. Focus on technique refinement and gradual fat loss.'}
           </Text>
           <Pressable style={styles.aiButton} onPress={() => router.push('/ai')}>
-            <Text style={styles.aiButtonText}>Ask AI Coach</Text>
+            <Text style={styles.aiButtonText}>{t.dashboard.askAiCoach}</Text>
           </Pressable>
         </View>
       </ScrollView>

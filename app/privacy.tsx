@@ -27,63 +27,63 @@ export default function PrivacyScreen() {
       >
         <View style={styles.heroSection}>
           <Shield size={48} color={Colors.gold} />
-          <Text style={styles.title}>Privacy Policy</Text>
-          <Text style={styles.lastUpdated}>Last updated: January 2025</Text>
+          <Text style={styles.title}>{t.privacy.title}</Text>
+          <Text style={styles.lastUpdated}>{t.privacy.lastUpdated}</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>1. Information We Collect</Text>
+          <Text style={styles.sectionTitle}>{t.privacy.sections.collection.title}</Text>
           <Text style={styles.sectionText}>
-            We collect information you provide directly to us, including your name, email address, age, height, weight, and fitness data. We also collect usage information about how you interact with our app.
+            {t.privacy.sections.collection.text}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>2. How We Use Your Information</Text>
+          <Text style={styles.sectionTitle}>{t.privacy.sections.usage.title}</Text>
           <Text style={styles.sectionText}>
-            We use the information we collect to provide, maintain, and improve our services, including personalized weight cutting recommendations, progress tracking, and AI-powered insights.
+            {t.privacy.sections.usage.text}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>3. Data Storage and Security</Text>
+          <Text style={styles.sectionTitle}>{t.privacy.sections.storage.title}</Text>
           <Text style={styles.sectionText}>
-            Your data is stored securely on your device and encrypted during transmission. We implement appropriate technical and organizational measures to protect your personal information.
+            {t.privacy.sections.storage.text}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>4. Data Sharing</Text>
+          <Text style={styles.sectionTitle}>{t.privacy.sections.sharing.title}</Text>
           <Text style={styles.sectionText}>
-            We do not sell, rent, or share your personal information with third parties for their marketing purposes. We may share anonymous, aggregated data for research and improvement purposes.
+            {t.privacy.sections.sharing.text}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>5. Your Rights</Text>
+          <Text style={styles.sectionTitle}>{t.privacy.sections.rights.title}</Text>
           <Text style={styles.sectionText}>
-            You have the right to access, correct, or delete your personal data at any time. You can export your data or request account deletion through the app settings.
+            {t.privacy.sections.rights.text}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>6. Children&apos;s Privacy</Text>
+          <Text style={styles.sectionTitle}>{t.privacy.sections.children.title}</Text>
           <Text style={styles.sectionText}>
-            Our service is not intended for individuals under the age of 13. We do not knowingly collect personal information from children under 13.
+            {t.privacy.sections.children.text}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>7. Changes to This Policy</Text>
+          <Text style={styles.sectionTitle}>{t.privacy.sections.changes.title}</Text>
           <Text style={styles.sectionText}>
-            We may update this privacy policy from time to time. We will notify you of any changes by posting the new privacy policy on this page and updating the &quot;Last updated&quot; date.
+            {t.privacy.sections.changes.text}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>8. Contact Us</Text>
+          <Text style={styles.sectionTitle}>{t.privacy.sections.contact.title}</Text>
           <Text style={styles.sectionText}>
-            If you have any questions about this Privacy Policy, please contact us at:
+            {t.privacy.sections.contact.text}
           </Text>
           <Text style={styles.contactText}>support@chytre-shazovani.cz</Text>
         </View>

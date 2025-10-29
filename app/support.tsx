@@ -16,7 +16,7 @@ export default function SupportScreen() {
 
   const handleSendEmail = async () => {
     if (!subject.trim() || !message.trim()) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert(t.support.error, t.support.errorFillFields);
       return;
     }
 
@@ -27,21 +27,21 @@ export default function SupportScreen() {
       const supported = await Linking.canOpenURL(mailto);
       if (supported) {
         await Linking.openURL(mailto);
-        Alert.alert('Success', 'Your email client has been opened');
+        Alert.alert(t.support.successTitle, t.support.successMessage);
       } else {
-        Alert.alert('Error', 'Unable to open email client');
+        Alert.alert(t.support.error, t.support.errorOpenEmail);
       }
     } catch (error) {
-      Alert.alert('Error', 'Something went wrong');
+      Alert.alert(t.support.error, t.support.errorGeneral);
     }
   };
 
   const openFAQ = () => {
-    Alert.alert('FAQ', 'FAQ section coming soon');
+    Alert.alert(t.support.faq, t.support.faqAlert);
   };
 
   const openDocs = () => {
-    Alert.alert('Documentation', 'Documentation coming soon');
+    Alert.alert(t.support.documentation, t.support.docsAlert);
   };
 
   return (
@@ -59,9 +59,9 @@ export default function SupportScreen() {
         contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 24 }]}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>How can we help?</Text>
+        <Text style={styles.title}>{t.support.howCanWeHelp}</Text>
         <Text style={styles.subtitle}>
-          Get in touch with our support team or explore our help resources
+          {t.support.getInTouch}
         </Text>
 
         <View style={styles.quickLinksSection}>
@@ -70,8 +70,8 @@ export default function SupportScreen() {
               <MessageCircle size={24} color={Colors.gold} />
             </View>
             <View style={styles.quickLinkContent}>
-              <Text style={styles.quickLinkTitle}>FAQ</Text>
-              <Text style={styles.quickLinkSubtitle}>Find answers to common questions</Text>
+              <Text style={styles.quickLinkTitle}>{t.support.faq}</Text>
+              <Text style={styles.quickLinkSubtitle}>{t.support.faqDescription}</Text>
             </View>
             <ExternalLink size={20} color={Colors.textSecondary} />
           </Pressable>
@@ -81,8 +81,8 @@ export default function SupportScreen() {
               <Book size={24} color={Colors.gold} />
             </View>
             <View style={styles.quickLinkContent}>
-              <Text style={styles.quickLinkTitle}>Documentation</Text>
-              <Text style={styles.quickLinkSubtitle}>Learn how to use the app</Text>
+              <Text style={styles.quickLinkTitle}>{t.support.documentation}</Text>
+              <Text style={styles.quickLinkSubtitle}>{t.support.documentationDescription}</Text>
             </View>
             <ExternalLink size={20} color={Colors.textSecondary} />
           </Pressable>
@@ -91,28 +91,28 @@ export default function SupportScreen() {
         <View style={styles.contactSection}>
           <View style={styles.contactHeader}>
             <Mail size={24} color={Colors.gold} />
-            <Text style={styles.contactTitle}>Contact Support</Text>
+            <Text style={styles.contactTitle}>{t.support.contactSupport}</Text>
           </View>
 
           <View style={styles.form}>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Subject</Text>
+              <Text style={styles.label}>{t.support.subject}</Text>
               <TextInput
                 style={styles.input}
                 value={subject}
                 onChangeText={setSubject}
-                placeholder="What do you need help with?"
+                placeholder={t.support.subjectPlaceholder}
                 placeholderTextColor={Colors.textLight}
               />
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Message</Text>
+              <Text style={styles.label}>{t.support.message}</Text>
               <TextInput
                 style={[styles.input, styles.textArea]}
                 value={message}
                 onChangeText={setMessage}
-                placeholder="Describe your issue or question..."
+                placeholder={t.support.messagePlaceholder}
                 placeholderTextColor={Colors.textLight}
                 multiline
                 numberOfLines={6}
@@ -122,20 +122,20 @@ export default function SupportScreen() {
 
             <Pressable style={styles.sendButton} onPress={handleSendEmail}>
               <Mail size={20} color={Colors.black} />
-              <Text style={styles.sendButtonText}>Send Email</Text>
+              <Text style={styles.sendButtonText}>{t.support.sendEmail}</Text>
             </Pressable>
           </View>
         </View>
 
         <View style={styles.infoSection}>
-          <Text style={styles.infoTitle}>Response Time</Text>
+          <Text style={styles.infoTitle}>{t.support.responseTime}</Text>
           <Text style={styles.infoText}>
-            We typically respond within 24 hours on business days. Premium members receive priority support.
+            {t.support.responseTimeText}
           </Text>
         </View>
 
         <View style={styles.contactInfoSection}>
-          <Text style={styles.contactInfoTitle}>Email</Text>
+          <Text style={styles.contactInfoTitle}>{t.support.email}</Text>
           <Text style={styles.contactInfoText}>support@chytre-shazovani.cz</Text>
         </View>
       </ScrollView>

@@ -11,14 +11,14 @@ export default function SubscriptionScreen() {
   const router = useRouter();
 
   const features = [
-    'Unlimited weight tracking',
-    'AI-powered recommendations',
-    'Advanced hydration planning',
-    'Scientific weight cut calculator',
-    'Meal planning & logging',
-    'Recovery optimization',
-    'Priority support',
-    'Export data & reports',
+    t.subscription.features.unlimitedTracking,
+    t.subscription.features.aiRecommendations,
+    t.subscription.features.hydrationPlanning,
+    t.subscription.features.scientificCalculator,
+    t.subscription.features.mealPlanning,
+    t.subscription.features.recoveryOptimization,
+    t.subscription.features.prioritySupport,
+    t.subscription.features.exportData,
   ];
 
   const handleSubscribe = (type: 'monthly' | 'annual') => {
@@ -42,56 +42,56 @@ export default function SubscriptionScreen() {
       >
         <View style={styles.heroSection}>
           <Crown size={48} color={Colors.gold} />
-          <Text style={styles.heroTitle}>Go Premium</Text>
+          <Text style={styles.heroTitle}>{t.subscription.goPremium}</Text>
           <Text style={styles.heroSubtitle}>
-            Unlock all features and take your weight cutting to the next level
+            {t.subscription.unlockFeatures}
           </Text>
         </View>
 
         <View style={styles.trialBanner}>
           <Calendar size={20} color={Colors.gold} />
-          <Text style={styles.trialText}>7-day free trial • Cancel anytime</Text>
+          <Text style={styles.trialText}>{t.subscription.freeTrial} • {t.subscription.cancelAnytime}</Text>
         </View>
 
         <View style={styles.plansSection}>
           <View style={styles.planCard}>
             <View style={styles.planHeader}>
-              <Text style={styles.planName}>Monthly</Text>
+              <Text style={styles.planName}>{t.subscription.monthly}</Text>
               <View style={styles.priceContainer}>
                 <Text style={styles.price}>149 Kč</Text>
-                <Text style={styles.pricePeriod}>/month</Text>
+                <Text style={styles.pricePeriod}>{t.subscription.perMonth}</Text>
               </View>
             </View>
             <Pressable style={styles.subscribeButton} onPress={() => handleSubscribe('monthly')}>
-              <Text style={styles.subscribeButtonText}>Start Free Trial</Text>
+              <Text style={styles.subscribeButtonText}>{t.subscription.startFreeTrial}</Text>
             </Pressable>
           </View>
 
           <View style={[styles.planCard, styles.planCardPopular]}>
             <View style={styles.popularBadge}>
-              <Text style={styles.popularText}>BEST VALUE</Text>
+              <Text style={styles.popularText}>{t.subscription.bestValue}</Text>
             </View>
             <View style={styles.planHeader}>
-              <Text style={styles.planName}>Annual</Text>
+              <Text style={styles.planName}>{t.subscription.annual}</Text>
               <View style={styles.priceContainer}>
                 <Text style={styles.price}>822 Kč</Text>
-                <Text style={styles.pricePeriod}>/year</Text>
+                <Text style={styles.pricePeriod}>{t.subscription.perYear}</Text>
               </View>
-              <Text style={styles.savingsText}>Save 54% • Only 69 Kč/month</Text>
+              <Text style={styles.savingsText}>{t.subscription.save54} • {t.subscription.only69PerMonth}</Text>
             </View>
             <Pressable
               style={[styles.subscribeButton, styles.subscribeButtonPremium]}
               onPress={() => handleSubscribe('annual')}
             >
               <Text style={[styles.subscribeButtonText, styles.subscribeButtonTextPremium]}>
-                Start Free Trial
+                {t.subscription.startFreeTrial}
               </Text>
             </Pressable>
           </View>
         </View>
 
         <View style={styles.featuresSection}>
-          <Text style={styles.featuresTitle}>What&apos;s Included</Text>
+          <Text style={styles.featuresTitle}>{t.subscription.whatsIncluded}</Text>
           {features.map((feature, index) => (
             <View key={index} style={styles.featureItem}>
               <View style={styles.checkIcon}>
@@ -104,15 +104,13 @@ export default function SubscriptionScreen() {
 
         <View style={styles.notesSection}>
           <Text style={styles.noteText}>
-            • Payment will be charged to your account at the confirmation of purchase
+            • {t.subscription.notes.payment}
           </Text>
           <Text style={styles.noteText}>
-            • Subscription automatically renews unless auto-renew is turned off at least 24 hours
-            before the end of the current period
+            • {t.subscription.notes.autoRenew}
           </Text>
           <Text style={styles.noteText}>
-            • Your account will be charged for renewal within 24 hours prior to the end of the
-            current period
+            • {t.subscription.notes.charged}
           </Text>
         </View>
       </ScrollView>

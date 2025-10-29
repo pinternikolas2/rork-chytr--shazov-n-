@@ -132,7 +132,7 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Preferences</Text>
+          <Text style={styles.sectionTitle}>{t.settings.preferences}</Text>
           <View style={styles.card}>
             <SettingItem
               icon={Globe}
@@ -147,26 +147,26 @@ export default function SettingsScreen() {
             <SettingItem
               icon={Bell}
               title={t.settings.notifications}
-              subtitle="Enabled"
-              onPress={() => Alert.alert('Notifications', 'Notification settings coming soon')}
+              subtitle={t.settings.enabled}
+              onPress={() => Alert.alert(t.settings.notifications, t.settings.notificationsComingSoon)}
             />
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Premium</Text>
+          <Text style={styles.sectionTitle}>{t.settings.premium}</Text>
           <View style={styles.card}>
             <SettingItem
               icon={CreditCard}
               title={t.settings.subscription}
-              subtitle="Free Trial (7 days left)"
+              subtitle={t.settings.freeTrialDaysLeft.replace('{days}', '7')}
               onPress={() => router.push('/subscription')}
             />
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About</Text>
+          <Text style={styles.sectionTitle}>{t.settings.about}</Text>
           <View style={styles.card}>
             <SettingItem
               icon={HelpCircle}

@@ -27,77 +27,77 @@ export default function TermsScreen() {
       >
         <View style={styles.heroSection}>
           <FileText size={48} color={Colors.gold} />
-          <Text style={styles.title}>Terms & Conditions</Text>
-          <Text style={styles.lastUpdated}>Last updated: January 2025</Text>
+          <Text style={styles.title}>{t.terms.title}</Text>
+          <Text style={styles.lastUpdated}>{t.terms.lastUpdated}</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>1. Acceptance of Terms</Text>
+          <Text style={styles.sectionTitle}>{t.terms.sections.acceptance.title}</Text>
           <Text style={styles.sectionText}>
-            By accessing and using Chytré Shazování, you accept and agree to be bound by the terms and provision of this agreement.
+            {t.terms.sections.acceptance.text}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>2. Use License</Text>
+          <Text style={styles.sectionTitle}>{t.terms.sections.license.title}</Text>
           <Text style={styles.sectionText}>
-            Permission is granted to temporarily download one copy of the app for personal, non-commercial use only. This is the grant of a license, not a transfer of title.
+            {t.terms.sections.license.text}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>3. Medical Disclaimer</Text>
+          <Text style={styles.sectionTitle}>{t.terms.sections.disclaimer.title}</Text>
           <Text style={styles.sectionText}>
-            The content in this app is provided for informational purposes only. Always consult with a qualified healthcare professional before starting any weight cutting program. We are not liable for any health issues that may arise from using this app.
+            {t.terms.sections.disclaimer.text}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>4. User Responsibilities</Text>
+          <Text style={styles.sectionTitle}>{t.terms.sections.responsibilities.title}</Text>
           <Text style={styles.sectionText}>
-            You are responsible for maintaining the confidentiality of your account and for all activities that occur under your account. You must notify us immediately of any unauthorized use of your account.
+            {t.terms.sections.responsibilities.text}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>5. Subscription and Payment</Text>
+          <Text style={styles.sectionTitle}>{t.terms.sections.subscription.title}</Text>
           <Text style={styles.sectionText}>
-            Premium features require a paid subscription. Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period. You may cancel your subscription at any time through your account settings.
+            {t.terms.sections.subscription.text}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>6. Prohibited Uses</Text>
+          <Text style={styles.sectionTitle}>{t.terms.sections.prohibited.title}</Text>
           <Text style={styles.sectionText}>
-            You may not use the app for any illegal purpose or to violate any laws. You may not attempt to gain unauthorized access to any portion of the app or any systems or networks connected to the app.
+            {t.terms.sections.prohibited.text}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>7. Limitation of Liability</Text>
+          <Text style={styles.sectionTitle}>{t.terms.sections.liability.title}</Text>
           <Text style={styles.sectionText}>
-            In no event shall Chytré Shazování or its suppliers be liable for any damages arising out of the use or inability to use the app, even if we have been notified of the possibility of such damage.
+            {t.terms.sections.liability.text}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>8. Termination</Text>
+          <Text style={styles.sectionTitle}>{t.terms.sections.termination.title}</Text>
           <Text style={styles.sectionText}>
-            We may terminate or suspend your account and bar access to the app immediately, without prior notice or liability, under our sole discretion, for any reason whatsoever.
+            {t.terms.sections.termination.text}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>9. Governing Law</Text>
+          <Text style={styles.sectionTitle}>{t.terms.sections.law.title}</Text>
           <Text style={styles.sectionText}>
-            These Terms shall be governed by and construed in accordance with the laws of the Czech Republic.
+            {t.terms.sections.law.text}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>10. Contact</Text>
+          <Text style={styles.sectionTitle}>{t.terms.sections.contact.title}</Text>
           <Text style={styles.sectionText}>
-            If you have any questions about these Terms, please contact us at:
+            {t.terms.sections.contact.text}
           </Text>
           <Text style={styles.contactText}>support@chytre-shazovani.cz</Text>
         </View>
