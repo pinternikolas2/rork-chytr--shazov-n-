@@ -9,6 +9,7 @@ import {
   Text,
   TextInput,
   View,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -28,7 +29,7 @@ import { LANGUAGES, Language } from '@/constants/translations';
 import { Discipline } from '@/constants/types';
 
 export default function SettingsScreen() {
-  const { t, profile, updateProfile, settings, setLanguage } = useApp();
+  const { t, profile, updateProfile, settings, setLanguage, signOut } = useApp();
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
@@ -192,6 +193,34 @@ export default function SettingsScreen() {
               subtitle="1.0.0"
               showChevron={false}
             />
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t.settings.account}</Text>
+          <View style={styles.card}>
+            <Pressable 
+              style={styles.signOutButton} 
+              onPress={() => {
+                Alert.alert(
+                  t.settings.confirmSignOut,
+                  t.settings.signOutMessage,
+                  [
+                    {
+                      text: t.common.cancel,
+                      style: 'cancel',
+                    },
+                    {
+                      text: t.settings.signOut,
+                      style: 'destructive',
+                      onPress: () => signOut(),
+                    },
+                  ]
+                );
+              }}
+            >
+              <Text style={styles.signOutButtonText}>{t.settings.signOut}</Text>
+            </Pressable>
           </View>
         </View>
 
@@ -430,6 +459,17 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: Colors.border.light,
     marginLeft: 68,
+  },
+  signOutButton: {
+    backgroundColor: Colors.error,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  signOutButtonText: {
+    color: Colors.white,
+    fontSize: 16,
+    fontWeight: '700' as const,
   },
   bottomSection: {
     alignItems: 'center',

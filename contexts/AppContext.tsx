@@ -229,6 +229,16 @@ export const [AppProvider, useApp] = createContextHook(() => {
     return WeightCuttingScience.getMetabolicData(profile);
   }, [profile]);
 
+  const signOut = useCallback(async () => {
+    setProfile(null);
+    setFights([]);
+    setWeightLogs([]);
+    setHydrationLogs([]);
+    setMealLogs([]);
+    await AsyncStorage.multiRemove(['profile', 'fights', 'weightLogs', 'hydrationLogs', 'mealLogs']);
+    await updateSettings({ hasCompletedOnboarding: false });
+  }, [updateSettings]);
+
   const t = useMemo(() => translations[settings.language], [settings.language]);
 
   return useMemo(() => ({
@@ -257,6 +267,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
     getSafetyStatus,
     getBodyComposition,
     getMetabolicData,
+    signOut,
   }), [
     settings,
     profile,
@@ -283,5 +294,6 @@ export const [AppProvider, useApp] = createContextHook(() => {
     getSafetyStatus,
     getBodyComposition,
     getMetabolicData,
+    signOut,
   ]);
 });

@@ -40,6 +40,10 @@ function RootLayoutNav() {
       <Stack.Screen name="onboarding" />
       <Stack.Screen name="profile-setup" />
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="subscription" options={{ presentation: "modal" }} />
+      <Stack.Screen name="support" options={{ presentation: "modal" }} />
+      <Stack.Screen name="privacy" options={{ presentation: "modal" }} />
+      <Stack.Screen name="terms" options={{ presentation: "modal" }} />
     </Stack>
   );
 }
