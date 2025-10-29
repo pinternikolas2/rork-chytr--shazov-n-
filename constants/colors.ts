@@ -1,5 +1,5 @@
 export const Colors = {
-  gold: '#FFD700',
+  gold: '#F4C430',
   black: '#0A0A0A',
   white: '#FFFFFF',
   lightGray: '#F5F5F7',
