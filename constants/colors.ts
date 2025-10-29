@@ -1,5 +1,5 @@
 export const Colors = {
-  gold: '#C9A961',
+  gold: '#FFD700',
   black: '#0A0A0A',
   white: '#FFFFFF',
   lightGray: '#F5F5F7',
@@ -11,7 +11,7 @@ export const Colors = {
   success: '#30D158',
   warning: '#FF9F0A',
   error: '#FF453A',
-  accent: '#C9A961',
+  accent: '#FFD700',
   background: {
     primary: '#FFFFFF',
     secondary: '#F5F5F7',
