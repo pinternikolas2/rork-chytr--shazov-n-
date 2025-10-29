@@ -2,7 +2,9 @@ import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Language, translations } from '@/constants/translations';
-import { AppSettings, Fight, FighterProfile, HydrationLog, WeightLog } from '@/constants/types';
+import { AppSettings, Fight, FighterProfile, HydrationLog, WeightLog, MealLog } from '@/constants/types';
+import { WeightCuttingScience } from '@/utils/scientificCalculations';
+import type { SafetyStatus, DailyWeightCutPlan, BodyCompositionEstimate, MetabolicData } from '@/utils/scientificCalculations';
 
 const DEFAULT_SETTINGS: AppSettings = {
   language: 'en',
@@ -17,6 +19,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
   const [fights, setFights] = useState<Fight[]>([]);
   const [weightLogs, setWeightLogs] = useState<WeightLog[]>([]);
   const [hydrationLogs, setHydrationLogs] = useState<HydrationLog[]>([]);
+  const [mealLogs, setMealLogs] = useState<MealLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -25,13 +28,14 @@ export const [AppProvider, useApp] = createContextHook(() => {
 
   const loadStoredData = async () => {
     try {
-      const [storedSettings, storedProfile, storedFights, storedWeightLogs, storedHydrationLogs] =
+      const [storedSettings, storedProfile, storedFights, storedWeightLogs, storedHydrationLogs, storedMealLogs] =
         await Promise.all([
           AsyncStorage.getItem('settings'),
           AsyncStorage.getItem('profile'),
           AsyncStorage.getItem('fights'),
           AsyncStorage.getItem('weightLogs'),
           AsyncStorage.getItem('hydrationLogs'),
+          AsyncStorage.getItem('mealLogs'),
         ]);
 
       if (storedSettings) {
@@ -61,6 +65,10 @@ export const [AppProvider, useApp] = createContextHook(() => {
       if (storedHydrationLogs) {
         const parsedLogs = JSON.parse(storedHydrationLogs);
         setHydrationLogs(parsedLogs.map((l: HydrationLog) => ({ ...l, date: new Date(l.date) })));
+      }
+      if (storedMealLogs) {
+        const parsedLogs = JSON.parse(storedMealLogs);
+        setMealLogs(parsedLogs.map((l: MealLog) => ({ ...l, date: new Date(l.date) })));
       }
     } catch (error) {
       console.error('Error loading stored data:', error);
@@ -163,6 +171,62 @@ export const [AppProvider, useApp] = createContextHook(() => {
       .reduce((sum, log) => sum + log.amount, 0);
   }, [hydrationLogs]);
 
+  const addMealLog = useCallback(async (meal: Omit<MealLog, 'id'>) => {
+    const newLog: MealLog = {
+      ...meal,
+      id: Date.now().toString(),
+    };
+    const updated = [...mealLogs, newLog];
+    setMealLogs(updated);
+    await AsyncStorage.setItem('mealLogs', JSON.stringify(updated));
+  }, [mealLogs]);
+
+  const getDailyHydrationGoal = useCallback((): number => {
+    if (!profile) return 3000;
+    const upcomingFight = getUpcomingFight();
+    if (!upcomingFight) return profile.currentWeight * 35;
+    
+    const now = new Date();
+    const daysUntilFight = Math.ceil((upcomingFight.date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    return WeightCuttingScience.getDailyHydrationGoal(
+      profile.currentWeight,
+      daysUntilFight,
+      profile.trainingIntensity
+    );
+  }, [profile, fights, getUpcomingFight]);
+
+  const getWeightCutPlan = useCallback((): DailyWeightCutPlan[] => {
+    if (!profile) return [];
+    const upcomingFight = getUpcomingFight();
+    if (!upcomingFight) return [];
+    return WeightCuttingScience.generateWeightCutPlan(profile, upcomingFight.date);
+  }, [profile, fights, getUpcomingFight]);
+
+  const getSafetyStatus = useCallback((): SafetyStatus | null => {
+    if (!profile) return null;
+    const upcomingFight = getUpcomingFight();
+    if (!upcomingFight) return null;
+    
+    const now = new Date();
+    const daysUntilFight = Math.ceil((upcomingFight.date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    return WeightCuttingScience.assessSafetyStatus(profile, weightLogs, daysUntilFight);
+  }, [profile, weightLogs, getUpcomingFight]);
+
+  const getBodyComposition = useCallback((): BodyCompositionEstimate | null => {
+    if (!profile) return null;
+    return WeightCuttingScience.estimateBodyComposition(
+      profile.currentWeight,
+      profile.height,
+      profile.age,
+      profile.gender
+    );
+  }, [profile]);
+
+  const getMetabolicData = useCallback((): MetabolicData | null => {
+    if (!profile) return null;
+    return WeightCuttingScience.getMetabolicData(profile);
+  }, [profile]);
+
   const t = useMemo(() => translations[settings.language], [settings.language]);
 
   return useMemo(() => ({
@@ -171,6 +235,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
     fights,
     weightLogs,
     hydrationLogs,
+    mealLogs,
     isLoading,
     t,
     setLanguage,
@@ -182,14 +247,21 @@ export const [AppProvider, useApp] = createContextHook(() => {
     deleteFight,
     addWeightLog,
     addHydrationLog,
+    addMealLog,
     getUpcomingFight,
     getTodayHydration,
+    getDailyHydrationGoal,
+    getWeightCutPlan,
+    getSafetyStatus,
+    getBodyComposition,
+    getMetabolicData,
   }), [
     settings,
     profile,
     fights,
     weightLogs,
     hydrationLogs,
+    mealLogs,
     isLoading,
     t,
     setLanguage,
@@ -201,7 +273,13 @@ export const [AppProvider, useApp] = createContextHook(() => {
     deleteFight,
     addWeightLog,
     addHydrationLog,
+    addMealLog,
     getUpcomingFight,
     getTodayHydration,
+    getDailyHydrationGoal,
+    getWeightCutPlan,
+    getSafetyStatus,
+    getBodyComposition,
+    getMetabolicData,
   ]);
 });

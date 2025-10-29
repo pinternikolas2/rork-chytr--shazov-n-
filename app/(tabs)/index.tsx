@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Plus, Droplets, TrendingDown } from 'lucide-react-native';
+import { Plus, Droplets, TrendingDown, AlertTriangle, Activity, Brain as BrainIcon } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
@@ -9,13 +9,28 @@ import { useApp } from '@/contexts/AppContext';
 
 
 export default function DashboardScreen() {
-  const { t, profile, getUpcomingFight, getTodayHydration, weightLogs } = useApp();
+  const { 
+    t, 
+    profile, 
+    getUpcomingFight, 
+    getTodayHydration, 
+    getDailyHydrationGoal,
+    getSafetyStatus,
+    getBodyComposition,
+    getMetabolicData,
+    getWeightCutPlan,
+    weightLogs 
+  } = useApp();
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
   const upcomingFight = getUpcomingFight();
   const todayHydration = getTodayHydration();
-  const dailyHydrationGoal = 3000;
+  const dailyHydrationGoal = getDailyHydrationGoal();
+  const safetyStatus = getSafetyStatus();
+  const bodyComposition = getBodyComposition();
+  const metabolicData = getMetabolicData();
+  const weightCutPlan = getWeightCutPlan();
 
   const daysUntilFight = useMemo(() => {
     if (!upcomingFight) return null;
@@ -162,13 +177,104 @@ export default function DashboardScreen() {
           </View>
         )}
 
+        {safetyStatus && (
+          <View style={[
+            styles.safetyCard,
+            safetyStatus.level === 'danger' && styles.safetyCardDanger,
+            safetyStatus.level === 'caution' && styles.safetyCardCaution,
+          ]}>
+            <View style={styles.safetyHeader}>
+              <AlertTriangle 
+                size={20} 
+                color={safetyStatus.level === 'safe' ? Colors.gold : safetyStatus.level === 'caution' ? '#f59e0b' : '#ef4444'} 
+              />
+              <Text style={[
+                styles.safetyTitle,
+                safetyStatus.level === 'danger' && styles.safetyTitleDanger,
+                safetyStatus.level === 'caution' && styles.safetyTitleCaution,
+              ]}>
+                {safetyStatus.level === 'safe' ? 'Weight Cut Status: Safe' : 
+                 safetyStatus.level === 'caution' ? 'Caution Required' : 'Danger - Immediate Action Needed'}
+              </Text>
+            </View>
+            <Text style={styles.safetyMessage}>{safetyStatus.message}</Text>
+            <View style={styles.recommendationsList}>
+              {safetyStatus.recommendations.slice(0, 3).map((rec, idx) => (
+                <Text key={idx} style={styles.recommendationItem}>• {rec}</Text>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {bodyComposition && metabolicData && (
+          <View style={styles.scientificDataSection}>
+            <View style={styles.dataHeader}>
+              <Activity size={20} color={Colors.gold} />
+              <Text style={styles.dataTitle}>Body Composition & Metabolism</Text>
+            </View>
+            <View style={styles.dataGrid}>
+              <View style={styles.dataBox}>
+                <Text style={styles.dataValue}>{bodyComposition.bodyFatPercentage}%</Text>
+                <Text style={styles.dataLabel}>Body Fat</Text>
+              </View>
+              <View style={styles.dataBox}>
+                <Text style={styles.dataValue}>{bodyComposition.leanMass.toFixed(1)}</Text>
+                <Text style={styles.dataLabel}>Lean Mass (kg)</Text>
+              </View>
+              <View style={styles.dataBox}>
+                <Text style={styles.dataValue}>{Math.round(metabolicData.bmr)}</Text>
+                <Text style={styles.dataLabel}>BMR (cal)</Text>
+              </View>
+              <View style={styles.dataBox}>
+                <Text style={styles.dataValue}>{Math.round(metabolicData.tdee)}</Text>
+                <Text style={styles.dataLabel}>TDEE (cal)</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {weightCutPlan.length > 0 && (
+          <View style={styles.todayPlanSection}>
+            <View style={styles.planHeader}>
+              <BrainIcon size={20} color={Colors.gold} />
+              <Text style={styles.planTitle}>Today&apos;s Weight Cut Plan</Text>
+            </View>
+            <View style={styles.planDetails}>
+              <View style={styles.planRow}>
+                <Text style={styles.planLabel}>Target Weight:</Text>
+                <Text style={styles.planValue}>{weightCutPlan[0].targetWeight.toFixed(1)} kg</Text>
+              </View>
+              <View style={styles.planRow}>
+                <Text style={styles.planLabel}>Water Intake:</Text>
+                <Text style={styles.planValue}>{weightCutPlan[0].waterIntake} ml</Text>
+              </View>
+              <View style={styles.planRow}>
+                <Text style={styles.planLabel}>Sodium Limit:</Text>
+                <Text style={styles.planValue}>{weightCutPlan[0].sodiumLimit} mg</Text>
+              </View>
+              <View style={styles.planRow}>
+                <Text style={styles.planLabel}>Calories:</Text>
+                <Text style={styles.planValue}>{weightCutPlan[0].calorieTarget} kcal</Text>
+              </View>
+            </View>
+            <View style={styles.recommendationsList}>
+              {weightCutPlan[0].recommendations.slice(0, 2).map((rec, idx) => (
+                <Text key={idx} style={styles.todayRecommendation}>• {rec}</Text>
+              ))}
+            </View>
+          </View>
+        )}
+
         <View style={styles.aiTipSection}>
-          <Text style={styles.aiTipTitle}>{t.dashboard.aiTip}</Text>
+          <Text style={styles.aiTipTitle}>AI Coach Insight</Text>
           <Text style={styles.aiTipText}>
             {daysUntilFight && daysUntilFight <= 7
-              ? 'You\'re in the final week. Focus on water manipulation and sodium control. Reduce water intake by 15% today.'
-              : 'Maintain consistent hydration. Drink at least 3L of water daily and monitor your sodium intake closely.'}
+              ? `Day ${daysUntilFight} of cut: Focus on water manipulation and sodium control. Your body is in the critical phase.`
+              : 'Maintain consistent training and nutrition. Focus on technique refinement and gradual fat loss.'}
           </Text>
+          <Pressable style={styles.aiButton} onPress={() => router.push('/ai')}>
+            <Text style={styles.aiButtonText}>Ask AI Coach</Text>
+          </Pressable>
         </View>
       </ScrollView>
     </View>
@@ -492,5 +598,165 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.textPrimary,
     lineHeight: 20,
+    marginBottom: 12,
+  },
+  aiButton: {
+    backgroundColor: Colors.gold,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  aiButtonText: {
+    color: Colors.black,
+    fontSize: 13,
+    fontWeight: '700' as const,
+  },
+  safetyCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: Colors.gold,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  safetyCardCaution: {
+    borderColor: '#f59e0b',
+  },
+  safetyCardDanger: {
+    borderColor: '#ef4444',
+  },
+  safetyHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  safetyTitle: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: Colors.gold,
+    textTransform: 'uppercase' as const,
+  },
+  safetyTitleCaution: {
+    color: '#f59e0b',
+  },
+  safetyTitleDanger: {
+    color: '#ef4444',
+  },
+  safetyMessage: {
+    fontSize: 15,
+    color: Colors.textPrimary,
+    fontWeight: '600' as const,
+    marginBottom: 12,
+  },
+  recommendationsList: {
+    gap: 6,
+  },
+  recommendationItem: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    lineHeight: 18,
+  },
+  scientificDataSection: {
+    backgroundColor: Colors.white,
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  dataHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  dataTitle: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
+  },
+  dataGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  dataBox: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: Colors.lightGray,
+    borderRadius: 12,
+    padding: 12,
+    alignItems: 'center',
+  },
+  dataValue: {
+    fontSize: 20,
+    fontWeight: '700' as const,
+    color: Colors.gold,
+    marginBottom: 4,
+  },
+  dataLabel: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+  },
+  todayPlanSection: {
+    backgroundColor: Colors.white,
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: Colors.gold,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  planHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  planTitle: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
+  },
+  planDetails: {
+    gap: 10,
+    marginBottom: 16,
+  },
+  planRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  planLabel: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+  },
+  planValue: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
+  },
+  todayRecommendation: {
+    fontSize: 13,
+    color: Colors.textPrimary,
+    lineHeight: 18,
+    fontWeight: '500' as const,
   },
 });

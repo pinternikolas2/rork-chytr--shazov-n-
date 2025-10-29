@@ -48,12 +48,37 @@ export interface WeightLog {
   date: Date;
   weight: number;
   time: 'morning' | 'evening';
+  bodyFatPercentage?: number;
+  notes?: string;
 }
 
 export interface HydrationLog {
   id: string;
   date: Date;
   amount: number;
+  sodiumMg?: number;
+}
+
+export interface MealLog {
+  id: string;
+  date: Date;
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  sodiumMg: number;
+  notes?: string;
+}
+
+export interface DailyProgress {
+  date: Date;
+  weight?: number;
+  hydration: number;
+  calories?: number;
+  sodium?: number;
+  energyLevel?: 1 | 2 | 3 | 4 | 5;
+  notes?: string;
 }
 
 export interface AppSettings {
