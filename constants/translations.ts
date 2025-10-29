@@ -1,13 +1,8 @@
-export type Language = 'cs' | 'en' | 'de' | 'fr' | 'es' | 'pl' | 'sk';
+export type Language = 'cs' | 'en';
 
 export const LANGUAGES = [
   { code: 'cs' as const, name: 'Čeština', flag: '🇨🇿' },
   { code: 'en' as const, name: 'English', flag: '🇬🇧' },
-  { code: 'de' as const, name: 'Deutsch', flag: '🇩🇪' },
-  { code: 'fr' as const, name: 'Français', flag: '🇫🇷' },
-  { code: 'es' as const, name: 'Español', flag: '🇪🇸' },
-  { code: 'pl' as const, name: 'Polski', flag: '🇵🇱' },
-  { code: 'sk' as const, name: 'Slovenčina', flag: '🇸🇰' },
 ] as const;
 
 const enTranslations = {
@@ -669,11 +664,6 @@ export const translations = {
     },
   },
   en: enTranslations,
-  de: enTranslations,
-  fr: enTranslations,
-  es: enTranslations,
-  pl: enTranslations,
-  sk: enTranslations,
 } as const;
 
 export type TranslationKey = typeof translations.en;
