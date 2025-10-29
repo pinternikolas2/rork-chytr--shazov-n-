@@ -8,7 +8,7 @@ import type { SafetyStatus, DailyWeightCutPlan, BodyCompositionEstimate, Metabol
 
 const DEFAULT_SETTINGS: AppSettings = {
   language: 'en',
-  theme: 'dark',
+  theme: 'light',
   notifications: true,
   hasCompletedOnboarding: false,
 };
