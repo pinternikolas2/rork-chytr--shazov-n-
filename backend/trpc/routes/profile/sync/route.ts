@@ -1,0 +1,117 @@
+import { z } from 'zod';
+import { publicProcedure } from '@/backend/trpc/create-context';
+
+const profileSchema = z.object({
+  id: z.string(),
+  role: z.enum(['fighter', 'coach']),
+  fullName: z.string(),
+  age: z.number(),
+  height: z.number(),
+  gender: z.enum(['male', 'female', 'other']),
+  discipline: z.enum(['mma', 'boxing', 'wrestling', 'bjj', 'muayThai', 'kickboxing']),
+  currentWeight: z.number().optional(),
+  targetWeight: z.number().optional(),
+  weightClass: z.string().optional(),
+  cuttingStartDate: z.date().optional(),
+  dietType: z.enum(['standard', 'keto', 'paleo', 'vegetarian', 'vegan', 'other']).optional(),
+  trainingIntensity: z.enum(['low', 'moderate', 'high', 'professional']).optional(),
+  hasPreviousExperience: z.boolean().optional(),
+  trainerName: z.string().optional(),
+  profilePhotoUri: z.string().optional(),
+  coachId: z.string().optional(),
+  linkedFighters: z.array(z.string()).optional(),
+  isPremium: z.boolean().optional(),
+  subscriptionEndDate: z.date().optional(),
+  certifications: z.array(z.string()).optional(),
+  yearsOfExperience: z.number().optional(),
+  specializations: z.array(z.enum(['mma', 'boxing', 'wrestling', 'bjj', 'muayThai', 'kickboxing'])).optional(),
+});
+
+export const syncProfileProcedure = publicProcedure
+  .input(profileSchema)
+  .mutation(async ({ input, ctx }) => {
+    const { supabase } = ctx;
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .upsert({
+        id: input.id,
+        role: input.role,
+        full_name: input.fullName,
+        age: input.age,
+        height: input.height,
+        gender: input.gender,
+        discipline: input.discipline,
+        current_weight: input.currentWeight,
+        target_weight: input.targetWeight,
+        weight_class: input.weightClass,
+        cutting_start_date: input.cuttingStartDate,
+        diet_type: input.dietType,
+        training_intensity: input.trainingIntensity,
+        has_previous_experience: input.hasPreviousExperience,
+        trainer_name: input.trainerName,
+        profile_photo_uri: input.profilePhotoUri,
+        coach_id: input.coachId,
+        linked_fighters: input.linkedFighters,
+        is_premium: input.isPremium,
+        subscription_end_date: input.subscriptionEndDate,
+        certifications: input.certifications,
+        years_of_experience: input.yearsOfExperience,
+        specializations: input.specializations,
+        updated_at: new Date(),
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error syncing profile:', error);
+      throw new Error(`Failed to sync profile: ${error.message}`);
+    }
+
+    return data;
+  });
+
+export const getProfileProcedure = publicProcedure
+  .input(z.object({ userId: z.string() }))
+  .query(async ({ input, ctx }) => {
+    const { supabase } = ctx;
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', input.userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching profile:', error);
+      return null;
+    }
+
+    if (!data) return null;
+
+    return {
+      id: data.id,
+      role: data.role,
+      fullName: data.full_name,
+      age: data.age,
+      height: data.height,
+      gender: data.gender,
+      discipline: data.discipline,
+      currentWeight: data.current_weight,
+      targetWeight: data.target_weight,
+      weightClass: data.weight_class,
+      cuttingStartDate: data.cutting_start_date ? new Date(data.cutting_start_date) : undefined,
+      dietType: data.diet_type,
+      trainingIntensity: data.training_intensity,
+      hasPreviousExperience: data.has_previous_experience,
+      trainerName: data.trainer_name,
+      profilePhotoUri: data.profile_photo_uri,
+      coachId: data.coach_id,
+      linkedFighters: data.linked_fighters,
+      isPremium: data.is_premium,
+      subscriptionEndDate: data.subscription_end_date ? new Date(data.subscription_end_date) : undefined,
+      certifications: data.certifications,
+      yearsOfExperience: data.years_of_experience,
+      specializations: data.specializations,
+    };
+  });
