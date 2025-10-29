@@ -65,7 +65,7 @@ export default function DashboardScreen() {
             <Image
               source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/eu9l4dsrphmttowu6m4wo' }}
               style={styles.logo}
-              resizeMode="contain"
+              resizeMode="cover"
             />
           </View>
           <View>
@@ -302,15 +302,15 @@ const styles = StyleSheet.create({
   logoContainer: {
     width: 56,
     height: 56,
-    borderRadius: 28,
-    backgroundColor: Colors.lightGray,
+    borderRadius: 12,
+    backgroundColor: 'transparent',
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
   },
   logo: {
-    width: 48,
-    height: 48,
+    width: 56,
+    height: 56,
   },
   greeting: {
     fontSize: 14,

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useRouter } from 'expo-router';
 import {
   Alert,
   Modal,
@@ -29,6 +30,7 @@ import { Discipline } from '@/constants/types';
 export default function SettingsScreen() {
   const { t, profile, updateProfile, settings, setLanguage } = useApp();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
 
   const [isLanguageModalVisible, setIsLanguageModalVisible] = useState(false);
   const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
@@ -37,8 +39,8 @@ export default function SettingsScreen() {
   const [fullName, setFullName] = useState(profile?.fullName || '');
   const [age, setAge] = useState(profile?.age.toString() || '');
   const [height, setHeight] = useState(profile?.height.toString() || '');
-  const [currentWeight, setCurrentWeight] = useState(profile?.currentWeight.toString() || '');
-  const [targetWeight, setTargetWeight] = useState(profile?.targetWeight.toString() || '');
+  const [currentWeight, setCurrentWeight] = useState(profile && profile.role === 'fighter' ? profile.currentWeight.toString() : '');
+  const [targetWeight, setTargetWeight] = useState(profile && profile.role === 'fighter' ? profile.targetWeight.toString() : '');
   const [discipline, setDiscipline] = useState<Discipline>(profile?.discipline || 'mma');
 
   const disciplines: Discipline[] = ['mma', 'boxing', 'wrestling', 'bjj', 'muayThai', 'kickboxing'];
@@ -51,14 +53,23 @@ export default function SettingsScreen() {
   const handleProfileUpdate = async () => {
     if (!profile) return;
     
-    await updateProfile({
-      fullName,
-      age: parseInt(age, 10),
-      height: parseInt(height, 10),
-      currentWeight: parseFloat(currentWeight),
-      targetWeight: parseFloat(targetWeight),
-      discipline,
-    });
+    if (profile.role === 'fighter') {
+      await updateProfile({
+        fullName,
+        age: parseInt(age, 10),
+        height: parseInt(height, 10),
+        currentWeight: parseFloat(currentWeight),
+        targetWeight: parseFloat(targetWeight),
+        discipline,
+      });
+    } else {
+      await updateProfile({
+        fullName,
+        age: parseInt(age, 10),
+        height: parseInt(height, 10),
+        discipline,
+      });
+    }
 
     setIsProfileModalVisible(false);
   };
@@ -105,12 +116,15 @@ export default function SettingsScreen() {
               title={t.settings.editProfile}
               subtitle={profile?.fullName}
               onPress={() => {
-                setFullName(profile?.fullName || '');
-                setAge(profile?.age.toString() || '');
-                setHeight(profile?.height.toString() || '');
-                setCurrentWeight(profile?.currentWeight.toString() || '');
-                setTargetWeight(profile?.targetWeight.toString() || '');
-                setDiscipline(profile?.discipline || 'mma');
+                if (!profile) return;
+                setFullName(profile.fullName);
+                setAge(profile.age.toString());
+                setHeight(profile.height.toString());
+                if (profile.role === 'fighter') {
+                  setCurrentWeight(profile.currentWeight.toString());
+                  setTargetWeight(profile.targetWeight.toString());
+                }
+                setDiscipline(profile.discipline);
                 setIsProfileModalVisible(true);
               }}
             />
@@ -146,7 +160,7 @@ export default function SettingsScreen() {
               icon={CreditCard}
               title={t.settings.subscription}
               subtitle="Free Trial (7 days left)"
-              onPress={() => Alert.alert('Subscription', 'Premium features coming soon')}
+              onPress={() => router.push('/subscription')}
             />
           </View>
         </View>
@@ -157,19 +171,19 @@ export default function SettingsScreen() {
             <SettingItem
               icon={HelpCircle}
               title={t.settings.support}
-              onPress={() => Alert.alert('Support', 'Contact us at support@chytre-shazovani.cz')}
+              onPress={() => router.push('/support')}
             />
             <View style={styles.divider} />
             <SettingItem
               icon={Shield}
               title={t.settings.privacy}
-              onPress={() => Alert.alert('Privacy', 'Privacy policy coming soon')}
+              onPress={() => router.push('/privacy')}
             />
             <View style={styles.divider} />
             <SettingItem
               icon={FileText}
               title={t.settings.terms}
-              onPress={() => Alert.alert('Terms', 'Terms & conditions coming soon')}
+              onPress={() => router.push('/terms')}
             />
             <View style={styles.divider} />
             <SettingItem

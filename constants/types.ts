@@ -30,6 +30,19 @@ export interface FighterProfile extends UserProfile {
   trainingIntensity: TrainingIntensity;
   hasPreviousExperience: boolean;
   trainerName?: string;
+  profilePhotoUri?: string;
+  coachId?: string;
+}
+
+export interface CoachProfile extends UserProfile {
+  role: 'coach';
+  linkedFighters: string[];
+  isPremium: boolean;
+  subscriptionEndDate?: Date;
+  profilePhotoUri?: string;
+  certifications?: string[];
+  yearsOfExperience?: number;
+  specializations?: Discipline[];
 }
 
 export interface Fight {
@@ -86,4 +99,16 @@ export interface AppSettings {
   theme: 'light' | 'dark';
   notifications: boolean;
   hasCompletedOnboarding: boolean;
+  reminderTime?: string;
+  soundEnabled: boolean;
+  vibrationEnabled: boolean;
+}
+
+export interface SubscriptionInfo {
+  isActive: boolean;
+  type: 'free' | 'monthly' | 'annual';
+  startDate: Date;
+  endDate?: Date;
+  trialEndsAt?: Date;
+  autoRenew: boolean;
 }
