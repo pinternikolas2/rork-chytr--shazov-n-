@@ -25,7 +25,7 @@ function RootLayoutNav() {
 
     if (!settings.hasCompletedOnboarding && !inAuth) {
       router.replace('/language-selection');
-    } else if (settings.hasCompletedOnboarding && !inTabs && !inAuth && !inModal) {
+    } else if (settings.hasCompletedOnboarding && !inTabs && !inModal) {
       router.replace('/(tabs)');
     }
   }, [isLoading, settings.hasCompletedOnboarding, segments, router]);

@@ -46,20 +46,25 @@ export default function ProfileSetupScreen() {
 
   const handleComplete = async () => {
     if (!fullName || !age || !height || !currentWeight || !targetWeight || !weightClass || !targetFightDate) {
+      Alert.alert(t.common.error, settings.language === 'cs' ? 'Prosím vyplňte všechna pole' : 'Please fill in all fields');
       return;
     }
 
     try {
+      console.log('[ProfileSetup] Starting profile setup...');
       let userId: string;
       const { data: { user: authUser } } = await supabase.auth.getUser();
       
       if (!authUser) {
+        console.log('[ProfileSetup] No authenticated user, using temp ID');
         userId = `temp_${Date.now()}`;
       } else {
+        console.log('[ProfileSetup] User authenticated:', authUser.id);
         userId = authUser.id;
       }
 
       const role = authUser?.user_metadata?.role || 'fighter';
+      console.log('[ProfileSetup] User role:', role);
 
       await completeOnboarding({
         id: userId,
@@ -79,10 +84,12 @@ export default function ProfileSetupScreen() {
         trainerName: trainerName.trim() || undefined,
       });
 
+      console.log('[ProfileSetup] Profile setup completed, navigating to tabs');
       router.replace('/(tabs)');
     } catch (error) {
-      console.error('Profile setup error:', error);
-      Alert.alert(t.common.error, 'Nepodařilo se uložit profil');
+      console.error('[ProfileSetup] Profile setup error:', error);
+      const errorMessage = settings.language === 'cs' ? 'Nepodařilo se uložit profil' : 'Failed to save profile';
+      Alert.alert(t.common.error, errorMessage);
     }
   };
 
@@ -221,22 +228,35 @@ export default function ProfileSetupScreen() {
               >
                 <Text style={[styles.datePickerText, !targetFightDate && styles.datePickerPlaceholder]}>
                   {targetFightDate
-                    ? targetFightDate.toLocaleDateString(settings.language === 'cs' ? 'cs-CZ' : 'en-US')
-                    : 'DD/MM/YYYY'}
+                    ? targetFightDate.toLocaleDateString(settings.language === 'cs' ? 'cs-CZ' : 'en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })
+                    : settings.language === 'cs' ? 'Vyberte datum' : 'Select date'}
                 </Text>
               </Pressable>
               {showDatePicker && (
                 <DateTimePicker
                   value={targetFightDate || new Date()}
                   mode="date"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  display={Platform.OS === 'ios' ? 'inline' : 'default'}
                   minimumDate={new Date()}
                   onChange={(event, selectedDate) => {
-                    setShowDatePicker(Platform.OS === 'ios');
-                    if (selectedDate) {
+                    if (Platform.OS === 'android') {
+                      setShowDatePicker(false);
+                    }
+                    if (event.type === 'set' && selectedDate) {
                       setTargetFightDate(selectedDate);
+                      if (Platform.OS === 'ios') {
+                        setShowDatePicker(false);
+                      }
+                    } else if (event.type === 'dismissed') {
+                      setShowDatePicker(false);
                     }
                   }}
+                  style={Platform.OS === 'ios' ? styles.datePickerIOS : undefined}
+                  locale={settings.language === 'cs' ? 'cs-CZ' : 'en-US'}
                 />
               )}
             </View>
@@ -464,5 +484,10 @@ const styles = StyleSheet.create({
   },
   datePickerPlaceholder: {
     color: Colors.textLight,
+  },
+  datePickerIOS: {
+    marginTop: 8,
+    backgroundColor: Colors.white,
+    borderRadius: 12,
   },
 });

@@ -32,6 +32,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
 
   const loadStoredData = async () => {
     try {
+      console.log('[AppContext] Starting to load stored data...');
       const [storedSettings, storedProfile, storedFights, storedWeightLogs, storedHydrationLogs, storedMealLogs, storedCustomFoods] =
         await Promise.all([
           AsyncStorage.getItem('settings'),
@@ -44,17 +45,27 @@ export const [AppProvider, useApp] = createContextHook(() => {
         ]);
 
       if (storedSettings) {
-        setSettings(JSON.parse(storedSettings));
+        const parsed = JSON.parse(storedSettings);
+        console.log('[AppContext] Loaded settings:', parsed);
+        setSettings(parsed);
+      } else {
+        console.log('[AppContext] No stored settings found, using defaults');
       }
+      
       if (storedProfile) {
         const parsed = JSON.parse(storedProfile);
+        console.log('[AppContext] Loaded profile for user:', parsed.id);
         setProfile({
           ...parsed,
           cuttingStartDate: parsed.cuttingStartDate ? new Date(parsed.cuttingStartDate) : undefined,
         });
+      } else {
+        console.log('[AppContext] No stored profile found');
       }
+      
       if (storedFights) {
         const parsedFights = JSON.parse(storedFights);
+        console.log('[AppContext] Loaded', parsedFights.length, 'fights');
         setFights(
           parsedFights.map((f: Fight) => ({
             ...f,
@@ -65,22 +76,27 @@ export const [AppProvider, useApp] = createContextHook(() => {
       }
       if (storedWeightLogs) {
         const parsedLogs = JSON.parse(storedWeightLogs);
+        console.log('[AppContext] Loaded', parsedLogs.length, 'weight logs');
         setWeightLogs(parsedLogs.map((l: WeightLog) => ({ ...l, date: new Date(l.date) })));
       }
       if (storedHydrationLogs) {
         const parsedLogs = JSON.parse(storedHydrationLogs);
+        console.log('[AppContext] Loaded', parsedLogs.length, 'hydration logs');
         setHydrationLogs(parsedLogs.map((l: HydrationLog) => ({ ...l, date: new Date(l.date) })));
       }
       if (storedMealLogs) {
         const parsedLogs = JSON.parse(storedMealLogs);
+        console.log('[AppContext] Loaded', parsedLogs.length, 'meal logs');
         setMealLogs(parsedLogs.map((l: MealLog) => ({ ...l, date: new Date(l.date) })));
       }
       if (storedCustomFoods) {
         const parsedFoods = JSON.parse(storedCustomFoods);
+        console.log('[AppContext] Loaded', parsedFoods.length, 'custom foods');
         setCustomFoods(parsedFoods.map((f: CustomFood) => ({ ...f, createdAt: new Date(f.createdAt) })));
       }
+      console.log('[AppContext] Finished loading stored data');
     } catch (error) {
-      console.error('Error loading stored data:', error);
+      console.error('[AppContext] Error loading stored data:', error);
     } finally {
       setIsLoading(false);
     }
@@ -97,15 +113,16 @@ export const [AppProvider, useApp] = createContextHook(() => {
   }, [updateSettings]);
 
   const completeOnboarding = useCallback(async (userProfile: FighterProfile | CoachProfile) => {
+    console.log('[AppContext] Completing onboarding for user:', userProfile.id);
     setProfile(userProfile);
     await AsyncStorage.setItem('profile', JSON.stringify(userProfile));
     await updateSettings({ hasCompletedOnboarding: true });
     
     try {
       await trpcClient.profile.sync.mutate(userProfile);
-      console.log('Profile synced to backend');
+      console.log('[AppContext] Profile synced to backend successfully');
     } catch (error) {
-      console.error('Failed to sync profile to backend:', error);
+      console.error('[AppContext] Failed to sync profile to backend:', error);
     }
   }, [updateSettings]);
 
