@@ -48,24 +48,27 @@ export default function ProfileSetupScreen() {
     }
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      let user;
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      
+      if (!authUser) {
+        const { data } = await supabase.auth.signUp({
+          email: `user_${Date.now()}@temp.com`,
+          password: Math.random().toString(36).slice(-12) + 'Aa1!',
+          options: {
+            data: {
+              role: 'fighter',
+            },
+          },
+        });
+        user = data.user;
+      } else {
+        user = authUser;
+      }
       
       if (!user) {
-        Alert.alert(t.common.error, 'Není přihlášen žádný uživatel');
-        router.replace('/onboarding');
+        Alert.alert(t.common.error, 'Nepodařilo se vytvořit uživatele');
         return;
-      }
-
-      const dateParts = targetFightDate.split('/');
-      let fightDate: Date;
-      
-      if (dateParts.length === 3) {
-        const day = parseInt(dateParts[0], 10);
-        const month = parseInt(dateParts[1], 10) - 1;
-        const year = parseInt(dateParts[2], 10);
-        fightDate = new Date(year, month, day);
-      } else {
-        fightDate = new Date(targetFightDate);
       }
 
       const role = user.user_metadata?.role || 'fighter';

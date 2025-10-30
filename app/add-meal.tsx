@@ -232,6 +232,13 @@ export default function AddMealScreen() {
   if (mode === 'edit') {
     return (
       <View style={styles.container}>
+        <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
+          <Pressable onPress={() => router.back()} style={styles.backButton}>
+            <X size={24} color={Colors.textPrimary} />
+          </Pressable>
+          <Text style={styles.headerTitle}>{t.nutrition.addFood}</Text>
+          <View style={{ width: 24 }} />
+        </View>
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
@@ -440,10 +447,16 @@ export default function AddMealScreen() {
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={styles.container}>
+      <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
+        <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <X size={24} color={Colors.textPrimary} />
+        </Pressable>
+        <Text style={styles.headerTitle}>{t.nutrition.addFood}</Text>
+        <View style={{ width: 24 }} />
+      </View>
       <View style={styles.selectContainer}>
         <Text style={styles.selectTitle}>{t.nutrition.addFood}</Text>
-        <Text style={styles.selectSubtitle}>Choose how to add your meal</Text>
 
         <View style={styles.optionsContainer}>
           <Pressable style={styles.optionCard} onPress={handleTakePhoto}>
@@ -452,7 +465,7 @@ export default function AddMealScreen() {
             </View>
             <Text style={styles.optionTitle}>{t.nutrition.takePhoto}</Text>
             <Text style={styles.optionDescription}>
-              Use AI to scan and analyze food
+              {t.nutrition.scanFood}
             </Text>
           </Pressable>
 
@@ -467,7 +480,7 @@ export default function AddMealScreen() {
             </View>
             <Text style={styles.optionTitle}>{t.nutrition.uploadPhoto}</Text>
             <Text style={styles.optionDescription}>
-              Choose photo from gallery
+              {t.nutrition.choosePhotoFromGallery}
             </Text>
           </Pressable>
 
@@ -482,7 +495,7 @@ export default function AddMealScreen() {
             </View>
             <Text style={styles.optionTitle}>{t.nutrition.manualEntry}</Text>
             <Text style={styles.optionDescription}>
-              Enter nutrition info manually
+              {t.nutrition.enterNutritionManually}
             </Text>
           </Pressable>
         </View>
@@ -513,13 +526,28 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     color: Colors.textPrimary,
     textAlign: 'center',
-    marginBottom: 8,
-  },
-  selectSubtitle: {
-    fontSize: 16,
-    color: Colors.textSecondary,
-    textAlign: 'center',
     marginBottom: 40,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border.light,
+    backgroundColor: Colors.white,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
   },
   optionsContainer: {
     gap: 16,

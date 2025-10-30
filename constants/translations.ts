@@ -1,8 +1,8 @@
 export type Language = 'cs' | 'en';
 
 export const LANGUAGES = [
-  { code: 'cs' as const, name: 'Čeština', flag: '🇨🇿' },
   { code: 'en' as const, name: 'English', flag: '🇬🇧' },
+  { code: 'cs' as const, name: 'Čeština', flag: '🇨🇿' },
 ] as const;
 
 const enTranslations = {
@@ -372,6 +372,8 @@ const enTranslations = {
     deleteFood: 'Delete Food',
     nutritionFacts: 'Nutrition Facts',
     mealType: 'Meal Type',
+    choosePhotoFromGallery: 'Choose photo from gallery',
+    enterNutritionManually: 'Enter nutrition info manually',
   },
   common: {
     cancel: 'Cancel',
@@ -761,6 +763,8 @@ export const translations = {
       deleteFood: 'Smazat jídlo',
       nutritionFacts: 'Nutriční hodnoty',
       mealType: 'Typ jídla',
+      choosePhotoFromGallery: 'Vybrat fotku z galerie',
+      enterNutritionManually: 'Zadat nutriční hodnoty ručně',
     },
     common: {
       cancel: 'Zrušit',

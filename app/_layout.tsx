@@ -47,8 +47,7 @@ function RootLayoutNav() {
         name="add-meal" 
         options={{ 
           presentation: "modal",
-          headerShown: true,
-          title: "Add Food"
+          headerShown: false
         }} 
       />
       <Stack.Screen 
@@ -62,24 +61,21 @@ function RootLayoutNav() {
         name="support" 
         options={{ 
           presentation: "modal",
-          headerShown: true,
-          title: "Support"
+          headerShown: false
         }} 
       />
       <Stack.Screen 
         name="privacy" 
         options={{ 
           presentation: "modal",
-          headerShown: true,
-          title: "Privacy Policy"
+          headerShown: false
         }} 
       />
       <Stack.Screen 
         name="terms" 
         options={{ 
           presentation: "modal",
-          headerShown: true,
-          title: "Terms of Service"
+          headerShown: false
         }} 
       />
     </Stack>
