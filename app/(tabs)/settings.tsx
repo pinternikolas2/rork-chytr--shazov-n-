@@ -478,7 +478,7 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: Colors.gold,
+    color: Colors.black,
     marginBottom: 8,
   },
   copyright: {
