@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useRouter } from 'expo-router';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -10,13 +11,14 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Scale, Droplets, Calendar } from 'lucide-react-native';
+import { Scale, Droplets, Calendar, BarChart3, TrendingDown } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
 export default function TrackingScreen() {
-  const { t, addWeightLog, addHydrationLog, weightLogs, hydrationLogs, getTodayHydration } = useApp();
+  const { t, addWeightLog, addHydrationLog, weightLogs, hydrationLogs, getTodayHydration, profile } = useApp();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
 
   const [weightInput, setWeightInput] = useState('');
   const [waterInput, setWaterInput] = useState('');
@@ -53,7 +55,15 @@ export default function TrackingScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.title}>{t.tracking.title}</Text>
+          <View style={styles.titleRow}>
+            <Text style={styles.title}>{t.tracking.title}</Text>
+            {(weightLogs.length > 0 || hydrationLogs.length > 0) && (
+              <Pressable style={styles.statsButton} onPress={() => router.push('/tracking-detail')}>
+                <BarChart3 size={20} color={Colors.gold} />
+                <Text style={styles.statsButtonText}>Statistiky</Text>
+              </Pressable>
+            )}
+          </View>
 
           <View style={styles.card}>
             <View style={styles.cardHeader}>
@@ -175,31 +185,57 @@ export default function TrackingScreen() {
             </Pressable>
           </View>
 
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <Calendar size={24} color={Colors.gold} />
-              <Text style={styles.cardTitle}>{t.tracking.history}</Text>
-            </View>
+          {weightLogs.length > 0 && (
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <Calendar size={24} color={Colors.gold} />
+                <Text style={styles.cardTitle}>{t.tracking.history}</Text>
+              </View>
 
-            {weightLogs.length === 0 ? (
-              <Text style={styles.emptyText}>No weight logs yet. Start tracking your weight!</Text>
-            ) : (
+              <View style={styles.quickStatsGrid}>
+                <View style={styles.quickStatItem}>
+                  <Text style={styles.quickStatValue}>
+                    {weightLogs[weightLogs.length - 1].weight.toFixed(1)}
+                  </Text>
+                  <Text style={styles.quickStatLabel}>Poslední váha (kg)</Text>
+                </View>
+                {profile && profile.role === 'fighter' && (
+                  <View style={styles.quickStatItem}>
+                    <View style={styles.quickStatValueRow}>
+                      {profile.currentWeight > profile.targetWeight ? (
+                        <TrendingDown size={20} color={Colors.gold} />
+                      ) : null}
+                      <Text style={styles.quickStatValue}>
+                        {(profile.currentWeight - profile.targetWeight).toFixed(1)}
+                      </Text>
+                    </View>
+                    <Text style={styles.quickStatLabel}>Zbývá shodit (kg)</Text>
+                  </View>
+                )}
+              </View>
+
               <View style={styles.historyList}>
-                {weightLogs.slice(-10).reverse().map((log) => (
+                {weightLogs.slice(-5).reverse().map((log) => (
                   <View key={log.id} style={styles.historyItem}>
                     <View>
                       <Text style={styles.historyValue}>
                         {log.weight.toFixed(1)} {t.common.kg}
                       </Text>
                       <Text style={styles.historyDate}>
-                        {log.date.toLocaleDateString()} - {t.tracking[log.time]}
+                        {log.date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short' })} - {t.tracking[log.time]}
                       </Text>
                     </View>
                   </View>
                 ))}
               </View>
-            )}
-          </View>
+
+              {weightLogs.length > 5 && (
+                <Pressable style={styles.seeAllButton} onPress={() => router.push('/tracking-detail')}>
+                  <Text style={styles.seeAllButtonText}>Zobrazit vše ({weightLogs.length} záznamů)</Text>
+                </Pressable>
+              )}
+            </View>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -222,11 +258,32 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 24,
   },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
   title: {
     fontSize: 32,
     fontWeight: '700' as const,
     color: Colors.textPrimary,
-    marginBottom: 24,
+  },
+  statsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.lightGray,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+  },
+  statsButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.gold,
   },
   card: {
     backgroundColor: Colors.white,
@@ -363,10 +420,46 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textSecondary,
   },
-  emptyText: {
-    fontSize: 14,
+  quickStatsGrid: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  quickStatItem: {
+    flex: 1,
+    backgroundColor: Colors.lightGray,
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+  },
+  quickStatValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  quickStatValue: {
+    fontSize: 22,
+    fontWeight: '700' as const,
+    color: Colors.gold,
+    marginBottom: 4,
+  },
+  quickStatLabel: {
+    fontSize: 11,
     color: Colors.textSecondary,
     textAlign: 'center',
-    paddingVertical: 20,
+  },
+  seeAllButton: {
+    backgroundColor: Colors.lightGray,
+    borderRadius: 8,
+    padding: 10,
+    alignItems: 'center',
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+  },
+  seeAllButtonText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: Colors.textPrimary,
   },
 });
