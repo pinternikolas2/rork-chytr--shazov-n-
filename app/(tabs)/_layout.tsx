@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Home, Activity, Swords, Brain, User } from "lucide-react-native";
+import { Home, Activity, Swords, Brain, User, UtensilsCrossed } from "lucide-react-native";
 import React from "react";
 import { Colors } from "@/constants/colors";
 import { useApp } from "@/contexts/AppContext";
@@ -36,6 +36,13 @@ export default function TabLayout() {
         options={{
           title: t.tracking.title,
           tabBarIcon: ({ color, size }) => <Activity color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="nutrition"
+        options={{
+          title: t.nutrition.title,
+          tabBarIcon: ({ color, size }) => <UtensilsCrossed color={color} size={size} />,
         }}
       />
       <Tabs.Screen

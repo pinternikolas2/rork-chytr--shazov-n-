@@ -75,16 +75,39 @@ export interface HydrationLog {
   sodiumMg?: number;
 }
 
+export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+
 export interface MealLog {
   id: string;
   date: Date;
+  name: string;
+  mealType?: MealType;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  sodiumMg: number;
+  fiber?: number;
+  notes?: string;
+  imageUri?: string;
+  customFoodId?: string;
+}
+
+export interface CustomFood {
+  id: string;
   name: string;
   calories: number;
   protein: number;
   carbs: number;
   fat: number;
   sodiumMg: number;
-  notes?: string;
+  fiber?: number;
+  servingSize?: string;
+  servingSizeGrams?: number;
+  category?: string;
+  imageUri?: string;
+  createdAt: Date;
+  usageCount: number;
 }
 
 export interface DailyProgress {
