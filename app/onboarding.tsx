@@ -15,10 +15,9 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { Target, Droplets, Shield, User, Briefcase } from 'lucide-react-native';
+import { Target, Droplets, Shield } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
-import { UserRole } from '@/constants/types';
 import { supabase } from '@/lib/supabase';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
@@ -52,7 +51,6 @@ export default function OnboardingScreen() {
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
   const [isRegistering, setIsRegistering] = useState(false);
   const [isLogin, setIsLogin] = useState(false);
 
@@ -66,7 +64,7 @@ export default function OnboardingScreen() {
       scrollViewRef.current?.scrollTo({ x: width * nextIndex, animated: true });
       setCurrentIndex(nextIndex);
     } else {
-      if (email && password && selectedRole) {
+      if (email && password) {
         await handleRegistration();
       }
     }
@@ -95,7 +93,7 @@ export default function OnboardingScreen() {
           password,
           options: {
             data: {
-              role: selectedRole,
+              role: 'fighter',
             },
           },
         });
@@ -178,7 +176,7 @@ export default function OnboardingScreen() {
     }
   };
 
-  const isLastSlideValid = email.trim() !== '' && password.length >= 6 && (isLogin || selectedRole !== null);
+  const isLastSlideValid = email.trim() !== '' && password.length >= 6;
 
   const handleSkip = async () => {
     router.replace('/profile-setup');
@@ -229,17 +227,21 @@ export default function OnboardingScreen() {
             
             <View style={styles.oauthButtons}>
               {Platform.OS === 'ios' && (
-                <Pressable style={styles.oauthButton} onPress={handleAppleAuth}>
+                <Pressable style={styles.appleButton} onPress={handleAppleAuth}>
                   <View style={styles.oauthContent}>
-                    <Text style={styles.oauthIcon}>🍎</Text>
-                    <Text style={styles.oauthText}>{t.auth.continueWithApple}</Text>
+                    <View style={styles.appleLogo}>
+                      <Text style={styles.appleLogoText}></Text>
+                    </View>
+                    <Text style={styles.appleText}>{t.auth.continueWithApple}</Text>
                   </View>
                 </Pressable>
               )}
-              <Pressable style={styles.oauthButton} onPress={handleGoogleAuth}>
+              <Pressable style={styles.googleButton} onPress={handleGoogleAuth}>
                 <View style={styles.oauthContent}>
-                  <Text style={styles.oauthIcon}>🔵</Text>
-                  <Text style={styles.oauthText}>{t.auth.continueWithGoogle}</Text>
+                  <View style={styles.googleLogo}>
+                    <Text style={styles.googleLogoText}>G</Text>
+                  </View>
+                  <Text style={styles.googleText}>{t.auth.continueWithGoogle}</Text>
                 </View>
               </Pressable>
             </View>
@@ -249,32 +251,6 @@ export default function OnboardingScreen() {
               <Text style={styles.dividerText}>{t.auth.orContinueWith}</Text>
               <View style={styles.dividerLine} />
             </View>
-            
-            {!isLogin && (
-              <View style={styles.roleSelection}>
-                <Text style={styles.roleLabel}>{t.profile.accountType}</Text>
-                <View style={styles.roleButtons}>
-                  <Pressable
-                    style={[styles.roleButton, selectedRole === 'fighter' && styles.roleButtonActive]}
-                    onPress={() => setSelectedRole('fighter')}
-                  >
-                    <User size={24} color={selectedRole === 'fighter' ? Colors.gold : Colors.textSecondary} />
-                    <Text style={[styles.roleButtonText, selectedRole === 'fighter' && styles.roleButtonTextActive]}>
-                      {t.profile.fighter}
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    style={[styles.roleButton, selectedRole === 'coach' && styles.roleButtonActive]}
-                    onPress={() => setSelectedRole('coach')}
-                  >
-                    <Briefcase size={24} color={selectedRole === 'coach' ? Colors.gold : Colors.textSecondary} />
-                    <Text style={[styles.roleButtonText, selectedRole === 'coach' && styles.roleButtonTextActive]}>
-                      {t.profile.coach}
-                    </Text>
-                  </Pressable>
-                </View>
-              </View>
-            )}
 
             <View style={styles.registrationForm}>
               <TextInput
@@ -420,7 +396,12 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 24,
   },
-  oauthButton: {
+  appleButton: {
+    backgroundColor: Colors.black,
+    borderRadius: 12,
+    padding: 16,
+  },
+  googleButton: {
     backgroundColor: Colors.white,
     borderRadius: 12,
     padding: 16,
@@ -433,10 +414,37 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 12,
   },
-  oauthIcon: {
-    fontSize: 20,
+  appleLogo: {
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  oauthText: {
+  appleLogoText: {
+    fontSize: 20,
+    fontWeight: '600' as const,
+    color: Colors.white,
+  },
+  appleText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.white,
+  },
+  googleLogo: {
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.white,
+    borderRadius: 2,
+  },
+  googleLogoText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#4285F4',
+    fontFamily: Platform.select({ ios: 'System', android: 'Roboto' }),
+  },
+  googleText: {
     fontSize: 16,
     fontWeight: '600' as const,
     color: Colors.textPrimary,
@@ -464,44 +472,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 16,
     fontWeight: '600' as const,
-  },
-  roleSelection: {
-    marginTop: 16,
-    marginBottom: 16,
-  },
-  roleLabel: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: Colors.textSecondary,
-    textTransform: 'uppercase' as const,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  roleButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  roleButton: {
-    flex: 1,
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    gap: 6,
-    borderWidth: 2,
-    borderColor: Colors.border.light,
-  },
-  roleButtonActive: {
-    borderColor: Colors.gold,
-    backgroundColor: Colors.lightGray,
-  },
-  roleButtonText: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: Colors.textSecondary,
-  },
-  roleButtonTextActive: {
-    color: Colors.gold,
   },
   registrationForm: {
     gap: 12,
