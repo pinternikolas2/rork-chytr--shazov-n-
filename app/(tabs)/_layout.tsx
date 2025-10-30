@@ -15,11 +15,20 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: Colors.white,
           borderTopColor: Colors.border.light,
-          borderTopWidth: 1,
+          borderTopWidth: 0.5,
+          elevation: 0,
+          shadowColor: Colors.black,
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.05,
+          shadowRadius: 8,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: '600',
+          marginTop: 4,
+        },
+        tabBarIconStyle: {
+          marginTop: 4,
         },
         headerShown: false,
       }}
@@ -28,42 +37,78 @@ export default function TabLayout() {
         name="index"
         options={{
           title: t.dashboard.title,
-          tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Home 
+              color={color} 
+              size={focused ? 26 : 24} 
+              strokeWidth={focused ? 2.5 : 2}
+            />
+          ),
         }}
       />
       <Tabs.Screen
         name="tracking"
         options={{
           title: t.tracking.title,
-          tabBarIcon: ({ color, size }) => <Activity color={color} size={size} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Activity 
+              color={color} 
+              size={focused ? 26 : 24} 
+              strokeWidth={focused ? 2.5 : 2}
+            />
+          ),
         }}
       />
       <Tabs.Screen
         name="nutrition"
         options={{
           title: t.nutrition.title,
-          tabBarIcon: ({ color, size }) => <UtensilsCrossed color={color} size={size} />,
+          tabBarIcon: ({ color, focused }) => (
+            <UtensilsCrossed 
+              color={color} 
+              size={focused ? 26 : 24} 
+              strokeWidth={focused ? 2.5 : 2}
+            />
+          ),
         }}
       />
       <Tabs.Screen
         name="fights"
         options={{
           title: t.fights.title,
-          tabBarIcon: ({ color, size }) => <Swords color={color} size={size} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Swords 
+              color={color} 
+              size={focused ? 26 : 24} 
+              strokeWidth={focused ? 2.5 : 2}
+            />
+          ),
         }}
       />
       <Tabs.Screen
         name="ai"
         options={{
           title: t.ai.title,
-          tabBarIcon: ({ color, size }) => <Brain color={color} size={size} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Brain 
+              color={color} 
+              size={focused ? 26 : 24} 
+              strokeWidth={focused ? 2.5 : 2}
+            />
+          ),
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: t.settings.title,
-          tabBarIcon: ({ color, size }) => <User color={color} size={size} />,
+          tabBarIcon: ({ color, focused }) => (
+            <User 
+              color={color} 
+              size={focused ? 26 : 24} 
+              strokeWidth={focused ? 2.5 : 2}
+            />
+          ),
         }}
       />
     </Tabs>
