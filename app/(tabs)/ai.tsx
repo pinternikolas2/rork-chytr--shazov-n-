@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Brain, Send, Sparkles } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
+import { generateText } from '@rork/toolkit-sdk';
 
 type Message = {
   id: string;
@@ -57,33 +58,24 @@ export default function AIScreen() {
     }, 100);
 
     try {
-      const context = `
-You are an expert AI weight-cutting coach for combat sports athletes. You provide safe, science-based advice on weight cutting, hydration, nutrition, and recovery.
+      const context = `You are an expert AI weight-cutting coach for combat sports athletes. You provide safe, science-based advice on weight cutting, hydration, nutrition, and recovery.
 
 Current fighter profile:
 - Name: ${profile?.fullName || 'Unknown'}
-- Current weight: ${profile?.currentWeight || 'Unknown'} kg
-- Target weight: ${profile?.targetWeight || 'Unknown'} kg
+- Current weight: ${profile && profile.role === 'fighter' ? profile.currentWeight : 'Unknown'} kg
+- Target weight: ${profile && profile.role === 'fighter' ? profile.targetWeight : 'Unknown'} kg
 - Discipline: ${profile?.discipline || 'Unknown'}
 ${upcomingFight ? `- Next fight: ${upcomingFight.name} on ${upcomingFight.date.toLocaleDateString()}` : '- No upcoming fight scheduled'}
 
-Provide clear, actionable, and safe advice. Always prioritize fighter safety and health.
-`;
+Provide clear, actionable, and safe advice. Always prioritize fighter safety and health.`;
 
-      const response = await fetch('https://toolkit.rork.com/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [
-            { role: 'system', content: context },
-            ...chatMessages.map((m) => ({ role: m.role, content: m.content })),
-            { role: 'user', content: message },
-          ],
-        }),
+      const aiResponse = await generateText({
+        messages: [
+          { role: 'user', content: context },
+          ...chatMessages.map((m) => ({ role: m.role, content: m.content })),
+          { role: 'user', content: message },
+        ],
       });
-
-      const data = await response.json();
-      const aiResponse = data.choices?.[0]?.message?.content || 'Sorry, I could not generate a response.';
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
