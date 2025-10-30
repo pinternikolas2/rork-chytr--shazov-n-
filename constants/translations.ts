@@ -28,6 +28,12 @@ const enTranslations = {
       title: 'Cut Weight Safely',
       description: 'AI advisor guides you through every step to weigh-in',
     },
+    registration: {
+      title: 'Create Account',
+      subtitle: 'Choose your role and register',
+      emailPlaceholder: 'Email',
+      passwordPlaceholder: 'Password (min 6 characters)',
+    },
   },
   profile: {
     title: 'Your Profile',
@@ -42,6 +48,7 @@ const enTranslations = {
     currentWeight: 'Current Weight (kg)',
     targetWeight: 'Target Weight (kg)',
     weightClass: 'Weight Class',
+    targetFightDate: 'Target Fight Date',
     discipline: 'Discipline',
     fightDate: 'Fight Date',
     cuttingStartDate: 'Cutting Start Date',
@@ -53,7 +60,6 @@ const enTranslations = {
     genders: {
       male: 'Male',
       female: 'Female',
-      other: 'Other',
     },
     disciplines: {
       mma: 'MMA',
@@ -139,6 +145,11 @@ const enTranslations = {
     location: 'Location',
     notes: 'Notes',
     weighInTime: 'Weigh-In Time',
+    weighInTiming: 'Weigh-In Timing',
+    weighInTimings: {
+      dayOf: 'Day of Fight',
+      dayBefore: 'Day Before Fight',
+    },
     delete: 'Delete Fight',
   },
   ai: {
@@ -358,6 +369,12 @@ export const translations = {
         title: 'Shazujte bezpečně',
         description: 'AI poradce vás provede každým krokem až k vážení',
       },
+      registration: {
+        title: 'Vytvořit účet',
+        subtitle: 'Vyberte svou roli a zaregistrujte se',
+        emailPlaceholder: 'E-mail',
+        passwordPlaceholder: 'Heslo (min 6 znaků)',
+      },
     },
     profile: {
       title: 'Váš profil',
@@ -372,6 +389,7 @@ export const translations = {
       currentWeight: 'Aktuální váha (kg)',
       targetWeight: 'Cílová váha (kg)',
       weightClass: 'Váhová kategorie',
+      targetFightDate: 'Cílové datum zápasu',
       discipline: 'Disciplína',
       fightDate: 'Datum zápasu',
       cuttingStartDate: 'Začátek shazování',
@@ -383,7 +401,6 @@ export const translations = {
       genders: {
         male: 'Muž',
         female: 'Žena',
-        other: 'Jiné',
       },
       disciplines: {
         mma: 'MMA',
@@ -469,6 +486,11 @@ export const translations = {
       location: 'Místo',
       notes: 'Poznámky',
       weighInTime: 'Čas vážení',
+      weighInTiming: 'Načasování vážení',
+      weighInTimings: {
+        dayOf: 'V den zápasu',
+        dayBefore: 'Den před zápasem',
+      },
       delete: 'Smazat zápas',
     },
     ai: {

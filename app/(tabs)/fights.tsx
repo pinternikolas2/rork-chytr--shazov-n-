@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Plus, Swords, Calendar, X, Trash2 } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
+import { WeighInTiming } from '@/constants/types';
 
 export default function FightsScreen() {
   const { t, fights, addFight, deleteFight } = useApp();
@@ -24,6 +25,7 @@ export default function FightsScreen() {
   const [opponent, setOpponent] = useState('');
   const [weightClass, setWeightClass] = useState('');
   const [fightDate, setFightDate] = useState('');
+  const [weighInTiming, setWeighInTiming] = useState<WeighInTiming>('dayBefore');
   const [location, setLocation] = useState('');
 
   const handleAddFight = async () => {
@@ -46,6 +48,7 @@ export default function FightsScreen() {
       opponent: opponent || 'TBD',
       weightClass: weightClass || 'N/A',
       date,
+      weighInTiming,
       location,
     });
 
@@ -53,6 +56,7 @@ export default function FightsScreen() {
     setOpponent('');
     setWeightClass('');
     setFightDate('');
+    setWeighInTiming('dayBefore');
     setLocation('');
     setIsModalVisible(false);
   };
@@ -224,6 +228,28 @@ export default function FightsScreen() {
                     placeholder="DD/MM/YYYY"
                     placeholderTextColor={Colors.textLight}
                   />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>{t.fights.weighInTiming}</Text>
+                  <View style={styles.timingButtons}>
+                    <Pressable
+                      style={[styles.timingButton, weighInTiming === 'dayBefore' && styles.timingButtonActive]}
+                      onPress={() => setWeighInTiming('dayBefore')}
+                    >
+                      <Text style={[styles.timingButtonText, weighInTiming === 'dayBefore' && styles.timingButtonTextActive]}>
+                        {t.fights.weighInTimings.dayBefore}
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      style={[styles.timingButton, weighInTiming === 'dayOf' && styles.timingButtonActive]}
+                      onPress={() => setWeighInTiming('dayOf')}
+                    >
+                      <Text style={[styles.timingButtonText, weighInTiming === 'dayOf' && styles.timingButtonTextActive]}>
+                        {t.fights.weighInTimings.dayOf}
+                      </Text>
+                    </Pressable>
+                  </View>
                 </View>
 
                 <View style={styles.inputGroup}>
@@ -444,5 +470,30 @@ const styles = StyleSheet.create({
     color: Colors.black,
     fontSize: 18,
     fontWeight: '700' as const,
+  },
+  timingButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  timingButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: Colors.white,
+    borderWidth: 2,
+    borderColor: Colors.border.light,
+    alignItems: 'center',
+  },
+  timingButtonActive: {
+    borderColor: Colors.gold,
+    backgroundColor: Colors.lightGray,
+  },
+  timingButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+  },
+  timingButtonTextActive: {
+    color: Colors.gold,
   },
 });

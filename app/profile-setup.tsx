@@ -28,6 +28,7 @@ export default function ProfileSetupScreen() {
   const [currentWeight, setCurrentWeight] = useState('');
   const [targetWeight, setTargetWeight] = useState('');
   const [weightClass, setWeightClass] = useState('');
+  const [targetFightDate, setTargetFightDate] = useState('');
   const [discipline, setDiscipline] = useState<Discipline>('mma');
   const [dietType, setDietType] = useState<DietType>('standard');
   const [trainingIntensity, setTrainingIntensity] = useState<TrainingIntensity>('moderate');
@@ -35,13 +36,25 @@ export default function ProfileSetupScreen() {
   const [trainerName, setTrainerName] = useState('');
 
   const disciplines: Discipline[] = ['mma', 'boxing', 'wrestling', 'bjj', 'muayThai', 'kickboxing'];
-  const genders: Gender[] = ['male', 'female', 'other'];
+  const genders: Gender[] = ['male', 'female'];
   const dietTypes: DietType[] = ['standard', 'keto', 'paleo', 'vegetarian', 'vegan', 'other'];
   const trainingIntensities: TrainingIntensity[] = ['low', 'moderate', 'high', 'professional'];
 
   const handleComplete = async () => {
-    if (!fullName || !age || !height || !currentWeight || !targetWeight || !weightClass) {
+    if (!fullName || !age || !height || !currentWeight || !targetWeight || !weightClass || !targetFightDate) {
       return;
+    }
+
+    const dateParts = targetFightDate.split('/');
+    let fightDate: Date;
+    
+    if (dateParts.length === 3) {
+      const day = parseInt(dateParts[0], 10);
+      const month = parseInt(dateParts[1], 10) - 1;
+      const year = parseInt(dateParts[2], 10);
+      fightDate = new Date(year, month, day);
+    } else {
+      fightDate = new Date(targetFightDate);
     }
 
     await completeOnboarding({
@@ -70,7 +83,8 @@ export default function ProfileSetupScreen() {
     height !== '' &&
     currentWeight !== '' &&
     targetWeight !== '' &&
-    weightClass.trim() !== '';
+    weightClass.trim() !== '' &&
+    targetFightDate.trim() !== '';
 
   return (
     <View style={[styles.container, { backgroundColor: Colors.white }]}>
@@ -186,6 +200,17 @@ export default function ProfileSetupScreen() {
                 value={weightClass}
                 onChangeText={setWeightClass}
                 placeholder="77 kg"
+                placeholderTextColor={Colors.textLight}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t.profile.targetFightDate}</Text>
+              <TextInput
+                style={styles.input}
+                value={targetFightDate}
+                onChangeText={setTargetFightDate}
+                placeholder="DD/MM/YYYY"
                 placeholderTextColor={Colors.textLight}
               />
             </View>

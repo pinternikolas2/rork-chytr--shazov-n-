@@ -2,7 +2,7 @@ import { Language } from './translations';
 
 export type UserRole = 'fighter' | 'coach';
 
-export type Gender = 'male' | 'female' | 'other';
+export type Gender = 'male' | 'female';
 
 export type Discipline = 'mma' | 'boxing' | 'wrestling' | 'bjj' | 'muayThai' | 'kickboxing';
 
@@ -45,6 +45,8 @@ export interface CoachProfile extends UserProfile {
   specializations?: Discipline[];
 }
 
+export type WeighInTiming = 'dayOf' | 'dayBefore';
+
 export interface Fight {
   id: string;
   name: string;
@@ -52,6 +54,7 @@ export interface Fight {
   weightClass: string;
   date: Date;
   weighInTime?: Date;
+  weighInTiming: WeighInTiming;
   location?: string;
   notes?: string;
 }
