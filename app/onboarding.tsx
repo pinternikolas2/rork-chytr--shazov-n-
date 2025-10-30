@@ -181,24 +181,7 @@ export default function OnboardingScreen() {
   const isLastSlideValid = email.trim() !== '' && password.length >= 6 && (isLogin || selectedRole !== null);
 
   const handleSkip = async () => {
-    try {
-      const { data } = await supabase.auth.signUp({
-        email: `skip_${Date.now()}@temp.com`,
-        password: Math.random().toString(36).slice(-12) + 'Aa1!',
-        options: {
-          data: {
-            role: 'fighter',
-          },
-        },
-      });
-      
-      if (data.user) {
-        router.replace('/profile-setup');
-      }
-    } catch (error) {
-      console.error('Skip registration error:', error);
-      router.replace('/profile-setup');
-    }
+    router.replace('/profile-setup');
   };
 
   return (
