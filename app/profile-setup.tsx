@@ -12,6 +12,7 @@ import {
   View,
   Alert,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import { Discipline, DietType, Gender, TrainingIntensity } from '@/constants/types';
@@ -20,7 +21,7 @@ import { supabase } from '@/lib/supabase';
 
 export default function ProfileSetupScreen() {
   const router = useRouter();
-  const { t, completeOnboarding } = useApp();
+  const { t, settings, completeOnboarding } = useApp();
   const insets = useSafeAreaInsets();
 
   const [fullName, setFullName] = useState('');
@@ -30,7 +31,8 @@ export default function ProfileSetupScreen() {
   const [currentWeight, setCurrentWeight] = useState('');
   const [targetWeight, setTargetWeight] = useState('');
   const [weightClass, setWeightClass] = useState('');
-  const [targetFightDate, setTargetFightDate] = useState('');
+  const [targetFightDate, setTargetFightDate] = useState<Date | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [discipline, setDiscipline] = useState<Discipline>('mma');
   const [dietType, setDietType] = useState<DietType>('standard');
   const [trainingIntensity, setTrainingIntensity] = useState<TrainingIntensity>('moderate');
@@ -48,33 +50,19 @@ export default function ProfileSetupScreen() {
     }
 
     try {
-      let user;
+      let userId: string;
       const { data: { user: authUser } } = await supabase.auth.getUser();
       
       if (!authUser) {
-        const { data } = await supabase.auth.signUp({
-          email: `user_${Date.now()}@temp.com`,
-          password: Math.random().toString(36).slice(-12) + 'Aa1!',
-          options: {
-            data: {
-              role: 'fighter',
-            },
-          },
-        });
-        user = data.user;
+        userId = `temp_${Date.now()}`;
       } else {
-        user = authUser;
-      }
-      
-      if (!user) {
-        Alert.alert(t.common.error, 'Nepodařilo se vytvořit uživatele');
-        return;
+        userId = authUser.id;
       }
 
-      const role = user.user_metadata?.role || 'fighter';
+      const role = authUser?.user_metadata?.role || 'fighter';
 
       await completeOnboarding({
-        id: user.id,
+        id: userId,
         role,
         fullName,
         age: parseInt(age, 10),
@@ -83,6 +71,7 @@ export default function ProfileSetupScreen() {
         currentWeight: parseFloat(currentWeight),
         targetWeight: parseFloat(targetWeight),
         weightClass,
+        targetFightDate: targetFightDate,
         discipline,
         dietType,
         trainingIntensity,
@@ -104,7 +93,7 @@ export default function ProfileSetupScreen() {
     currentWeight !== '' &&
     targetWeight !== '' &&
     weightClass.trim() !== '' &&
-    targetFightDate.trim() !== '';
+    targetFightDate !== null;
 
   return (
     <View style={[styles.container, { backgroundColor: Colors.white }]}>
@@ -226,13 +215,30 @@ export default function ProfileSetupScreen() {
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t.profile.targetFightDate}</Text>
-              <TextInput
-                style={styles.input}
-                value={targetFightDate}
-                onChangeText={setTargetFightDate}
-                placeholder="DD/MM/YYYY"
-                placeholderTextColor={Colors.textLight}
-              />
+              <Pressable
+                style={styles.datePickerButton}
+                onPress={() => setShowDatePicker(true)}
+              >
+                <Text style={[styles.datePickerText, !targetFightDate && styles.datePickerPlaceholder]}>
+                  {targetFightDate
+                    ? targetFightDate.toLocaleDateString(settings.language === 'cs' ? 'cs-CZ' : 'en-US')
+                    : 'DD/MM/YYYY'}
+                </Text>
+              </Pressable>
+              {showDatePicker && (
+                <DateTimePicker
+                  value={targetFightDate || new Date()}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  minimumDate={new Date()}
+                  onChange={(event, selectedDate) => {
+                    setShowDatePicker(Platform.OS === 'ios');
+                    if (selectedDate) {
+                      setTargetFightDate(selectedDate);
+                    }
+                  }}
+                />
+              )}
             </View>
 
             <View style={styles.inputGroup}>
@@ -444,5 +450,19 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 18,
     fontWeight: '700' as const,
+  },
+  datePickerButton: {
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+  },
+  datePickerText: {
+    fontSize: 16,
+    color: Colors.textPrimary,
+  },
+  datePickerPlaceholder: {
+    color: Colors.textLight,
   },
 });

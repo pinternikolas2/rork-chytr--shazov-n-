@@ -25,6 +25,7 @@ export interface FighterProfile extends UserProfile {
   currentWeight: number;
   targetWeight: number;
   weightClass: string;
+  targetFightDate?: Date;
   cuttingStartDate?: Date;
   dietType: DietType;
   trainingIntensity: TrainingIntensity;
