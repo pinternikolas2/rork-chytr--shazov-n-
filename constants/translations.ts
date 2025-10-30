@@ -361,6 +361,7 @@ const enTranslations = {
     editFood: 'Edit Food',
     deleteFood: 'Delete Food',
     nutritionFacts: 'Nutrition Facts',
+    mealType: 'Meal Type',
   },
   common: {
     cancel: 'Cancel',
@@ -739,6 +740,7 @@ export const translations = {
       editFood: 'Upravit jídlo',
       deleteFood: 'Smazat jídlo',
       nutritionFacts: 'Nutriční hodnoty',
+      mealType: 'Typ jídla',
     },
     common: {
       cancel: 'Zrušit',

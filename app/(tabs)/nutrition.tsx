@@ -2,12 +2,14 @@
 import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Plus, Camera, Flame, Drumstick, Wheat, Droplet, Pizza } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
 export default function NutritionScreen() {
   const { t, getTodayNutrition, getNutritionGoals, getTodayMeals } = useApp();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
 
   const todayNutrition = getTodayNutrition();
   const goals = getNutritionGoals();
@@ -68,7 +70,7 @@ export default function NutritionScreen() {
           <Text style={styles.title}>{t.nutrition.title}</Text>
           <Pressable
             style={styles.addButton}
-            onPress={() => {  }}
+            onPress={() => router.push('/add-meal')}
           >
             <Plus size={20} color={Colors.black} />
           </Pressable>
@@ -120,7 +122,7 @@ export default function NutritionScreen() {
               <Text style={styles.emptyDescription}>{t.nutrition.startLogging}</Text>
               <Pressable
                 style={styles.scanButton}
-                onPress={() => {  }}
+                onPress={() => router.push('/add-meal')}
               >
                 <Camera size={20} color={Colors.black} />
                 <Text style={styles.scanButtonText}>{t.nutrition.scanFood}</Text>
