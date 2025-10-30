@@ -35,7 +35,7 @@ const nutritionSchema = z.object({
 type NutritionData = z.infer<typeof nutritionSchema>;
 
 export default function AddMealScreen() {
-  const { t, addMealLog, addCustomFood } = useApp();
+  const { t, addMealLog, addCustomFood, settings } = useApp();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [mode, setMode] = useState<'select' | 'camera' | 'edit'>('select');
@@ -60,7 +60,7 @@ export default function AddMealScreen() {
     if (!cameraPermission || !cameraPermission.granted) {
       const result = await requestCameraPermission();
       if (!result.granted) {
-        Alert.alert(t.common.error, 'Camera permission required');
+        Alert.alert(t.common.error, t.nutrition.cameraPermissionRequired);
         return;
       }
     }
@@ -104,7 +104,7 @@ export default function AddMealScreen() {
       }
     } catch (error) {
       console.error('Error capturing photo:', error);
-      Alert.alert(t.common.error, 'Failed to capture photo');
+      Alert.alert(t.common.error, t.nutrition.failedToCapture);
     }
   };
 
@@ -113,6 +113,10 @@ export default function AddMealScreen() {
     setMode('edit');
     
     try {
+      const analyzePrompt = settings.language === 'cs' 
+        ? 'Analyzuj tento obrázek jídla a poskytni podrobné nutriční informace. Pokud vidíš více položek, poskytni celkové hodnoty pro všechny položky dohromady. Buď co nejpřesnější s odhady. Název jídla musí být v češtině. Popis porce také v češtině.'
+        : 'Analyze this food image and provide detailed nutrition information. If you see multiple items, provide total values for all items combined. Be as accurate as possible with estimates.';
+
       const result = await generateObject({
         messages: [
           {
@@ -120,7 +124,7 @@ export default function AddMealScreen() {
             content: [
               {
                 type: 'text',
-                text: 'Analyze this food image and provide detailed nutrition information. If you see multiple items, provide total values for all items combined. Be as accurate as possible with estimates.',
+                text: analyzePrompt,
               },
               {
                 type: 'image',
@@ -135,11 +139,11 @@ export default function AddMealScreen() {
       setNutritionData({
         ...result,
         fiber: result.fiber || 0,
-        servingSize: result.servingSize || '1 serving',
+        servingSize: result.servingSize || (settings.language === 'cs' ? '1 porce' : '1 serving'),
       });
     } catch (error) {
       console.error('Error analyzing food:', error);
-      Alert.alert(t.common.error, 'Failed to analyze food. Please enter manually.');
+      Alert.alert(t.common.error, t.nutrition.failedToAnalyze);
       setNutritionData({
         name: '',
         calories: 0,
@@ -148,7 +152,7 @@ export default function AddMealScreen() {
         fat: 0,
         sodium: 0,
         fiber: 0,
-        servingSize: '1 serving',
+        servingSize: settings.language === 'cs' ? '1 porce' : '1 serving',
       });
     } finally {
       setIsAnalyzing(false);
@@ -162,12 +166,12 @@ export default function AddMealScreen() {
 
   const handleSave = async () => {
     if (!nutritionData.name.trim()) {
-      Alert.alert(t.common.error, 'Please enter food name');
+      Alert.alert(t.common.error, t.nutrition.enterFoodName);
       return;
     }
 
     if (nutritionData.calories <= 0) {
-      Alert.alert(t.common.error, 'Please enter valid calories');
+      Alert.alert(t.common.error, t.nutrition.enterValidCalories);
       return;
     }
 
@@ -206,7 +210,7 @@ export default function AddMealScreen() {
       router.back();
     } catch (error) {
       console.error('Error saving meal:', error);
-      Alert.alert(t.common.error, 'Failed to save meal');
+      Alert.alert(t.common.error, t.nutrition.failedToSave);
     }
   };
 
@@ -296,7 +300,7 @@ export default function AddMealScreen() {
               onChangeText={(text) =>
                 setNutritionData({ ...nutritionData, name: text })
               }
-              placeholder="e.g., Chicken Breast"
+              placeholder={settings.language === 'cs' ? 'např. Kuřecí prsa' : 'e.g., Chicken Breast'}
               placeholderTextColor={Colors.textLight}
             />
           </View>
@@ -309,7 +313,7 @@ export default function AddMealScreen() {
               onChangeText={(text) =>
                 setNutritionData({ ...nutritionData, servingSize: text })
               }
-              placeholder="e.g., 100g"
+              placeholder={settings.language === 'cs' ? 'např. 100g' : 'e.g., 100g'}
               placeholderTextColor={Colors.textLight}
             />
           </View>

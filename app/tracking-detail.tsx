@@ -153,33 +153,44 @@ export default function TrackingDetailScreen() {
       return (
         <View style={styles.emptyChart}>
           <Text style={styles.emptyText}>Nedostatek dat pro graf</Text>
+          <Text style={styles.emptySubtext}>Začněte zaznamenávat hydrataci každý den</Text>
         </View>
       );
     }
 
     const chartWidth = screenWidth - 80;
-    const chartHeight = 180;
+    const chartHeight = 200;
     const days = Array.from(hydrationStats.dailyTotals.entries()).slice(-7);
-    const barWidth = (chartWidth - 60) / days.length;
-    const maxAmount = hydrationStats.max;
+    const barWidth = Math.max(30, (chartWidth - 60) / Math.max(days.length, 1));
+    const maxAmount = Math.max(hydrationStats.max, 1000);
+    const minHeight = 10;
+    const maxBarHeight = chartHeight - 60;
 
     return (
       <View style={[styles.barChart, { width: chartWidth, height: chartHeight }]}>
-        {days.map(([date, amount], i) => {
-          const barHeight = (amount / maxAmount) * (chartHeight - 40);
-          const dateObj = new Date(date);
-          const dayLabel = dateObj.toLocaleDateString('cs-CZ', { weekday: 'short' });
-          
-          return (
-            <View key={i} style={[styles.barContainer, { width: barWidth }]}>
-              <View style={styles.barWrapper}>
-                <Text style={styles.barValue}>{Math.round(amount / 1000)}L</Text>
-                <View style={[styles.bar, { height: Math.max(barHeight, 5) }]} />
+        {days.length > 0 ? (
+          days.map(([date, amount], i) => {
+            const barHeight = Math.max(minHeight, (amount / maxAmount) * maxBarHeight);
+            const dateObj = new Date(date);
+            const dayLabel = dateObj.toLocaleDateString('cs-CZ', { weekday: 'short' });
+            
+            return (
+              <View key={i} style={[styles.barContainer, { width: barWidth }]}>
+                <View style={styles.barWrapper}>
+                  <Text style={styles.barValue}>
+                    {amount >= 1000 ? `${Math.round(amount / 1000)}L` : `${amount}ml`}
+                  </Text>
+                  <View style={[styles.bar, { height: barHeight }]} />
+                </View>
+                <Text style={styles.barLabel}>{dayLabel}</Text>
               </View>
-              <Text style={styles.barLabel}>{dayLabel}</Text>
-            </View>
-          );
-        })}
+            );
+          })
+        ) : (
+          <View style={styles.emptyChart}>
+            <Text style={styles.emptyText}>Nedostatek dat</Text>
+          </View>
+        )}
       </View>
     );
   };
@@ -522,14 +533,21 @@ const styles = StyleSheet.create({
     height: 180,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
   },
   emptyText: {
     fontSize: 14,
+    fontWeight: '600' as const,
     color: Colors.textSecondary,
+  },
+  emptySubtext: {
+    fontSize: 12,
+    color: Colors.textLight,
   },
   barChart: {
     flexDirection: 'row',
     alignItems: 'flex-end',
+    justifyContent: 'center',
     gap: 8,
   },
   barContainer: {
@@ -545,7 +563,8 @@ const styles = StyleSheet.create({
     width: '80%',
     backgroundColor: Colors.gold,
     borderRadius: 4,
-    minHeight: 5,
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
   },
   barValue: {
     fontSize: 10,

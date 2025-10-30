@@ -197,11 +197,16 @@ export default function DashboardScreen() {
                  safetyStatus.level === 'caution' ? t.dashboard.cautionRequired : t.dashboard.dangerAction}
               </Text>
             </View>
-            <Text style={styles.safetyMessage}>{safetyStatus.level === 'safe' && safetyStatus.message === 'Not enough data to assess safety' ? t.dashboard.notEnoughData : safetyStatus.message}</Text>
+            <Text style={styles.safetyMessage}>{safetyStatus.level === 'safe' && safetyStatus.message === 'Not enough data to assess safety' ? t.dashboard.notEnoughData : (
+              safetyStatus.message === 'Weight goal achieved - focus on maintenance' ? t.dashboard.weightGoalAchieved : safetyStatus.message
+            )}</Text>
             <View style={styles.recommendationsList}>
               {safetyStatus.recommendations.slice(0, 3).map((rec, idx) => {
                 let translatedRec = rec;
                 if (rec === 'Continue logging weight daily for accurate tracking') translatedRec = t.dashboard.continueLogging;
+                if (rec === 'Immediately increase calorie intake') translatedRec = t.dashboard.immediatelyIncreaseCalories;
+                if (rec === 'Consult with a nutritionist or coach') translatedRec = t.dashboard.consultNutritionist;
+                if (rec === 'Consider adjusting target weight or timeline') translatedRec = t.dashboard.considerAdjustingTarget;
                 return <Text key={idx} style={styles.recommendationItem}>• {translatedRec}</Text>;
               })}
             </View>
