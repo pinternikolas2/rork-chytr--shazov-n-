@@ -114,6 +114,12 @@ const enTranslations = {
     weightCutStatus: 'Weight Cut Status: Safe',
     cautionRequired: 'Caution Required',
     dangerAction: 'Danger - Immediate Action Needed',
+    safetyStatus: 'Weight Cut Status: Safe',
+    notEnoughData: 'Not enough data to assess safety',
+    continueLogging: 'Continue logging weight daily for accurate tracking',
+    maintainTraining: 'Maintain training intensity and normal nutrition',
+    focusTechnique: 'Focus on technique and conditioning',
+    maintainConsistent: 'Maintain consistent training and nutrition. Focus on technique refinement and gradual fat loss.',
   },
   tracking: {
     title: 'Tracking',
@@ -161,6 +167,8 @@ const enTranslations = {
     cuttingTips: 'Cutting Tips',
     recovery: 'Recovery',
     generating: 'Generating response...',
+    askMeAnything: 'Ask me anything!',
+    helpText: 'I\'m here to help you with your weight cutting journey. Get personalized advice on hydration, nutrition, and recovery.',
   },
   settings: {
     title: 'Settings',
@@ -493,6 +501,12 @@ export const translations = {
       weightCutStatus: 'Stav shazování váhy: Bezpečné',
       cautionRequired: 'Vyžadována opatrnost',
       dangerAction: 'Nebezpečí - Okamžitá akce vyžadována',
+      safetyStatus: 'Stav shazování váhy: Bezpečné',
+      notEnoughData: 'Nedostatek dat pro vyhodnocení bezpečnosti',
+      continueLogging: 'Pokračujte v denním zaznamenávání váhy pro přesné sledování',
+      maintainTraining: 'Udržujte tréninkovou intenzitu a normální výživu',
+      focusTechnique: 'Zaměřte se na techniku a kondici',
+      maintainConsistent: 'Udržujte konzistentní trénink a výživu. Zaměřte se na zlepšování techniky a postupnou ztrátu tuku.',
     },
     tracking: {
       title: 'Sledování',
@@ -540,6 +554,8 @@ export const translations = {
       cuttingTips: 'Tipy pro shazování',
       recovery: 'Regenerace',
       generating: 'Generuji odpověď...',
+      askMeAnything: 'Zeptejte se na cokoliv!',
+      helpText: 'Jsem tu, abych vám pomohl s vaším hubnutím na zápas. Získejte personalizované rady ohledně hydratace, výživy a regenerace.',
     },
     settings: {
       title: 'Nastavení',

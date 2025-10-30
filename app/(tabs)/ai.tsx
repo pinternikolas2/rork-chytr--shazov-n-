@@ -128,9 +128,9 @@ Provide clear, actionable, and safe advice. Always prioritize fighter safety and
           {chatMessages.length === 0 ? (
             <View style={styles.emptyState}>
               <Sparkles size={64} color={Colors.gold} strokeWidth={1.5} />
-              <Text style={styles.emptyTitle}>Ask me anything!</Text>
+              <Text style={styles.emptyTitle}>{t.ai.askMeAnything}</Text>
               <Text style={styles.emptySubtitle}>
-                I&apos;m here to help you with your weight cutting journey. Get personalized advice on hydration, nutrition, and recovery.
+                {t.ai.helpText}
               </Text>
 
               <View style={styles.suggestionsContainer}>

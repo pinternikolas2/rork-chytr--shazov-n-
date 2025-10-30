@@ -193,15 +193,17 @@ export default function DashboardScreen() {
                 safetyStatus.level === 'danger' && styles.safetyTitleDanger,
                 safetyStatus.level === 'caution' && styles.safetyTitleCaution,
               ]}>
-                {safetyStatus.level === 'safe' ? t.dashboard.weightCutStatus : 
+                {safetyStatus.level === 'safe' ? t.dashboard.safetyStatus : 
                  safetyStatus.level === 'caution' ? t.dashboard.cautionRequired : t.dashboard.dangerAction}
               </Text>
             </View>
-            <Text style={styles.safetyMessage}>{safetyStatus.message}</Text>
+            <Text style={styles.safetyMessage}>{safetyStatus.level === 'safe' && safetyStatus.message === 'Not enough data to assess safety' ? t.dashboard.notEnoughData : safetyStatus.message}</Text>
             <View style={styles.recommendationsList}>
-              {safetyStatus.recommendations.slice(0, 3).map((rec, idx) => (
-                <Text key={idx} style={styles.recommendationItem}>• {rec}</Text>
-              ))}
+              {safetyStatus.recommendations.slice(0, 3).map((rec, idx) => {
+                let translatedRec = rec;
+                if (rec === 'Continue logging weight daily for accurate tracking') translatedRec = t.dashboard.continueLogging;
+                return <Text key={idx} style={styles.recommendationItem}>• {translatedRec}</Text>;
+              })}
             </View>
           </View>
         )}
@@ -258,9 +260,12 @@ export default function DashboardScreen() {
               </View>
             </View>
             <View style={styles.recommendationsList}>
-              {weightCutPlan[0].recommendations.slice(0, 2).map((rec, idx) => (
-                <Text key={idx} style={styles.todayRecommendation}>• {rec}</Text>
-              ))}
+              {weightCutPlan[0].recommendations.slice(0, 2).map((rec, idx) => {
+                let translatedRec = rec;
+                if (rec === 'Maintain training intensity and normal nutrition') translatedRec = t.dashboard.maintainTraining;
+                if (rec === 'Focus on technique and conditioning') translatedRec = t.dashboard.focusTechnique;
+                return <Text key={idx} style={styles.todayRecommendation}>• {translatedRec}</Text>;
+              })}
             </View>
           </View>
         )}
@@ -268,9 +273,7 @@ export default function DashboardScreen() {
         <View style={styles.aiTipSection}>
           <Text style={styles.aiTipTitle}>{t.dashboard.aiCoachInsight}</Text>
           <Text style={styles.aiTipText}>
-            {daysUntilFight && daysUntilFight <= 7
-              ? `Day ${daysUntilFight} of cut: Focus on water manipulation and sodium control. Your body is in the critical phase.`
-              : 'Maintain consistent training and nutrition. Focus on technique refinement and gradual fat loss.'}
+            {t.dashboard.maintainConsistent}
           </Text>
           <Pressable style={styles.aiButton} onPress={() => router.push('/ai')}>
             <Text style={styles.aiButtonText}>{t.dashboard.askAiCoach}</Text>
