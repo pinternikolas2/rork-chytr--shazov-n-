@@ -237,27 +237,46 @@ export default function ProfileSetupScreen() {
                 </Text>
               </Pressable>
               {showDatePicker && (
-                <DateTimePicker
-                  value={targetFightDate || new Date()}
-                  mode="date"
-                  display={Platform.OS === 'ios' ? 'inline' : 'default'}
-                  minimumDate={new Date()}
-                  onChange={(event, selectedDate) => {
-                    if (Platform.OS === 'android') {
-                      setShowDatePicker(false);
-                    }
-                    if (event.type === 'set' && selectedDate) {
-                      setTargetFightDate(selectedDate);
-                      if (Platform.OS === 'ios') {
+                <View style={styles.datePickerContainer}>
+                  <DateTimePicker
+                    value={targetFightDate || new Date()}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    minimumDate={new Date()}
+                    onChange={(event, selectedDate) => {
+                      if (Platform.OS === 'android') {
                         setShowDatePicker(false);
+                        if (event.type === 'set' && selectedDate) {
+                          setTargetFightDate(selectedDate);
+                        }
+                      } else if (Platform.OS === 'ios' && selectedDate) {
+                        setTargetFightDate(selectedDate);
                       }
-                    } else if (event.type === 'dismissed') {
-                      setShowDatePicker(false);
-                    }
-                  }}
-                  style={Platform.OS === 'ios' ? styles.datePickerIOS : undefined}
-                  locale={settings.language === 'cs' ? 'cs-CZ' : 'en-US'}
-                />
+                    }}
+                    locale={settings.language === 'cs' ? 'cs-CZ' : 'en-US'}
+                    textColor={Colors.textPrimary}
+                  />
+                  {Platform.OS === 'ios' && (
+                    <View style={styles.datePickerButtons}>
+                      <Pressable
+                        style={styles.datePickerCancelButton}
+                        onPress={() => setShowDatePicker(false)}
+                      >
+                        <Text style={styles.datePickerCancelText}>
+                          {settings.language === 'cs' ? 'Zrušit' : 'Cancel'}
+                        </Text>
+                      </Pressable>
+                      <Pressable
+                        style={styles.datePickerConfirmButton}
+                        onPress={() => setShowDatePicker(false)}
+                      >
+                        <Text style={styles.datePickerConfirmText}>
+                          {settings.language === 'cs' ? 'Potvrdit' : 'Confirm'}
+                        </Text>
+                      </Pressable>
+                    </View>
+                  )}
+                </View>
               )}
             </View>
 
@@ -489,5 +508,41 @@ const styles = StyleSheet.create({
     marginTop: 8,
     backgroundColor: Colors.white,
     borderRadius: 12,
+  },
+  datePickerContainer: {
+    marginTop: 12,
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+    overflow: 'hidden' as const,
+  },
+  datePickerButtons: {
+    flexDirection: 'row' as const,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border.light,
+  },
+  datePickerCancelButton: {
+    flex: 1,
+    padding: 16,
+    alignItems: 'center' as const,
+    borderRightWidth: 1,
+    borderRightColor: Colors.border.light,
+  },
+  datePickerCancelText: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+    fontWeight: '600' as const,
+  },
+  datePickerConfirmButton: {
+    flex: 1,
+    padding: 16,
+    alignItems: 'center' as const,
+    backgroundColor: Colors.gold,
+  },
+  datePickerConfirmText: {
+    fontSize: 16,
+    color: Colors.black,
+    fontWeight: '700' as const,
   },
 });
