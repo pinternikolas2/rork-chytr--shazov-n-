@@ -2,6 +2,9 @@
 EXPO_PUBLIC_SUPABASE_URL=https://vfgoizqsdljodwffcgyi.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmZ29penFzZGxqb2R3ZmZjZ3lpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc2MzU4MzAsImV4cCI6MjA1MzIxMTgzMH0.Pr3LdSJn6KeWL4mRaZRzyPkUqMLrfFWQjOXqsqvUSPY
 
+# Backend API Configuration
+EXPO_PUBLIC_RORK_API_BASE_URL=https://rork.app/apps/eux5r9qh1kk84e35tuis5
+
 # Note: 
 # This file contains your Supabase configuration
 # The anon key is safe to expose in client-side code
