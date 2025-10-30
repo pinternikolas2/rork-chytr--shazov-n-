@@ -367,6 +367,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 12,
+    paddingRight: 40,
   },
   fightInfo: {
     flex: 1,
