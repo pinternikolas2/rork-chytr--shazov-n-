@@ -84,11 +84,14 @@ CREATE TABLE IF NOT EXISTS meal_logs (
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   date TIMESTAMPTZ NOT NULL,
   name VARCHAR(255) NOT NULL,
+  meal_type VARCHAR(20) NOT NULL CHECK (meal_type IN ('breakfast', 'lunch', 'dinner', 'snack')),
   calories INTEGER NOT NULL,
   protein NUMERIC(6,2) NOT NULL,
   carbs NUMERIC(6,2) NOT NULL,
   fat NUMERIC(6,2) NOT NULL,
   sodium_mg INTEGER NOT NULL,
+  fiber NUMERIC(6,2),
+  custom_food_id UUID,
   notes TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

@@ -10,11 +10,13 @@ import {
   Text,
   TextInput,
   View,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import { Discipline, DietType, Gender, TrainingIntensity } from '@/constants/types';
 import { useApp } from '@/contexts/AppContext';
+import { supabase } from '@/lib/supabase';
 
 export default function ProfileSetupScreen() {
   const router = useRouter();
@@ -45,36 +47,51 @@ export default function ProfileSetupScreen() {
       return;
     }
 
-    const dateParts = targetFightDate.split('/');
-    let fightDate: Date;
-    
-    if (dateParts.length === 3) {
-      const day = parseInt(dateParts[0], 10);
-      const month = parseInt(dateParts[1], 10) - 1;
-      const year = parseInt(dateParts[2], 10);
-      fightDate = new Date(year, month, day);
-    } else {
-      fightDate = new Date(targetFightDate);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        Alert.alert(t.common.error, 'Není přihlášen žádný uživatel');
+        router.replace('/onboarding');
+        return;
+      }
+
+      const dateParts = targetFightDate.split('/');
+      let fightDate: Date;
+      
+      if (dateParts.length === 3) {
+        const day = parseInt(dateParts[0], 10);
+        const month = parseInt(dateParts[1], 10) - 1;
+        const year = parseInt(dateParts[2], 10);
+        fightDate = new Date(year, month, day);
+      } else {
+        fightDate = new Date(targetFightDate);
+      }
+
+      const role = user.user_metadata?.role || 'fighter';
+
+      await completeOnboarding({
+        id: user.id,
+        role,
+        fullName,
+        age: parseInt(age, 10),
+        height: parseInt(height, 10),
+        gender,
+        currentWeight: parseFloat(currentWeight),
+        targetWeight: parseFloat(targetWeight),
+        weightClass,
+        discipline,
+        dietType,
+        trainingIntensity,
+        hasPreviousExperience,
+        trainerName: trainerName.trim() || undefined,
+      });
+
+      router.replace('/(tabs)');
+    } catch (error) {
+      console.error('Profile setup error:', error);
+      Alert.alert(t.common.error, 'Nepodařilo se uložit profil');
     }
-
-    await completeOnboarding({
-      id: Date.now().toString(),
-      role: 'fighter',
-      fullName,
-      age: parseInt(age, 10),
-      height: parseInt(height, 10),
-      gender,
-      currentWeight: parseFloat(currentWeight),
-      targetWeight: parseFloat(targetWeight),
-      weightClass,
-      discipline,
-      dietType,
-      trainingIntensity,
-      hasPreviousExperience,
-      trainerName: trainerName.trim() || undefined,
-    });
-
-    router.replace('/(tabs)');
   };
 
   const isValid =

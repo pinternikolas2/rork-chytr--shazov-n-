@@ -4,6 +4,7 @@ import { syncProfileProcedure, getProfileProcedure } from "@/backend/trpc/routes
 import { addFightProcedure, updateFightProcedure, deleteFightProcedure, getFightsProcedure } from "@/backend/trpc/routes/fights/route";
 import { addWeightLogProcedure, getWeightLogsProcedure } from "@/backend/trpc/routes/weight-logs/route";
 import { addHydrationLogProcedure, getHydrationLogsProcedure } from "@/backend/trpc/routes/hydration-logs/route";
+import { addMealLogProcedure, getMealLogsProcedure, updateMealLogProcedure, deleteMealLogProcedure } from "@/backend/trpc/routes/meal-logs/route";
 
 export const appRouter = createTRPCRouter({
   example: createTRPCRouter({
@@ -26,6 +27,12 @@ export const appRouter = createTRPCRouter({
   hydrationLogs: createTRPCRouter({
     add: addHydrationLogProcedure,
     list: getHydrationLogsProcedure,
+  }),
+  mealLogs: createTRPCRouter({
+    add: addMealLogProcedure,
+    list: getMealLogsProcedure,
+    update: updateMealLogProcedure,
+    delete: deleteMealLogProcedure,
   }),
 });
 

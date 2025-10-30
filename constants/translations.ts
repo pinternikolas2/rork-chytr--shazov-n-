@@ -33,6 +33,8 @@ const enTranslations = {
       subtitle: 'Choose your role and register',
       emailPlaceholder: 'Email',
       passwordPlaceholder: 'Password (min 6 characters)',
+      error: 'Registration Error',
+      registering: 'Registering...',
     },
   },
   profile: {
@@ -420,6 +422,8 @@ export const translations = {
         subtitle: 'Vyberte svou roli a zaregistrujte se',
         emailPlaceholder: 'E-mail',
         passwordPlaceholder: 'Heslo (min 6 znaků)',
+        error: 'Chyba registrace',
+        registering: 'Registruji...',
       },
     },
     profile: {

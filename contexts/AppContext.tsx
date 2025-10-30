@@ -5,6 +5,7 @@ import { Language, translations } from '@/constants/translations';
 import { AppSettings, Fight, FighterProfile, CoachProfile, HydrationLog, WeightLog, MealLog, CustomFood } from '@/constants/types';
 import { WeightCuttingScience } from '@/utils/scientificCalculations';
 import type { SafetyStatus, DailyWeightCutPlan, BodyCompositionEstimate, MetabolicData } from '@/utils/scientificCalculations';
+import { trpcClient } from '@/lib/trpc';
 
 const DEFAULT_SETTINGS: AppSettings = {
   language: 'en',
@@ -99,6 +100,13 @@ export const [AppProvider, useApp] = createContextHook(() => {
     setProfile(userProfile);
     await AsyncStorage.setItem('profile', JSON.stringify(userProfile));
     await updateSettings({ hasCompletedOnboarding: true });
+    
+    try {
+      await trpcClient.profile.sync.mutate(userProfile);
+      console.log('Profile synced to backend');
+    } catch (error) {
+      console.error('Failed to sync profile to backend:', error);
+    }
   }, [updateSettings]);
 
   const updateProfile = useCallback(async (updates: Partial<FighterProfile> | Partial<CoachProfile>) => {

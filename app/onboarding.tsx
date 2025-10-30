@@ -12,11 +12,13 @@ import {
   View,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { Target, Droplets, Shield, User, Briefcase } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 import { UserRole } from '@/constants/types';
+import { supabase } from '@/lib/supabase';
 
 const { width } = Dimensions.get('window');
 
@@ -48,20 +50,50 @@ export default function OnboardingScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
+  const [isRegistering, setIsRegistering] = useState(false);
 
   const handleScroll = Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
     useNativeDriver: false,
   });
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentIndex < TOTAL_SLIDES - 1) {
       const nextIndex = currentIndex + 1;
       scrollViewRef.current?.scrollTo({ x: width * nextIndex, animated: true });
       setCurrentIndex(nextIndex);
     } else {
       if (email && password && selectedRole) {
+        await handleRegistration();
+      }
+    }
+  };
+
+  const handleRegistration = async () => {
+    setIsRegistering(true);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          data: {
+            role: selectedRole,
+          },
+        },
+      });
+
+      if (error) {
+        Alert.alert(t.onboarding.registration.error, error.message);
+        return;
+      }
+
+      if (data.user) {
         router.replace('/profile-setup');
       }
+    } catch (error) {
+      console.error('Registration error:', error);
+      Alert.alert(t.onboarding.registration.error, 'Neočekávaná chyba při registraci');
+    } finally {
+      setIsRegistering(false);
     }
   };
 
@@ -176,13 +208,13 @@ export default function OnboardingScreen() {
         <Pressable
           style={[
             styles.nextButton,
-            currentIndex === TOTAL_SLIDES - 1 && !isLastSlideValid && styles.nextButtonDisabled
+            (currentIndex === TOTAL_SLIDES - 1 && !isLastSlideValid) || isRegistering && styles.nextButtonDisabled
           ]}
           onPress={handleNext}
-          disabled={currentIndex === TOTAL_SLIDES - 1 && !isLastSlideValid}
+          disabled={(currentIndex === TOTAL_SLIDES - 1 && !isLastSlideValid) || isRegistering}
         >
           <Text style={styles.nextButtonText}>
-            {currentIndex === TOTAL_SLIDES - 1 ? t.onboarding.getStarted : t.onboarding.next}
+            {isRegistering ? t.onboarding.registration.registering : (currentIndex === TOTAL_SLIDES - 1 ? t.onboarding.getStarted : t.onboarding.next)}
           </Text>
         </Pressable>
       </View>

@@ -23,7 +23,7 @@ type Message = {
 };
 
 export default function AIScreen() {
-  const { t, profile, getUpcomingFight } = useApp();
+  const { t, profile, getUpcomingFight, getTodayHydration, getDailyHydrationGoal, getTodayMeals, getTodayNutrition, getNutritionGoals, weightLogs } = useApp();
   const insets = useSafeAreaInsets();
   const scrollViewRef = useRef<ScrollView>(null);
   
@@ -32,6 +32,11 @@ export default function AIScreen() {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const upcomingFight = getUpcomingFight();
+  const todayHydration = getTodayHydration();
+  const hydrationGoal = getDailyHydrationGoal();
+  const todayMeals = getTodayMeals();
+  const todayNutrition = getTodayNutrition();
+  const nutritionGoals = getNutritionGoals();
 
   const suggestions = [
     t.ai.waterIntake,
@@ -58,6 +63,14 @@ export default function AIScreen() {
     }, 100);
 
     try {
+      const recentWeightLogs = weightLogs.slice(-7).map(log => 
+        `${log.date.toLocaleDateString()}: ${log.weight} kg (${log.time})`
+      ).join('\n');
+
+      const todayMealsList = todayMeals.map(meal => 
+        `${meal.name} - ${meal.calories} kcal (P: ${meal.protein}g, C: ${meal.carbs}g, F: ${meal.fat}g, Na: ${meal.sodiumMg}mg)`
+      ).join('\n');
+
       const context = `You are an expert AI weight-cutting coach for combat sports athletes. You provide safe, science-based advice on weight cutting, hydration, nutrition, and recovery.
 
 Current fighter profile:
@@ -65,9 +78,24 @@ Current fighter profile:
 - Current weight: ${profile && profile.role === 'fighter' ? profile.currentWeight : 'Unknown'} kg
 - Target weight: ${profile && profile.role === 'fighter' ? profile.targetWeight : 'Unknown'} kg
 - Discipline: ${profile?.discipline || 'Unknown'}
+- Diet type: ${profile && profile.role === 'fighter' ? profile.dietType : 'Unknown'}
+- Training intensity: ${profile && profile.role === 'fighter' ? profile.trainingIntensity : 'Unknown'}
 ${upcomingFight ? `- Next fight: ${upcomingFight.name} on ${upcomingFight.date.toLocaleDateString()}` : '- No upcoming fight scheduled'}
 
-Provide clear, actionable, and safe advice. Always prioritize fighter safety and health.`;
+Today's tracking data:
+- Hydration: ${todayHydration} ml / ${hydrationGoal} ml (${Math.round((todayHydration / hydrationGoal) * 100)}%)
+- Calories: ${todayNutrition.calories} kcal / ${nutritionGoals.calories} kcal
+- Protein: ${todayNutrition.protein}g / ${nutritionGoals.protein}g
+- Carbs: ${todayNutrition.carbs}g / ${nutritionGoals.carbs}g
+- Fat: ${todayNutrition.fat}g / ${nutritionGoals.fat}g
+- Sodium: ${todayNutrition.sodium}mg / ${nutritionGoals.sodium}mg
+- Meals today (${todayMeals.length}):
+${todayMealsList || '  No meals logged yet'}
+
+Recent weight logs (last 7 days):
+${recentWeightLogs || '  No recent weight logs'}
+
+Provide clear, actionable, and safe advice based on this data. Always prioritize fighter safety and health. Use the actual data to give personalized recommendations.`;
 
       const aiResponse = await generateText({
         messages: [
