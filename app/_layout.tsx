@@ -21,10 +21,11 @@ function RootLayoutNav() {
 
     const inTabs = segments[0] === '(tabs)';
     const inAuth = segments[0] === 'language-selection' || segments[0] === 'onboarding' || segments[0] === 'profile-setup';
+    const inModal = segments[0] === 'add-meal' || segments[0] === 'subscription' || segments[0] === 'support' || segments[0] === 'privacy' || segments[0] === 'terms' || segments[0] === 'tracking-detail';
 
     if (!settings.hasCompletedOnboarding && !inAuth) {
       router.replace('/language-selection');
-    } else if (settings.hasCompletedOnboarding && !inTabs && !inAuth) {
+    } else if (settings.hasCompletedOnboarding && !inTabs && !inAuth && !inModal) {
       router.replace('/(tabs)');
     }
   }, [isLoading, settings.hasCompletedOnboarding, segments, router]);
