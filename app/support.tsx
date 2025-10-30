@@ -1,15 +1,11 @@
-import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View, Alert, Linking } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { X, Mail, MessageCircle, Book, ExternalLink } from 'lucide-react-native';
+import { Mail, MessageCircle, Book, ExternalLink } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
 export default function SupportScreen() {
   const { t } = useApp();
-  const insets = useSafeAreaInsets();
-  const router = useRouter();
 
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
@@ -45,18 +41,11 @@ export default function SupportScreen() {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.closeButton}>
-          <X size={24} color={Colors.textPrimary} />
-        </Pressable>
-        <Text style={styles.headerTitle}>{t.settings.support}</Text>
-        <View style={{ width: 24 }} />
-      </View>
+    <View style={styles.container}>
 
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 24 }]}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.title}>{t.support.howCanWeHelp}</Text>

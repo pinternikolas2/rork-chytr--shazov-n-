@@ -10,9 +10,9 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useState, useRef } from 'react';
-import { Stack, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Camera, Upload, Edit3, Save, X } from 'lucide-react-native';
+import { Camera, Upload, Edit3, Check, X } from 'lucide-react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { Colors } from '@/constants/colors';
@@ -213,7 +213,6 @@ export default function AddMealScreen() {
   if (mode === 'camera') {
     return (
       <View style={styles.container}>
-        <Stack.Screen options={{ headerShown: false }} />
         <CameraView ref={cameraRef} style={styles.camera} facing="back">
           <View style={styles.cameraOverlay}>
             <Pressable style={styles.closeButton} onPress={() => setMode('select')}>
@@ -233,16 +232,6 @@ export default function AddMealScreen() {
   if (mode === 'edit') {
     return (
       <View style={styles.container}>
-        <Stack.Screen
-          options={{
-            title: t.nutrition.addFood,
-            headerRight: () => (
-              <Pressable onPress={handleSave} disabled={isAnalyzing}>
-                <Save size={22} color={Colors.gold} />
-              </Pressable>
-            ),
-          }}
-        />
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
@@ -437,13 +426,21 @@ export default function AddMealScreen() {
             <Text style={styles.saveToCustomText}>{t.nutrition.saveToMyFoods}</Text>
           </Pressable>
         </ScrollView>
+
+        <Pressable
+          style={styles.floatingSaveButton}
+          onPress={handleSave}
+          disabled={isAnalyzing}
+        >
+          <Check size={24} color={Colors.black} />
+          <Text style={styles.floatingSaveText}>{t.common.save}</Text>
+        </Pressable>
       </View>
     );
   }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <Stack.Screen options={{ title: t.nutrition.addMeal, headerShown: false }} />
       <View style={styles.selectContainer}>
         <Text style={styles.selectTitle}>{t.nutrition.addFood}</Text>
         <Text style={styles.selectSubtitle}>Choose how to add your meal</Text>
@@ -741,5 +738,28 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: Colors.textPrimary,
     fontWeight: '600' as const,
+  },
+  floatingSaveButton: {
+    position: 'absolute' as const,
+    bottom: 24,
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.gold,
+    borderRadius: 16,
+    padding: 18,
+    gap: 8,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  floatingSaveText: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: Colors.black,
   },
 });

@@ -1,28 +1,17 @@
-import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { X, FileText } from 'lucide-react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { FileText } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
 export default function TermsScreen() {
   const { t } = useApp();
-  const insets = useSafeAreaInsets();
-  const router = useRouter();
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.closeButton}>
-          <X size={24} color={Colors.textPrimary} />
-        </Pressable>
-        <Text style={styles.headerTitle}>{t.settings.terms}</Text>
-        <View style={{ width: 24 }} />
-      </View>
+    <View style={styles.container}>
 
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 24 }]}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.heroSection}>

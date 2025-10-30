@@ -36,17 +36,51 @@ function RootLayoutNav() {
   }, [isLoading]);
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="language-selection" />
-      <Stack.Screen name="onboarding" />
-      <Stack.Screen name="profile-setup" />
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="tracking-detail" options={{ presentation: "modal" }} />
-      <Stack.Screen name="add-meal" options={{ presentation: "modal" }} />
-      <Stack.Screen name="subscription" options={{ presentation: "modal" }} />
-      <Stack.Screen name="support" options={{ presentation: "modal" }} />
-      <Stack.Screen name="privacy" options={{ presentation: "modal" }} />
-      <Stack.Screen name="terms" options={{ presentation: "modal" }} />
+    <Stack screenOptions={{ headerShown: true }}>
+      <Stack.Screen name="language-selection" options={{ headerShown: false }} />
+      <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+      <Stack.Screen name="profile-setup" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="tracking-detail" options={{ presentation: "modal", headerShown: false }} />
+      <Stack.Screen 
+        name="add-meal" 
+        options={{ 
+          presentation: "modal",
+          headerShown: true,
+          title: "Add Food"
+        }} 
+      />
+      <Stack.Screen 
+        name="subscription" 
+        options={{ 
+          presentation: "modal",
+          headerShown: false
+        }} 
+      />
+      <Stack.Screen 
+        name="support" 
+        options={{ 
+          presentation: "modal",
+          headerShown: true,
+          title: "Support"
+        }} 
+      />
+      <Stack.Screen 
+        name="privacy" 
+        options={{ 
+          presentation: "modal",
+          headerShown: true,
+          title: "Privacy Policy"
+        }} 
+      />
+      <Stack.Screen 
+        name="terms" 
+        options={{ 
+          presentation: "modal",
+          headerShown: true,
+          title: "Terms of Service"
+        }} 
+      />
     </Stack>
   );
 }
