@@ -141,6 +141,24 @@ export interface RegenerationLog {
   notes?: string;
 }
 
+export interface SleepLog {
+  id: string;
+  date: Date;
+  hours: number;
+  quality: 1 | 2 | 3 | 4 | 5;
+  notes?: string;
+}
+
+export type WaterRetentionLevel = 1 | 2 | 3 | 4 | 5;
+
+export interface DailyNote {
+  id: string;
+  date: Date;
+  note: string;
+  energyLevel?: EnergyLevel;
+  waterRetention?: WaterRetentionLevel;
+}
+
 export interface DailyProgress {
   date: Date;
   weight?: number;

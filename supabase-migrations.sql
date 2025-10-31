@@ -96,6 +96,29 @@ CREATE TABLE IF NOT EXISTS meal_logs (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Create sleep_logs table
+CREATE TABLE IF NOT EXISTS sleep_logs (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  date TIMESTAMPTZ NOT NULL,
+  hours NUMERIC(3,1) NOT NULL,
+  quality INTEGER NOT NULL CHECK (quality >= 1 AND quality <= 5),
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Create daily_notes table
+CREATE TABLE IF NOT EXISTS daily_notes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  date TIMESTAMPTZ NOT NULL,
+  note TEXT NOT NULL,
+  energy_level INTEGER CHECK (energy_level >= 1 AND energy_level <= 5),
+  water_retention INTEGER CHECK (water_retention >= 1 AND water_retention <= 5),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Create indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_profiles_role ON profiles(role);
 CREATE INDEX IF NOT EXISTS idx_profiles_coach_id ON profiles(coach_id);
@@ -107,6 +130,10 @@ CREATE INDEX IF NOT EXISTS idx_hydration_logs_user_id ON hydration_logs(user_id)
 CREATE INDEX IF NOT EXISTS idx_hydration_logs_date ON hydration_logs(date);
 CREATE INDEX IF NOT EXISTS idx_meal_logs_user_id ON meal_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_meal_logs_date ON meal_logs(date);
+CREATE INDEX IF NOT EXISTS idx_sleep_logs_user_id ON sleep_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_sleep_logs_date ON sleep_logs(date);
+CREATE INDEX IF NOT EXISTS idx_daily_notes_user_id ON daily_notes(user_id);
+CREATE INDEX IF NOT EXISTS idx_daily_notes_date ON daily_notes(date);
 
 -- Create function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -136,6 +163,8 @@ ALTER TABLE fights ENABLE ROW LEVEL SECURITY;
 ALTER TABLE weight_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE hydration_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE meal_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sleep_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE daily_notes ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policies
 
@@ -220,10 +249,51 @@ CREATE POLICY "Users can delete their own meal logs"
   ON meal_logs FOR DELETE 
   USING (user_id = auth.uid());
 
+-- Sleep logs: Users can CRUD their own logs
+CREATE POLICY "Users can view their own sleep logs" 
+  ON sleep_logs FOR SELECT 
+  USING (user_id = auth.uid());
+
+CREATE POLICY "Users can insert their own sleep logs" 
+  ON sleep_logs FOR INSERT 
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Users can update their own sleep logs" 
+  ON sleep_logs FOR UPDATE 
+  USING (user_id = auth.uid());
+
+CREATE POLICY "Users can delete their own sleep logs" 
+  ON sleep_logs FOR DELETE 
+  USING (user_id = auth.uid());
+
+-- Daily notes: Users can CRUD their own logs
+CREATE POLICY "Users can view their own daily notes" 
+  ON daily_notes FOR SELECT 
+  USING (user_id = auth.uid());
+
+CREATE POLICY "Users can insert their own daily notes" 
+  ON daily_notes FOR INSERT 
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Users can update their own daily notes" 
+  ON daily_notes FOR UPDATE 
+  USING (user_id = auth.uid());
+
+CREATE POLICY "Users can delete their own daily notes" 
+  ON daily_notes FOR DELETE 
+  USING (user_id = auth.uid());
+
 -- Grant necessary permissions
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
 GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
+
+-- Create triggers for updated_at on daily_notes
+DROP TRIGGER IF EXISTS update_daily_notes_updated_at ON daily_notes;
+CREATE TRIGGER update_daily_notes_updated_at
+  BEFORE UPDATE ON daily_notes
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
 
 -- Add comments for documentation
 COMMENT ON TABLE profiles IS 'User profiles for fighters and coaches';
@@ -231,3 +301,5 @@ COMMENT ON TABLE fights IS 'Scheduled fights for fighters';
 COMMENT ON TABLE weight_logs IS 'Daily weight tracking logs';
 COMMENT ON TABLE hydration_logs IS 'Water intake tracking logs';
 COMMENT ON TABLE meal_logs IS 'Meal and nutrition tracking logs';
+COMMENT ON TABLE sleep_logs IS 'Sleep quality and duration tracking';
+COMMENT ON TABLE daily_notes IS 'Daily notes and feelings tracking';

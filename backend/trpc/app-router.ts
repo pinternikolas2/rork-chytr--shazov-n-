@@ -5,6 +5,8 @@ import { addFightProcedure, updateFightProcedure, deleteFightProcedure, getFight
 import { addWeightLogProcedure, getWeightLogsProcedure } from "@/backend/trpc/routes/weight-logs/route";
 import { addHydrationLogProcedure, getHydrationLogsProcedure } from "@/backend/trpc/routes/hydration-logs/route";
 import { addMealLogProcedure, getMealLogsProcedure, updateMealLogProcedure, deleteMealLogProcedure } from "@/backend/trpc/routes/meal-logs/route";
+import { addSleepLogProcedure, getSleepLogsProcedure } from "@/backend/trpc/routes/sleep-logs/route";
+import { addDailyNoteProcedure, updateDailyNoteProcedure, getDailyNotesProcedure } from "@/backend/trpc/routes/daily-notes/route";
 
 export const appRouter = createTRPCRouter({
   example: createTRPCRouter({
@@ -33,6 +35,15 @@ export const appRouter = createTRPCRouter({
     list: getMealLogsProcedure,
     update: updateMealLogProcedure,
     delete: deleteMealLogProcedure,
+  }),
+  sleepLogs: createTRPCRouter({
+    add: addSleepLogProcedure,
+    list: getSleepLogsProcedure,
+  }),
+  dailyNotes: createTRPCRouter({
+    add: addDailyNoteProcedure,
+    update: updateDailyNoteProcedure,
+    list: getDailyNotesProcedure,
   }),
 });
 
