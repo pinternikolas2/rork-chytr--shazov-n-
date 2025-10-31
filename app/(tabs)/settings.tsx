@@ -9,7 +9,6 @@ import {
   Text,
   TextInput,
   View,
-  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -22,14 +21,17 @@ import {
   FileText,
   ChevronRight,
   X,
+  Crown,
 } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { LANGUAGES, Language } from '@/constants/translations';
 import { Discipline } from '@/constants/types';
 
 export default function SettingsScreen() {
   const { t, profile, updateProfile, settings, setLanguage, signOut } = useApp();
+  const { isPremium, isTrial, isFree, trialDaysRemaining } = useSubscription();
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
@@ -157,10 +159,35 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t.settings.premium}</Text>
           <View style={styles.card}>
+            {isPremium && (
+              <View style={[styles.settingItem, styles.premiumBanner]}>
+                <View style={styles.settingIconContainer}>
+                  <Crown size={22} color={Colors.gold} />
+                </View>
+                <View style={styles.settingContent}>
+                  <Text style={styles.settingTitle}>Premium</Text>
+                  <Text style={styles.settingSubtitle}>Všechny funkce odmċněny</Text>
+                </View>
+              </View>
+            )}
+            {isTrial && (
+              <View style={[styles.settingItem, styles.trialBanner]}>
+                <View style={styles.settingIconContainer}>
+                  <Crown size={22} color={Colors.gold} />
+                </View>
+                <View style={styles.settingContent}>
+                  <Text style={styles.settingTitle}>Zkušební období</Text>
+                  <Text style={styles.settingSubtitle}>
+                    {trialDaysRemaining} {trialDaysRemaining === 1 ? 'den' : trialDaysRemaining < 5 ? 'dny' : 'dní'} zbývá
+                  </Text>
+                </View>
+              </View>
+            )}
+            {!isPremium && <View style={styles.divider} />}
             <SettingItem
               icon={CreditCard}
               title={t.settings.subscription}
-              subtitle={t.settings.freeTrialDaysLeft.replace('{days}', '7')}
+              subtitle={isFree ? 'Základní verze' : isTrial ? `Zkušební období (${trialDaysRemaining} dní)` : 'Premium aktivní'}
               onPress={() => router.push('/subscription')}
             />
           </View>
@@ -607,5 +634,11 @@ const styles = StyleSheet.create({
     color: Colors.black,
     fontSize: 18,
     fontWeight: '700' as const,
+  },
+  premiumBanner: {
+    backgroundColor: Colors.lightGray,
+  },
+  trialBanner: {
+    backgroundColor: Colors.lightGray,
   },
 });

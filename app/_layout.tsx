@@ -5,6 +5,7 @@ import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AppProvider, useApp } from "@/contexts/AppContext";
+import { SubscriptionProvider, useSubscription } from "@/contexts/SubscriptionContext";
 import { trpc, trpcClient } from "@/lib/trpc";
 
 SplashScreen.preventAutoHideAsync();
@@ -12,23 +13,29 @@ SplashScreen.preventAutoHideAsync();
 const queryClient = new QueryClient();
 
 function RootLayoutNav() {
-  const { settings, isLoading } = useApp();
+  const { settings, isLoading: appLoading } = useApp();
+  const { hasSeenWelcome, isLoading: subLoading } = useSubscription();
   const segments = useSegments();
   const router = useRouter();
+
+  const isLoading = appLoading || subLoading;
 
   useEffect(() => {
     if (isLoading) return;
 
     const inTabs = segments[0] === '(tabs)';
     const inAuth = segments[0] === 'language-selection' || segments[0] === 'onboarding' || segments[0] === 'profile-setup';
+    const inWelcome = segments[0] === 'welcome';
     const inModal = segments[0] === 'add-meal' || segments[0] === 'subscription' || segments[0] === 'support' || segments[0] === 'privacy' || segments[0] === 'terms' || segments[0] === 'tracking-detail' || segments[0] === 'wellness';
 
-    if (!settings.hasCompletedOnboarding && !inAuth) {
+    if (!hasSeenWelcome && !inWelcome) {
+      router.replace('/welcome');
+    } else if (hasSeenWelcome && !settings.hasCompletedOnboarding && !inAuth && !inWelcome) {
       router.replace('/language-selection');
-    } else if (settings.hasCompletedOnboarding && !inTabs && !inModal) {
+    } else if (hasSeenWelcome && settings.hasCompletedOnboarding && !inTabs && !inModal && !inAuth && !inWelcome) {
       router.replace('/(tabs)');
     }
-  }, [isLoading, settings.hasCompletedOnboarding, segments, router]);
+  }, [isLoading, hasSeenWelcome, settings.hasCompletedOnboarding, segments, router]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -38,6 +45,7 @@ function RootLayoutNav() {
 
   return (
     <Stack screenOptions={{ headerShown: true }}>
+      <Stack.Screen name="welcome" options={{ headerShown: false }} />
       <Stack.Screen name="language-selection" options={{ headerShown: false }} />
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="profile-setup" options={{ headerShown: false }} />
@@ -96,7 +104,9 @@ export default function RootLayout() {
         <GestureHandlerRootView style={{ flex: 1 }}>
           <SafeAreaProvider>
             <AppProvider>
-              <RootLayoutNav />
+              <SubscriptionProvider>
+                <RootLayoutNav />
+              </SubscriptionProvider>
             </AppProvider>
           </SafeAreaProvider>
         </GestureHandlerRootView>

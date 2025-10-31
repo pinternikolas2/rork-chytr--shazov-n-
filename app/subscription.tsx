@@ -1,14 +1,16 @@
 import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Check, X, Crown, Calendar } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 
 export default function SubscriptionScreen() {
   const { t } = useApp();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { startPremium, isPremium } = useSubscription();
 
   const features = [
     t.subscription.features.unlimitedTracking,
@@ -21,8 +23,29 @@ export default function SubscriptionScreen() {
     t.subscription.features.exportData,
   ];
 
-  const handleSubscribe = (type: 'monthly' | 'annual') => {
-    console.log('Subscribe:', type);
+  const handleSubscribe = async (type: 'monthly' | 'annual') => {
+    console.log('[Subscription] Starting subscription:', type);
+    
+    try {
+      const months = type === 'annual' ? 12 : 1;
+      await startPremium(months);
+      
+      Alert.alert(
+        t.common.success,
+        type === 'monthly'
+          ? 'Předplatné aktivováno! Máte nyní plný přístup ke všem funkcím.'
+          : 'Roční předplatné aktivováno! Ušetřili jste 54% a máte plný přístup na celý rok.',
+        [
+          {
+            text: 'OK',
+            onPress: () => router.back(),
+          },
+        ]
+      );
+    } catch (error) {
+      console.error('[Subscription] Error:', error);
+      Alert.alert(t.common.error, 'Nešlo aktivovat předplatné. Zkuste to prosím znovu.');
+    }
   };
 
   return (

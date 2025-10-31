@@ -446,6 +446,16 @@ const enTranslations = {
     g: 'g',
     mg: 'mg',
   },
+  welcome: {
+    title: 'Track Weight Like a Pro',
+    subtitle: 'Smart weight cutting for fighters - control calories, water, and progress.',
+    tryFree: 'Try Free (7 days)',
+    continueWithoutAccount: 'Continue Without Registration',
+    alreadyHaveAccount: 'Already have an account? Log in',
+    termsAndPrivacy: 'Terms of Service | Privacy Policy',
+    selectLanguage: 'Select Language',
+    trialInfo: 'Get access to all features of Smart Weight Cutting - AI analysis, advanced statistics, and personalized advice. 7 days free, then 149 Kč/month. You can cancel anytime.',
+  },
 };
 
 export const translations = {
@@ -889,6 +899,16 @@ export const translations = {
       kcal: 'kcal',
       g: 'g',
       mg: 'mg',
+    },
+    welcome: {
+      title: 'Sleduj váhu jako profík.',
+      subtitle: 'Chytré shazování pro zápasníky – kontroluj kalorie, vodu a progres.',
+      tryFree: 'Vyzkoušet zdarma (7 dní)',
+      continueWithoutAccount: 'Pokračovat bez registrace',
+      alreadyHaveAccount: 'Už máš účet? Přihlásit se',
+      termsAndPrivacy: 'Podmínky služby | Zásady ochrany osobních údajů',
+      selectLanguage: 'Vybrat jazyk',
+      trialInfo: 'Získej přístup ke všem funkcím Chytrého Shazování – AI analýzy, pokročilé statistiky a personalizované rady. 7 dní zdarma, poté 149 Kč/měsíc. Předplatné můžeš kdykoli zrušit.',
     },
   },
   en: enTranslations,
