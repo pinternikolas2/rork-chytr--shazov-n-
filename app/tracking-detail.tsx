@@ -164,7 +164,7 @@ export default function TrackingDetailScreen() {
     const barWidth = Math.max(30, (chartWidth - 60) / Math.max(days.length, 1));
     const maxAmount = Math.max(hydrationStats.max, 1000);
     const minHeight = 10;
-    const maxBarHeight = chartHeight - 60;
+    const maxBarHeight = chartHeight - 80;
 
     return (
       <View style={[styles.barChart, { width: chartWidth, height: chartHeight }]}>
@@ -176,12 +176,10 @@ export default function TrackingDetailScreen() {
             
             return (
               <View key={i} style={[styles.barContainer, { width: barWidth }]}>
-                <View style={styles.barWrapper}>
-                  <Text style={styles.barValue}>
-                    {amount >= 1000 ? `${Math.round(amount / 1000)}L` : `${amount}ml`}
-                  </Text>
-                  <View style={[styles.bar, { height: barHeight }]} />
-                </View>
+                <Text style={styles.barValue}>
+                  {amount >= 1000 ? `${(amount / 1000).toFixed(1)}L` : `${amount}ml`}
+                </Text>
+                <View style={[styles.bar, { height: barHeight }]} />
                 <Text style={styles.barLabel}>{dayLabel}</Text>
               </View>
             );
@@ -552,24 +550,21 @@ const styles = StyleSheet.create({
   },
   barContainer: {
     alignItems: 'center',
-  },
-  barWrapper: {
-    flex: 1,
     justifyContent: 'flex-end',
-    alignItems: 'center',
     gap: 4,
   },
   bar: {
-    width: '80%',
+    width: 28,
     backgroundColor: Colors.gold,
     borderRadius: 4,
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
   },
   barValue: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '600' as const,
     color: Colors.textSecondary,
+    marginBottom: 2,
   },
   barLabel: {
     fontSize: 10,
