@@ -148,8 +148,9 @@ export const [AppProvider, useApp] = createContextHook(() => {
         const updatedProfile = { 
           ...profile, 
           targetWeight: targetWeightFromClass,
-          startingWeight: profile.startingWeight || profile.currentWeight
+          startingWeight: profile.currentWeight
         } as FighterProfile;
+        console.log('[AppContext] New fight created - setting startingWeight:', profile.currentWeight, 'targetWeight:', targetWeightFromClass);
         setProfile(updatedProfile);
         await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
       }
@@ -181,6 +182,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
 
     if (profile && profile.role === 'fighter' && time === 'morning') {
       const updatedProfile = { ...profile, currentWeight: weight } as FighterProfile;
+      console.log('[AppContext] Weight logged - currentWeight:', weight, 'startingWeight:', updatedProfile.startingWeight, 'targetWeight:', updatedProfile.targetWeight);
       setProfile(updatedProfile);
       await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
     }
