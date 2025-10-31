@@ -21,7 +21,7 @@ function RootLayoutNav() {
 
     const inTabs = segments[0] === '(tabs)';
     const inAuth = segments[0] === 'language-selection' || segments[0] === 'onboarding' || segments[0] === 'profile-setup';
-    const inModal = segments[0] === 'add-meal' || segments[0] === 'subscription' || segments[0] === 'support' || segments[0] === 'privacy' || segments[0] === 'terms' || segments[0] === 'tracking-detail';
+    const inModal = segments[0] === 'add-meal' || segments[0] === 'subscription' || segments[0] === 'support' || segments[0] === 'privacy' || segments[0] === 'terms' || segments[0] === 'tracking-detail' || segments[0] === 'wellness';
 
     if (!settings.hasCompletedOnboarding && !inAuth) {
       router.replace('/language-selection');
@@ -73,6 +73,13 @@ function RootLayoutNav() {
       />
       <Stack.Screen 
         name="terms" 
+        options={{ 
+          presentation: "modal",
+          headerShown: false
+        }} 
+      />
+      <Stack.Screen 
+        name="wellness" 
         options={{ 
           presentation: "modal",
           headerShown: false
