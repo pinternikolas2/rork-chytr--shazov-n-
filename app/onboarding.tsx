@@ -230,7 +230,7 @@ export default function OnboardingScreen() {
                 <Pressable style={styles.appleButton} onPress={handleAppleAuth}>
                   <View style={styles.oauthContent}>
                     <View style={styles.appleLogo}>
-                      <Text style={styles.appleLogoText}></Text>
+                      <View style={styles.appleIcon} />
                     </View>
                     <Text style={styles.appleText}>{t.auth.continueWithApple}</Text>
                   </View>
@@ -238,8 +238,11 @@ export default function OnboardingScreen() {
               )}
               <Pressable style={styles.googleButton} onPress={handleGoogleAuth}>
                 <View style={styles.oauthContent}>
-                  <View style={styles.googleLogo}>
-                    <Text style={styles.googleLogoText}>G</Text>
+                  <View style={styles.googleIconContainer}>
+                    <View style={styles.googleRedPart} />
+                    <View style={styles.googleYellowPart} />
+                    <View style={styles.googleGreenPart} />
+                    <View style={styles.googleBluePart} />
                   </View>
                   <Text style={styles.googleText}>{t.auth.continueWithGoogle}</Text>
                 </View>
@@ -400,6 +403,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.black,
     borderRadius: 12,
     padding: 16,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   googleButton: {
     backgroundColor: Colors.white,
@@ -407,6 +415,11 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1.5,
     borderColor: Colors.border.light,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   oauthContent: {
     flexDirection: 'row',
@@ -415,34 +428,64 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   appleLogo: {
-    width: 20,
-    height: 20,
+    width: 24,
+    height: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  appleLogoText: {
-    fontSize: 20,
-    fontWeight: '600' as const,
-    color: Colors.white,
+  appleIcon: {
+    width: 20,
+    height: 24,
+    backgroundColor: Colors.white,
+    borderRadius: 12,
   },
   appleText: {
     fontSize: 16,
     fontWeight: '600' as const,
     color: Colors.white,
   },
-  googleLogo: {
-    width: 20,
-    height: 20,
+  googleIconContainer: {
+    width: 24,
+    height: 24,
+    position: 'relative' as const,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.white,
-    borderRadius: 2,
   },
-  googleLogoText: {
-    fontSize: 16,
-    fontWeight: '700' as const,
-    color: '#4285F4',
-    fontFamily: Platform.select({ ios: 'System', android: 'Roboto' }),
+  googleRedPart: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    width: 12,
+    height: 12,
+    backgroundColor: '#EA4335',
+    borderTopLeftRadius: 12,
+  },
+  googleYellowPart: {
+    position: 'absolute' as const,
+    top: 0,
+    right: 0,
+    width: 12,
+    height: 12,
+    backgroundColor: '#FBBC04',
+    borderTopRightRadius: 12,
+  },
+  googleGreenPart: {
+    position: 'absolute' as const,
+    bottom: 0,
+    left: 0,
+    width: 12,
+    height: 12,
+    backgroundColor: '#34A853',
+    borderBottomLeftRadius: 12,
+  },
+  googleBluePart: {
+    position: 'absolute' as const,
+    bottom: 0,
+    right: 0,
+    width: 12,
+    height: 12,
+    backgroundColor: '#4285F4',
+    borderBottomRightRadius: 12,
   },
   googleText: {
     fontSize: 16,

@@ -409,6 +409,17 @@ export const [AppProvider, useApp] = createContextHook(() => {
     return WeightCuttingScience.assessSafetyStatus(profile, weightLogs, daysUntilFight);
   }, [profile, weightLogs, getUpcomingFight]);
 
+  const getWeightProgress = useCallback((): number => {
+    if (!profile || profile.role !== 'fighter') return 0;
+    const startWeight = profile.startingWeight || profile.currentWeight;
+    const total = startWeight - profile.targetWeight;
+    if (total <= 0) return 100;
+    const remaining = profile.currentWeight - profile.targetWeight;
+    if (remaining <= 0) return 100;
+    const progress = ((total - remaining) / total) * 100;
+    return Math.max(0, Math.min(100, progress));
+  }, [profile]);
+
   const signOut = useCallback(async () => {
     setProfile(null);
     setFights([]);
@@ -457,6 +468,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
     getSafetyStatus,
     getBodyComposition,
     getMetabolicData,
+    getWeightProgress,
     signOut,
   }), [
     settings,
@@ -493,6 +505,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
     getSafetyStatus,
     getBodyComposition,
     getMetabolicData,
+    getWeightProgress,
     signOut,
   ]);
 });

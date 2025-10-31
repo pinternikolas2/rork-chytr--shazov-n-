@@ -19,6 +19,7 @@ export default function DashboardScreen() {
     getBodyComposition,
     getMetabolicData,
     getWeightCutPlan,
+    getWeightProgress,
     weightLogs 
   } = useApp();
   const insets = useSafeAreaInsets();
@@ -43,16 +44,7 @@ export default function DashboardScreen() {
     return weightLogs.slice(-7).reverse();
   }, [weightLogs]);
 
-  const weightProgress = useMemo(() => {
-    if (!profile || profile.role !== 'fighter') return 0;
-    const startWeight = profile.startingWeight || profile.currentWeight;
-    const total = startWeight - profile.targetWeight;
-    if (total <= 0) return 100;
-    const remaining = profile.currentWeight - profile.targetWeight;
-    if (remaining <= 0) return 100;
-    const progress = ((total - remaining) / total) * 100;
-    return Math.max(0, Math.min(100, progress));
-  }, [profile]);
+  const weightProgress = getWeightProgress();
 
   const hydrationProgress = (todayHydration / dailyHydrationGoal) * 100;
 
@@ -68,7 +60,7 @@ export default function DashboardScreen() {
             <Image
               source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/eu9l4dsrphmttowu6m4wo' }}
               style={styles.logo}
-              resizeMode="cover"
+              resizeMode="contain"
             />
           </View>
           <View>
