@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Scale, Droplets, Calendar, BarChart3, TrendingDown, Heart } from 'lucide-react-native';
+import { Scale, Droplets, Calendar, BarChart3, TrendingDown, Activity } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
@@ -59,7 +59,7 @@ export default function TrackingScreen() {
             <Text style={styles.title}>{t.tracking.title}</Text>
             <View style={styles.headerButtons}>
               <Pressable style={styles.statsButton} onPress={() => router.push('/wellness')}>
-                <Heart size={18} color={Colors.gold} />
+                <Activity size={18} color={Colors.gold} />
               </Pressable>
               {(weightLogs.length > 0 || hydrationLogs.length > 0) && (
                 <Pressable style={styles.statsButton} onPress={() => router.push('/tracking-detail')}>
