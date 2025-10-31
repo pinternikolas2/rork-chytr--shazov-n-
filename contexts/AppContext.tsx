@@ -8,7 +8,7 @@ import type { SafetyStatus, DailyWeightCutPlan, BodyCompositionEstimate, Metabol
 import { trpcClient } from '@/lib/trpc';
 
 const DEFAULT_SETTINGS: AppSettings = {
-  language: 'en',
+  language: 'cs',
   theme: 'light',
   notifications: true,
   hasCompletedOnboarding: false,

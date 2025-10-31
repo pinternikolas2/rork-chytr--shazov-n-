@@ -1,8 +1,8 @@
 export type Language = 'cs' | 'en';
 
 export const LANGUAGES = [
-  { code: 'en' as const, name: 'English', flag: '🇬🇧' },
   { code: 'cs' as const, name: 'Čeština', flag: '🇨🇿' },
+  { code: 'en' as const, name: 'English', flag: '🇬🇧' },
 ] as const;
 
 const enTranslations = {

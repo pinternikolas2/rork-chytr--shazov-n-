@@ -71,7 +71,35 @@ export default function AIScreen() {
         `${meal.name} - ${meal.calories} kcal (P: ${meal.protein}g, C: ${meal.carbs}g, F: ${meal.fat}g, Na: ${meal.sodiumMg}mg)`
       ).join('\n');
 
-      const context = `You are an expert AI weight-cutting coach for combat sports athletes. You provide safe, science-based advice on weight cutting, hydration, nutrition, and recovery.
+      const isCzech = t.appName === 'Chytré Shazování';
+      
+      const context = isCzech 
+        ? `Jsi expertní AI trenér pro shazování váhy pro bojové sporty. Poskytuj bezpečné, vědecky podložené rady ohledně shazování váhy, hydratace, výživy a regenerace. ODPOVÍDEJ VŽDY V ČEŠTINĚ.
+
+Profil zápasníka:
+- Jméno: ${profile?.fullName || 'Neznámé'}
+- Aktuální váha: ${profile && profile.role === 'fighter' ? profile.currentWeight : 'Neznámá'} kg
+- Cílová váha: ${profile && profile.role === 'fighter' ? profile.targetWeight : 'Neznámá'} kg
+- Disciplína: ${profile?.discipline || 'Neznámá'}
+- Typ diety: ${profile && profile.role === 'fighter' ? profile.dietType : 'Neznámý'}
+- Intenzita tréninku: ${profile && profile.role === 'fighter' ? profile.trainingIntensity : 'Neznámá'}
+${upcomingFight ? `- Další zápas: ${upcomingFight.name} dne ${upcomingFight.date.toLocaleDateString('cs-CZ')}` : '- Žádný nadcházející zápas'}
+
+Dnešní sledování:
+- Hydratace: ${todayHydration} ml / ${hydrationGoal} ml (${Math.round((todayHydration / hydrationGoal) * 100)}%)
+- Kalorie: ${todayNutrition.calories} kcal / ${nutritionGoals.calories} kcal
+- Bílkoviny: ${todayNutrition.protein}g / ${nutritionGoals.protein}g
+- Sacharidy: ${todayNutrition.carbs}g / ${nutritionGoals.carbs}g
+- Tuky: ${todayNutrition.fat}g / ${nutritionGoals.fat}g
+- Sodík: ${todayNutrition.sodium}mg / ${nutritionGoals.sodium}mg
+- Jídla dnes (${todayMeals.length}):
+${todayMealsList || '  Zatím žádná zaznamenaná jídla'}
+
+Poslední záznamy váhy (posledních 7 dní):
+${recentWeightLogs || '  Žádné poslední záznamy váhy'}
+
+Poskytuj jasné, praktické a bezpečné rady na základě těchto dat. Vždy upřednostňuj bezpečnost a zdraví zápasníka. Používej skutečná data pro personalizovaná doporučení. ODPOVÍDEJ VŽDY V ČEŠTINĚ.`
+        : `You are an expert AI weight-cutting coach for combat sports athletes. You provide safe, science-based advice on weight cutting, hydration, nutrition, and recovery. ALWAYS RESPOND IN ENGLISH.
 
 Current fighter profile:
 - Name: ${profile?.fullName || 'Unknown'}
@@ -80,7 +108,7 @@ Current fighter profile:
 - Discipline: ${profile?.discipline || 'Unknown'}
 - Diet type: ${profile && profile.role === 'fighter' ? profile.dietType : 'Unknown'}
 - Training intensity: ${profile && profile.role === 'fighter' ? profile.trainingIntensity : 'Unknown'}
-${upcomingFight ? `- Next fight: ${upcomingFight.name} on ${upcomingFight.date.toLocaleDateString()}` : '- No upcoming fight scheduled'}
+${upcomingFight ? `- Next fight: ${upcomingFight.name} on ${upcomingFight.date.toLocaleDateString('en-US')}` : '- No upcoming fight scheduled'}
 
 Today's tracking data:
 - Hydration: ${todayHydration} ml / ${hydrationGoal} ml (${Math.round((todayHydration / hydrationGoal) * 100)}%)
@@ -95,7 +123,7 @@ ${todayMealsList || '  No meals logged yet'}
 Recent weight logs (last 7 days):
 ${recentWeightLogs || '  No recent weight logs'}
 
-Provide clear, actionable, and safe advice based on this data. Always prioritize fighter safety and health. Use the actual data to give personalized recommendations.`;
+Provide clear, actionable, and safe advice based on this data. Always prioritize fighter safety and health. Use the actual data to give personalized recommendations. ALWAYS RESPOND IN ENGLISH.`;
 
       const aiResponse = await generateText({
         messages: [
@@ -118,10 +146,11 @@ Provide clear, actionable, and safe advice based on this data. Always prioritize
       }, 100);
     } catch (error) {
       console.error('AI error:', error);
+      const isChech = t.appName === 'Chytré Shazování';
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
+        content: isChech ? 'Omlouváme se, došlo k chybě. Zkuste to prosím znovu.' : 'Sorry, I encountered an error. Please try again.',
       };
       setChatMessages((prev) => [...prev, errorMessage]);
     } finally {
