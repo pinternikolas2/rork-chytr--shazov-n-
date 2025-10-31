@@ -24,6 +24,7 @@ export interface FighterProfile extends UserProfile {
   role: 'fighter';
   currentWeight: number;
   targetWeight: number;
+  startingWeight?: number;
   weightClass: string;
   targetFightDate?: Date;
   cuttingStartDate?: Date;

@@ -45,10 +45,13 @@ export default function DashboardScreen() {
 
   const weightProgress = useMemo(() => {
     if (!profile || profile.role !== 'fighter') return 0;
-    const total = profile.currentWeight - profile.targetWeight;
+    const startWeight = profile.startingWeight || profile.currentWeight;
+    const total = startWeight - profile.targetWeight;
     if (total <= 0) return 100;
-    const current = profile.currentWeight - profile.targetWeight;
-    return Math.max(0, Math.min(100, ((total - current) / total) * 100));
+    const remaining = profile.currentWeight - profile.targetWeight;
+    if (remaining <= 0) return 100;
+    const progress = ((total - remaining) / total) * 100;
+    return Math.max(0, Math.min(100, progress));
   }, [profile]);
 
   const hydrationProgress = (todayHydration / dailyHydrationGoal) * 100;

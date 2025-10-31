@@ -141,7 +141,20 @@ export const [AppProvider, useApp] = createContextHook(() => {
     const updated = [...fights, newFight];
     setFights(updated);
     await AsyncStorage.setItem('fights', JSON.stringify(updated));
-  }, [fights]);
+
+    if (profile && profile.role === 'fighter' && fight.weightClass) {
+      const targetWeightFromClass = parseFloat(fight.weightClass.replace(/[^0-9.]/g, ''));
+      if (!isNaN(targetWeightFromClass)) {
+        const updatedProfile = { 
+          ...profile, 
+          targetWeight: targetWeightFromClass,
+          startingWeight: profile.startingWeight || profile.currentWeight
+        } as FighterProfile;
+        setProfile(updatedProfile);
+        await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
+      }
+    }
+  }, [fights, profile]);
 
   const updateFight = useCallback(async (id: string, updates: Partial<Fight>) => {
     const updated = fights.map((f) => (f.id === id ? { ...f, ...updates } : f));
