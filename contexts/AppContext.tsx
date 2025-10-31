@@ -2,7 +2,7 @@ import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Language, translations } from '@/constants/translations';
-import { AppSettings, Fight, FighterProfile, CoachProfile, HydrationLog, WeightLog, MealLog, CustomFood } from '@/constants/types';
+import { AppSettings, Fight, FighterProfile, CoachProfile, HydrationLog, WeightLog, MealLog, CustomFood, SupplementLog, RegenerationLog } from '@/constants/types';
 import { WeightCuttingScience } from '@/utils/scientificCalculations';
 import type { SafetyStatus, DailyWeightCutPlan, BodyCompositionEstimate, MetabolicData } from '@/utils/scientificCalculations';
 import { trpcClient } from '@/lib/trpc';
@@ -24,6 +24,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
   const [hydrationLogs, setHydrationLogs] = useState<HydrationLog[]>([]);
   const [mealLogs, setMealLogs] = useState<MealLog[]>([]);
   const [customFoods, setCustomFoods] = useState<CustomFood[]>([]);
+  const [supplementLogs, setSupplementLogs] = useState<SupplementLog[]>([]);
+  const [regenerationLogs, setRegenerationLogs] = useState<RegenerationLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -33,7 +35,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
   const loadStoredData = async () => {
     try {
       console.log('[AppContext] Starting to load stored data...');
-      const [storedSettings, storedProfile, storedFights, storedWeightLogs, storedHydrationLogs, storedMealLogs, storedCustomFoods] =
+      const [storedSettings, storedProfile, storedFights, storedWeightLogs, storedHydrationLogs, storedMealLogs, storedCustomFoods, storedSupplementLogs, storedRegenerationLogs] =
         await Promise.all([
           AsyncStorage.getItem('settings'),
           AsyncStorage.getItem('profile'),
@@ -42,6 +44,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
           AsyncStorage.getItem('hydrationLogs'),
           AsyncStorage.getItem('mealLogs'),
           AsyncStorage.getItem('customFoods'),
+          AsyncStorage.getItem('supplementLogs'),
+          AsyncStorage.getItem('regenerationLogs'),
         ]);
 
       if (storedSettings) {
@@ -93,6 +97,16 @@ export const [AppProvider, useApp] = createContextHook(() => {
         const parsedFoods = JSON.parse(storedCustomFoods);
         console.log('[AppContext] Loaded', parsedFoods.length, 'custom foods');
         setCustomFoods(parsedFoods.map((f: CustomFood) => ({ ...f, createdAt: new Date(f.createdAt) })));
+      }
+      if (storedSupplementLogs) {
+        const parsedLogs = JSON.parse(storedSupplementLogs);
+        console.log('[AppContext] Loaded', parsedLogs.length, 'supplement logs');
+        setSupplementLogs(parsedLogs.map((l: SupplementLog) => ({ ...l, date: new Date(l.date) })));
+      }
+      if (storedRegenerationLogs) {
+        const parsedLogs = JSON.parse(storedRegenerationLogs);
+        console.log('[AppContext] Loaded', parsedLogs.length, 'regeneration logs');
+        setRegenerationLogs(parsedLogs.map((l: RegenerationLog) => ({ ...l, date: new Date(l.date) })));
       }
       console.log('[AppContext] Finished loading stored data');
     } catch (error) {
@@ -188,16 +202,66 @@ export const [AppProvider, useApp] = createContextHook(() => {
     }
   }, [weightLogs, profile]);
 
-  const addHydrationLog = useCallback(async (amount: number) => {
+  const addHydrationLog = useCallback(async (amount: number, sodiumMg?: number, potassiumMg?: number, magnesiumMg?: number) => {
     const newLog: HydrationLog = {
       id: Date.now().toString(),
       date: new Date(),
       amount,
+      sodiumMg,
+      potassiumMg,
+      magnesiumMg,
     };
     const updated = [...hydrationLogs, newLog];
     setHydrationLogs(updated);
     await AsyncStorage.setItem('hydrationLogs', JSON.stringify(updated));
   }, [hydrationLogs]);
+
+  const addSupplementLog = useCallback(async (supplement: Omit<SupplementLog, 'id'>) => {
+    const newLog: SupplementLog = {
+      ...supplement,
+      id: Date.now().toString(),
+    };
+    const updated = [...supplementLogs, newLog];
+    setSupplementLogs(updated);
+    await AsyncStorage.setItem('supplementLogs', JSON.stringify(updated));
+  }, [supplementLogs]);
+
+  const deleteSupplementLog = useCallback(async (id: string) => {
+    const updated = supplementLogs.filter((s) => s.id !== id);
+    setSupplementLogs(updated);
+    await AsyncStorage.setItem('supplementLogs', JSON.stringify(updated));
+  }, [supplementLogs]);
+
+  const getTodaySupplements = useCallback((): SupplementLog[] => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return supplementLogs.filter((log) => {
+      const logDate = new Date(log.date);
+      logDate.setHours(0, 0, 0, 0);
+      return logDate.getTime() === today.getTime();
+    });
+  }, [supplementLogs]);
+
+  const addRegenerationLog = useCallback(async (log: Omit<RegenerationLog, 'id'>) => {
+    const newLog: RegenerationLog = {
+      ...log,
+      id: Date.now().toString(),
+    };
+    const updated = [...regenerationLogs, newLog];
+    setRegenerationLogs(updated);
+    await AsyncStorage.setItem('regenerationLogs', JSON.stringify(updated));
+  }, [regenerationLogs]);
+
+  const getTodayRegeneration = useCallback((): RegenerationLog | null => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayLogs = regenerationLogs.filter((log) => {
+      const logDate = new Date(log.date);
+      logDate.setHours(0, 0, 0, 0);
+      return logDate.getTime() === today.getTime();
+    });
+    return todayLogs[todayLogs.length - 1] || null;
+  }, [regenerationLogs]);
 
   const getUpcomingFight = useCallback((): Fight | null => {
     const now = new Date();
@@ -427,7 +491,9 @@ export const [AppProvider, useApp] = createContextHook(() => {
     setHydrationLogs([]);
     setMealLogs([]);
     setCustomFoods([]);
-    await AsyncStorage.multiRemove(['profile', 'fights', 'weightLogs', 'hydrationLogs', 'mealLogs', 'customFoods']);
+    setSupplementLogs([]);
+    setRegenerationLogs([]);
+    await AsyncStorage.multiRemove(['profile', 'fights', 'weightLogs', 'hydrationLogs', 'mealLogs', 'customFoods', 'supplementLogs', 'regenerationLogs']);
     await updateSettings({ hasCompletedOnboarding: false });
   }, [updateSettings]);
 
@@ -441,6 +507,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
     hydrationLogs,
     mealLogs,
     customFoods,
+    supplementLogs,
+    regenerationLogs,
     isLoading,
     t,
     setLanguage,
@@ -452,6 +520,11 @@ export const [AppProvider, useApp] = createContextHook(() => {
     deleteFight,
     addWeightLog,
     addHydrationLog,
+    addSupplementLog,
+    deleteSupplementLog,
+    getTodaySupplements,
+    addRegenerationLog,
+    getTodayRegeneration,
     addMealLog,
     updateMealLog,
     deleteMealLog,
@@ -478,6 +551,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
     hydrationLogs,
     mealLogs,
     customFoods,
+    supplementLogs,
+    regenerationLogs,
     isLoading,
     t,
     setLanguage,
@@ -489,6 +564,11 @@ export const [AppProvider, useApp] = createContextHook(() => {
     deleteFight,
     addWeightLog,
     addHydrationLog,
+    addSupplementLog,
+    deleteSupplementLog,
+    getTodaySupplements,
+    addRegenerationLog,
+    getTodayRegeneration,
     addMealLog,
     updateMealLog,
     deleteMealLog,

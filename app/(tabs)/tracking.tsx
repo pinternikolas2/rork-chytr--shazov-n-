@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Scale, Droplets, Calendar, BarChart3, TrendingDown } from 'lucide-react-native';
+import { Scale, Droplets, Calendar, BarChart3, TrendingDown, Heart } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
@@ -57,12 +57,16 @@ export default function TrackingScreen() {
         >
           <View style={styles.titleRow}>
             <Text style={styles.title}>{t.tracking.title}</Text>
-            {(weightLogs.length > 0 || hydrationLogs.length > 0) && (
-              <Pressable style={styles.statsButton} onPress={() => router.push('/tracking-detail')}>
-                <BarChart3 size={20} color={Colors.gold} />
-                <Text style={styles.statsButtonText}>Statistiky</Text>
+            <View style={styles.headerButtons}>
+              <Pressable style={styles.statsButton} onPress={() => router.push('/wellness')}>
+                <Heart size={18} color={Colors.gold} />
               </Pressable>
-            )}
+              {(weightLogs.length > 0 || hydrationLogs.length > 0) && (
+                <Pressable style={styles.statsButton} onPress={() => router.push('/tracking-detail')}>
+                  <BarChart3 size={18} color={Colors.gold} />
+                </Pressable>
+              )}
+            </View>
           </View>
 
           <View style={styles.card}>
@@ -264,18 +268,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
   },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
   title: {
     fontSize: 32,
     fontWeight: '700' as const,
     color: Colors.textPrimary,
   },
   statsButton: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    justifyContent: 'center',
     backgroundColor: Colors.lightGray,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    width: 40,
+    height: 40,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: Colors.border.light,

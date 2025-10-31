@@ -75,6 +75,8 @@ export interface HydrationLog {
   date: Date;
   amount: number;
   sodiumMg?: number;
+  potassiumMg?: number;
+  magnesiumMg?: number;
 }
 
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
@@ -110,6 +112,33 @@ export interface CustomFood {
   imageUri?: string;
   createdAt: Date;
   usageCount: number;
+}
+
+export type SupplementType = 'electrolytes' | 'protein' | 'creatine' | 'vitamins' | 'bcaa' | 'other';
+
+export interface SupplementLog {
+  id: string;
+  date: Date;
+  name: string;
+  type: SupplementType;
+  amount: string;
+  notes?: string;
+}
+
+export type EnergyLevel = 1 | 2 | 3 | 4 | 5;
+export type MoodLevel = 1 | 2 | 3 | 4 | 5;
+export type SleepQuality = 1 | 2 | 3 | 4 | 5;
+
+export interface RegenerationLog {
+  id: string;
+  date: Date;
+  energyLevel: EnergyLevel;
+  moodLevel: MoodLevel;
+  sleepQuality: SleepQuality;
+  sleepHours?: number;
+  muscleSoreness?: 1 | 2 | 3 | 4 | 5;
+  stress?: 1 | 2 | 3 | 4 | 5;
+  notes?: string;
 }
 
 export interface DailyProgress {
