@@ -284,25 +284,26 @@ const styles = StyleSheet.create({
   goalValues: {
     flexDirection: 'row',
     alignItems: 'baseline',
+    flexWrap: 'wrap',
   },
   goalCurrent: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '700' as const,
   },
   goalSeparator: {
-    fontSize: 18,
+    fontSize: 16,
     color: Colors.textSecondary,
-    marginHorizontal: 4,
+    marginHorizontal: 3,
   },
   goalTarget: {
-    fontSize: 16,
+    fontSize: 15,
     color: Colors.textSecondary,
     fontWeight: '600' as const,
   },
   goalUnit: {
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.textSecondary,
-    marginLeft: 4,
+    marginLeft: 3,
   },
   mealsSection: {
     marginBottom: 24,
