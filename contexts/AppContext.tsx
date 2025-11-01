@@ -6,6 +6,7 @@ import { AppSettings, Fight, FighterProfile, CoachProfile, HydrationLog, WeightL
 import { WeightCuttingScience } from '@/utils/scientificCalculations';
 import type { SafetyStatus, DailyWeightCutPlan, BodyCompositionEstimate, MetabolicData } from '@/utils/scientificCalculations';
 import { trpcClient } from '@/lib/trpc';
+import { supabase } from '@/lib/supabase';
 
 const DEFAULT_SETTINGS: AppSettings = {
   language: 'cs',
@@ -556,6 +557,14 @@ export const [AppProvider, useApp] = createContextHook(() => {
   }, [profile]);
 
   const signOut = useCallback(async () => {
+    console.log('[AppContext] Signing out...');
+    try {
+      await supabase.auth.signOut();
+      console.log('[AppContext] Successfully signed out from Supabase');
+    } catch (error) {
+      console.error('[AppContext] Error signing out from Supabase:', error);
+    }
+    
     setProfile(null);
     setFights([]);
     setWeightLogs([]);
@@ -568,6 +577,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
     setDailyNotes([]);
     await AsyncStorage.multiRemove(['profile', 'fights', 'weightLogs', 'hydrationLogs', 'mealLogs', 'customFoods', 'supplementLogs', 'regenerationLogs', 'sleepLogs', 'dailyNotes']);
     await updateSettings({ hasCompletedOnboarding: false });
+    console.log('[AppContext] Local data cleared, onboarding reset');
   }, [updateSettings]);
 
   const t = useMemo(() => translations[settings.language], [settings.language]);
