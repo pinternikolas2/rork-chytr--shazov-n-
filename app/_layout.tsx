@@ -23,16 +23,30 @@ function RootLayoutNav() {
   useEffect(() => {
     if (isLoading) return;
 
-    const inTabs = segments[0] === '(tabs)';
-    const inAuth = segments[0] === 'profile-setup';
-    const inWelcome = segments[0] === 'welcome';
-    const inModal = segments[0] === 'add-meal' || segments[0] === 'subscription' || segments[0] === 'support' || segments[0] === 'privacy' || segments[0] === 'terms' || segments[0] === 'tracking-detail' || segments[0] === 'wellness';
+    const currentSegment = segments[0];
+    const inTabs = currentSegment === '(tabs)';
+    const inAuth = currentSegment === 'profile-setup';
+    const inWelcome = currentSegment === 'welcome';
+    const inLanguage = currentSegment === 'language-selection';
+    const inModal = currentSegment === 'add-meal' || currentSegment === 'subscription' || currentSegment === 'support' || currentSegment === 'privacy' || currentSegment === 'terms' || currentSegment === 'tracking-detail' || currentSegment === 'wellness';
+    const isRoot = !currentSegment;
 
-    if (!hasSeenWelcome && !inWelcome && !inModal) {
+    console.log('[RootLayoutNav] Navigation check:', { 
+      hasSeenWelcome, 
+      hasCompletedOnboarding: settings.hasCompletedOnboarding, 
+      currentSegment,
+      isRoot,
+      allSegments: segments 
+    });
+
+    if (!hasSeenWelcome && !inWelcome && !inLanguage && !inModal) {
+      console.log('[RootLayoutNav] Redirecting to welcome - user has not seen welcome screen');
       router.replace('/welcome');
-    } else if (hasSeenWelcome && !settings.hasCompletedOnboarding && !inAuth && !inWelcome && !inModal) {
+    } else if (hasSeenWelcome && !settings.hasCompletedOnboarding && !inAuth && !inWelcome && !inLanguage && !inModal) {
+      console.log('[RootLayoutNav] Redirecting to profile-setup - onboarding not completed');
       router.replace('/profile-setup');
-    } else if (hasSeenWelcome && settings.hasCompletedOnboarding && !inTabs && !inModal && !inAuth && !inWelcome) {
+    } else if (hasSeenWelcome && settings.hasCompletedOnboarding && !inTabs && !inModal && !inAuth && !inWelcome && !inLanguage) {
+      console.log('[RootLayoutNav] Redirecting to tabs - user is fully onboarded');
       router.replace('/(tabs)');
     }
   }, [isLoading, hasSeenWelcome, settings.hasCompletedOnboarding, segments, router]);

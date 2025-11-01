@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Dumbbell } from 'lucide-react-native';
+import { Swords } from 'lucide-react-native';
 import React from 'react';
 import {
   Pressable,
@@ -67,7 +67,7 @@ export default function WelcomeScreen() {
         >
           <View style={styles.logoContainer}>
             <View style={styles.logoCircle}>
-              <Dumbbell size={64} color={Colors.black} strokeWidth={2} />
+              <Swords size={64} color={Colors.black} strokeWidth={2} />
             </View>
           </View>
 
