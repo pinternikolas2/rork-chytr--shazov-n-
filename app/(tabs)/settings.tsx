@@ -224,11 +224,10 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t.settings.account}</Text>
           <View style={styles.card}>
             <Pressable 
               style={styles.signOutButton} 
-              onPress={() => {
+              onPress={async () => {
                 Alert.alert(
                   t.settings.confirmSignOut,
                   t.settings.signOutMessage,
@@ -240,7 +239,10 @@ export default function SettingsScreen() {
                     {
                       text: t.settings.signOut,
                       style: 'destructive',
-                      onPress: () => signOut(),
+                      onPress: async () => {
+                        await signOut();
+                        router.replace('/welcome');
+                      },
                     },
                   ]
                 );
@@ -359,29 +361,31 @@ export default function SettingsScreen() {
                 </View>
               </View>
 
-              <View style={styles.row}>
-                <View style={[styles.inputGroup, styles.halfWidth]}>
-                  <Text style={styles.label}>{t.profile.currentWeight}</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={currentWeight}
-                    onChangeText={setCurrentWeight}
-                    keyboardType="decimal-pad"
-                    placeholderTextColor={Colors.textLight}
-                  />
-                </View>
+              {profile && profile.role === 'fighter' && (
+                <View style={styles.row}>
+                  <View style={[styles.inputGroup, styles.halfWidth]}>
+                    <Text style={styles.label}>{t.profile.currentWeight}</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={currentWeight}
+                      onChangeText={setCurrentWeight}
+                      keyboardType="decimal-pad"
+                      placeholderTextColor={Colors.textLight}
+                    />
+                  </View>
 
-                <View style={[styles.inputGroup, styles.halfWidth]}>
-                  <Text style={styles.label}>{t.profile.targetWeight}</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={targetWeight}
-                    onChangeText={setTargetWeight}
-                    keyboardType="decimal-pad"
-                    placeholderTextColor={Colors.textLight}
-                  />
+                  <View style={[styles.inputGroup, styles.halfWidth]}>
+                    <Text style={styles.label}>{t.profile.targetWeight}</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={targetWeight}
+                      onChangeText={setTargetWeight}
+                      keyboardType="decimal-pad"
+                      placeholderTextColor={Colors.textLight}
+                    />
+                  </View>
                 </View>
-              </View>
+              )}
 
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>{t.profile.discipline}</Text>
