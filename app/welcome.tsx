@@ -23,17 +23,17 @@ export default function WelcomeScreen() {
   const handleTryFree = async () => {
     await startTrial();
     await markWelcomeSeen();
-    router.replace('/profile-setup');
+    router.replace('/(tabs)');
   };
 
   const handleContinueWithoutAccount = async () => {
     await skipWelcome();
-    router.replace('/profile-setup');
+    router.replace('/(tabs)');
   };
 
   const handleLogin = async () => {
     await markWelcomeSeen();
-    router.replace('/profile-setup');
+    router.replace('/(tabs)');
   };
 
   const handlePrivacy = () => {

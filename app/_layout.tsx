@@ -42,11 +42,8 @@ function RootLayoutNav() {
     if (!hasSeenWelcome && !inWelcome && !inLanguage && !inModal) {
       console.log('[RootLayoutNav] Redirecting to welcome - user has not seen welcome screen');
       router.replace('/welcome');
-    } else if (hasSeenWelcome && !settings.hasCompletedOnboarding && !inAuth && !inWelcome && !inLanguage && !inModal) {
-      console.log('[RootLayoutNav] Redirecting to profile-setup - onboarding not completed');
-      router.replace('/profile-setup');
-    } else if (hasSeenWelcome && settings.hasCompletedOnboarding && !inTabs && !inModal && !inAuth && !inWelcome && !inLanguage) {
-      console.log('[RootLayoutNav] Redirecting to tabs - user is fully onboarded');
+    } else if (hasSeenWelcome && !inTabs && !inModal && !inAuth && !inWelcome && !inLanguage && isRoot) {
+      console.log('[RootLayoutNav] Redirecting to tabs - user has seen welcome, going to app');
       router.replace('/(tabs)');
     }
   }, [isLoading, hasSeenWelcome, settings.hasCompletedOnboarding, segments, router]);
