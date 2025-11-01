@@ -13,7 +13,7 @@ export default function LanguageSelectionScreen() {
 
   const handleContinue = () => {
     setLanguage(selectedLanguage);
-    router.replace('/onboarding');
+    router.replace('/profile-setup');
   };
 
   return (
