@@ -248,7 +248,7 @@ export default function AddMealScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {photo && (
+          {photo && photo.trim() !== '' && (
             <View style={styles.photoContainer}>
               <Image source={{ uri: photo }} style={styles.photo} />
               <Pressable
