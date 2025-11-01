@@ -24,7 +24,7 @@ function RootLayoutNav() {
     if (isLoading) return;
 
     const inTabs = segments[0] === '(tabs)';
-    const inAuth = segments[0] === 'language-selection' || segments[0] === 'onboarding' || segments[0] === 'profile-setup';
+    const inAuth = segments[0] === 'language-selection' || segments[0] === 'profile-setup';
     const inWelcome = segments[0] === 'welcome';
     const inModal = segments[0] === 'add-meal' || segments[0] === 'subscription' || segments[0] === 'support' || segments[0] === 'privacy' || segments[0] === 'terms' || segments[0] === 'tracking-detail' || segments[0] === 'wellness';
 
@@ -47,7 +47,6 @@ function RootLayoutNav() {
     <Stack screenOptions={{ headerShown: true }}>
       <Stack.Screen name="welcome" options={{ headerShown: false }} />
       <Stack.Screen name="language-selection" options={{ headerShown: false }} />
-      <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="profile-setup" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="tracking-detail" options={{ presentation: "modal", headerShown: false }} />

@@ -31,8 +31,9 @@ export default function WelcomeScreen() {
     router.replace('/language-selection');
   };
 
-  const handleLogin = () => {
-    router.push('/onboarding');
+  const handleLogin = async () => {
+    await markWelcomeSeen();
+    router.replace('/language-selection');
   };
 
   const handlePrivacy = () => {
