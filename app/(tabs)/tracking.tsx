@@ -79,9 +79,6 @@ export default function TrackingScreen() {
           <View style={styles.titleRow}>
             <Text style={styles.title}>{t.tracking.title}</Text>
             <View style={styles.headerButtons}>
-              <Pressable style={styles.statsButton} onPress={() => router.push('/wellness')}>
-                <Activity size={18} color={Colors.gold} />
-              </Pressable>
               {(weightLogs.length > 0 || hydrationLogs.length > 0) && (
                 <Pressable style={styles.statsButton} onPress={() => router.push('/tracking-detail')}>
                   <BarChart3 size={18} color={Colors.gold} />
