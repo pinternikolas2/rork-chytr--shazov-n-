@@ -24,14 +24,14 @@ function RootLayoutNav() {
     if (isLoading) return;
 
     const inTabs = segments[0] === '(tabs)';
-    const inAuth = segments[0] === 'language-selection' || segments[0] === 'profile-setup';
+    const inAuth = segments[0] === 'profile-setup';
     const inWelcome = segments[0] === 'welcome';
     const inModal = segments[0] === 'add-meal' || segments[0] === 'subscription' || segments[0] === 'support' || segments[0] === 'privacy' || segments[0] === 'terms' || segments[0] === 'tracking-detail' || segments[0] === 'wellness';
 
-    if (!hasSeenWelcome && !inWelcome) {
+    if (!hasSeenWelcome && !inWelcome && !inModal) {
       router.replace('/welcome');
-    } else if (hasSeenWelcome && !settings.hasCompletedOnboarding && !inAuth && !inWelcome) {
-      router.replace('/language-selection');
+    } else if (hasSeenWelcome && !settings.hasCompletedOnboarding && !inAuth && !inWelcome && !inModal) {
+      router.replace('/profile-setup');
     } else if (hasSeenWelcome && settings.hasCompletedOnboarding && !inTabs && !inModal && !inAuth && !inWelcome) {
       router.replace('/(tabs)');
     }

@@ -23,17 +23,17 @@ export default function WelcomeScreen() {
   const handleTryFree = async () => {
     await startTrial();
     await markWelcomeSeen();
-    router.replace('/language-selection');
+    router.replace('/profile-setup');
   };
 
   const handleContinueWithoutAccount = async () => {
     await skipWelcome();
-    router.replace('/language-selection');
+    router.replace('/profile-setup');
   };
 
   const handleLogin = async () => {
     await markWelcomeSeen();
-    router.replace('/language-selection');
+    router.replace('/profile-setup');
   };
 
   const handlePrivacy = () => {
@@ -77,15 +77,15 @@ export default function WelcomeScreen() {
           <View style={styles.featuresContainer}>
             <View style={styles.featureRow}>
               <View style={styles.featureDot} />
-              <Text style={styles.featureText}>AI analýza jídel</Text>
+              <Text style={styles.featureText}>{settings.language === 'cs' ? 'AI analýza jídel' : 'AI food analysis'}</Text>
             </View>
             <View style={styles.featureRow}>
               <View style={styles.featureDot} />
-              <Text style={styles.featureText}>Pokročilé statistiky</Text>
+              <Text style={styles.featureText}>{settings.language === 'cs' ? 'Pokročilé statistiky' : 'Advanced statistics'}</Text>
             </View>
             <View style={styles.featureRow}>
               <View style={styles.featureDot} />
-              <Text style={styles.featureText}>Personalizované rady</Text>
+              <Text style={styles.featureText}>{settings.language === 'cs' ? 'Personalizované rady' : 'Personalized advice'}</Text>
             </View>
           </View>
 
@@ -121,11 +121,11 @@ export default function WelcomeScreen() {
 
           <View style={styles.footerLinks}>
             <Pressable onPress={handleTerms}>
-              <Text style={styles.linkText}>Podmínky služby</Text>
+              <Text style={styles.linkText}>{settings.language === 'cs' ? 'Podmínky služby' : 'Terms of Service'}</Text>
             </Pressable>
             <Text style={styles.linkSeparator}>|</Text>
             <Pressable onPress={handlePrivacy}>
-              <Text style={styles.linkText}>Zásady ochrany</Text>
+              <Text style={styles.linkText}>{settings.language === 'cs' ? 'Zásady ochrany' : 'Privacy Policy'}</Text>
             </Pressable>
           </View>
         </ScrollView>
