@@ -1,29 +1,29 @@
-import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface NotificationSettings {
   waterReminders: boolean;
-  mealReminders: boolean;
-  weightReminders: boolean;
-  morningWeightTime: string;
-  eveningWeightTime: string;
   waterInterval: number;
+  mealReminders: boolean;
   breakfastTime: string;
   lunchTime: string;
   dinnerTime: string;
+  weightReminders: boolean;
+  morningWeightTime: string;
+  eveningWeightTime: string;
 }
 
 const DEFAULT_SETTINGS: NotificationSettings = {
   waterReminders: true,
+  waterInterval: 2,
   mealReminders: true,
+  breakfastTime: '08:00',
+  lunchTime: '12:30',
+  dinnerTime: '18:30',
   weightReminders: true,
   morningWeightTime: '07:00',
   eveningWeightTime: '21:00',
-  waterInterval: 2,
-  breakfastTime: '08:00',
-  lunchTime: '12:30',
-  dinnerTime: '19:00',
 };
 
 const STORAGE_KEY = 'notificationSettings';
@@ -38,41 +38,27 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export async function requestNotificationPermissions(): Promise<boolean> {
+export async function requestPermissions(): Promise<boolean> {
   if (Platform.OS === 'web') {
-    console.log('[Notifications] Skipping permission request on web');
     return false;
   }
 
-  try {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
 
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
 
-    if (finalStatus !== 'granted') {
-      console.log('[Notifications] Permission not granted');
-      return false;
-    }
+  const { status: existingStatus } = await Notifications.getPermissionsAsync();
+  let finalStatus = existingStatus;
 
-    if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync('default', {
-        name: 'Default',
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#D4AF37',
-      });
-    }
+  if (existingStatus !== 'granted') {
+    const { status } = await Notifications.requestPermissionsAsync();
+    finalStatus = status;
+  }
 
-    console.log('[Notifications] Permissions granted');
-    return true;
-  } catch (error) {
-    console.error('[Notifications] Error requesting permissions:', error);
+  if (finalStatus !== 'granted') {
+    console.log('[Notifications] Permission denied');
     return false;
   }
+
+  return true;
 }
 
 export async function getNotificationSettings(): Promise<NotificationSettings> {
@@ -81,13 +67,16 @@ export async function getNotificationSettings(): Promise<NotificationSettings> {
     if (stored) {
       return { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
     }
+    return DEFAULT_SETTINGS;
   } catch (error) {
     console.error('[Notifications] Error loading settings:', error);
+    return DEFAULT_SETTINGS;
   }
-  return DEFAULT_SETTINGS;
 }
 
-export async function saveNotificationSettings(settings: Partial<NotificationSettings>): Promise<void> {
+export async function saveNotificationSettings(
+  settings: Partial<NotificationSettings>
+): Promise<void> {
   try {
     const current = await getNotificationSettings();
     const updated = { ...current, ...settings };
@@ -98,166 +87,152 @@ export async function saveNotificationSettings(settings: Partial<NotificationSet
   }
 }
 
-export async function scheduleWaterReminders(): Promise<void> {
-  if (Platform.OS === 'web') return;
-
-  try {
-    const settings = await getNotificationSettings();
-    if (!settings.waterReminders) {
-      console.log('[Notifications] Water reminders disabled');
-      return;
-    }
-
-    await Notifications.cancelAllScheduledNotificationsAsync();
-
-    const startHour = 8;
-    const endHour = 21;
-    const interval = settings.waterInterval;
-
-    for (let hour = startHour; hour <= endHour; hour += interval) {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: '💧 Nezapomeň pít!',
-          body: 'Je čas doplnit hydrataci. Zůstaň hydratovaný!',
-          sound: true,
-          priority: Notifications.AndroidNotificationPriority.HIGH,
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
-          hour,
-          minute: 0,
-          repeats: true,
-        },
-      });
-    }
-
-    console.log('[Notifications] Water reminders scheduled');
-  } catch (error) {
-    console.error('[Notifications] Error scheduling water reminders:', error);
-  }
-}
-
-export async function scheduleMealReminders(): Promise<void> {
-  if (Platform.OS === 'web') return;
-
-  try {
-    const settings = await getNotificationSettings();
-    if (!settings.mealReminders) {
-      console.log('[Notifications] Meal reminders disabled');
-      return;
-    }
-
-    const meals = [
-      { time: settings.breakfastTime, name: 'Snídaně', emoji: '🍳' },
-      { time: settings.lunchTime, name: 'Oběd', emoji: '🍽️' },
-      { time: settings.dinnerTime, name: 'Večeře', emoji: '🥗' },
-    ];
-
-    for (const meal of meals) {
-      const [hour, minute] = meal.time.split(':').map(Number);
-      
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: `${meal.emoji} Čas na ${meal.name.toLowerCase()}!`,
-          body: 'Nezapomeň zaznamenat své jídlo',
-          sound: true,
-          priority: Notifications.AndroidNotificationPriority.HIGH,
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
-          hour,
-          minute,
-          repeats: true,
-        },
-      });
-    }
-
-    console.log('[Notifications] Meal reminders scheduled');
-  } catch (error) {
-    console.error('[Notifications] Error scheduling meal reminders:', error);
-  }
-}
-
-export async function scheduleWeightReminders(): Promise<void> {
-  if (Platform.OS === 'web') return;
-
-  try {
-    const settings = await getNotificationSettings();
-    if (!settings.weightReminders) {
-      console.log('[Notifications] Weight reminders disabled');
-      return;
-    }
-
-    const [morningHour, morningMinute] = settings.morningWeightTime.split(':').map(Number);
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: '⚖️ Ranní vážení',
-        body: 'Nezapomeň se zvážit na lačno',
-        sound: true,
-        priority: Notifications.AndroidNotificationPriority.HIGH,
-      },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
-        hour: morningHour,
-        minute: morningMinute,
-        repeats: true,
-      },
-    });
-
-    const [eveningHour, eveningMinute] = settings.eveningWeightTime.split(':').map(Number);
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: '⚖️ Večerní vážení',
-        body: 'Čas na večerní kontrolu váhy',
-        sound: true,
-        priority: Notifications.AndroidNotificationPriority.HIGH,
-      },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
-        hour: eveningHour,
-        minute: eveningMinute,
-        repeats: true,
-      },
-    });
-
-    console.log('[Notifications] Weight reminders scheduled');
-  } catch (error) {
-    console.error('[Notifications] Error scheduling weight reminders:', error);
-  }
-}
-
-export async function scheduleAllReminders(): Promise<void> {
-  const hasPermission = await requestNotificationPermissions();
-  if (!hasPermission) {
-    console.log('[Notifications] Cannot schedule reminders without permissions');
-    return;
-  }
-
-  await scheduleWaterReminders();
-  await scheduleMealReminders();
-  await scheduleWeightReminders();
-  console.log('[Notifications] All reminders scheduled');
-}
-
-export async function cancelAllReminders(): Promise<void> {
+export async function cancelAllNotifications(): Promise<void> {
   if (Platform.OS === 'web') return;
   
   try {
     await Notifications.cancelAllScheduledNotificationsAsync();
-    console.log('[Notifications] All reminders cancelled');
+    console.log('[Notifications] All notifications cancelled');
   } catch (error) {
-    console.error('[Notifications] Error cancelling reminders:', error);
+    console.error('[Notifications] Error cancelling notifications:', error);
   }
 }
 
-export async function sendTestNotification(): Promise<void> {
+function parseTime(timeString: string): { hour: number; minute: number } {
+  const [hourStr, minuteStr] = timeString.split(':');
+  return {
+    hour: parseInt(hourStr, 10),
+    minute: parseInt(minuteStr, 10),
+  };
+}
+
+async function scheduleNotification(
+  title: string,
+  body: string,
+  hour: number,
+  minute: number
+): Promise<void> {
   if (Platform.OS === 'web') return;
 
   try {
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: '✅ Notifikace fungují!',
-        body: 'Tvoje připomínky jsou nastaveny',
+        title,
+        body,
+        sound: true,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DAILY,
+        hour,
+        minute,
+      },
+    });
+    console.log(`[Notifications] Scheduled: ${title} at ${hour}:${minute}`);
+  } catch (error) {
+    console.error('[Notifications] Error scheduling notification:', error);
+  }
+}
+
+async function scheduleWaterReminders(intervalHours: number): Promise<void> {
+  if (Platform.OS === 'web') return;
+
+  const startHour = 8;
+  const endHour = 22;
+
+  for (let hour = startHour; hour < endHour; hour += intervalHours) {
+    await scheduleNotification(
+      '💧 Čas na vodu!',
+      'Nezapomeň se napít. Udržuj pravidelnou hydrataci.',
+      hour,
+      0
+    );
+  }
+}
+
+export async function scheduleAllReminders(): Promise<void> {
+  if (Platform.OS === 'web') {
+    console.log('[Notifications] Web platform, skipping notifications');
+    return;
+  }
+
+  const hasPermission = await requestPermissions();
+  if (!hasPermission) {
+    console.log('[Notifications] No permission, skipping schedule');
+    return;
+  }
+
+  await cancelAllNotifications();
+
+  const settings = await getNotificationSettings();
+
+  if (settings.waterReminders) {
+    await scheduleWaterReminders(settings.waterInterval);
+  }
+
+  if (settings.mealReminders) {
+    const breakfast = parseTime(settings.breakfastTime);
+    await scheduleNotification(
+      '🍳 Čas na snídani!',
+      'Nezapomeň zaznamenat svou snídani.',
+      breakfast.hour,
+      breakfast.minute
+    );
+
+    const lunch = parseTime(settings.lunchTime);
+    await scheduleNotification(
+      '🍽️ Čas na oběd!',
+      'Nezapomeň zaznamenat svůj oběd.',
+      lunch.hour,
+      lunch.minute
+    );
+
+    const dinner = parseTime(settings.dinnerTime);
+    await scheduleNotification(
+      '🥗 Čas na večeři!',
+      'Nezapomeň zaznamenat svou večeři.',
+      dinner.hour,
+      dinner.minute
+    );
+  }
+
+  if (settings.weightReminders) {
+    const morning = parseTime(settings.morningWeightTime);
+    await scheduleNotification(
+      '⚖️ Ranní vážení',
+      'Čas na ranní vážení. Nezapomeň zaznamenat svou váhu.',
+      morning.hour,
+      morning.minute
+    );
+
+    const evening = parseTime(settings.eveningWeightTime);
+    await scheduleNotification(
+      '⚖️ Večerní vážení',
+      'Čas na večerní vážení. Nezapomeň zaznamenat svou váhu.',
+      evening.hour,
+      evening.minute
+    );
+  }
+
+  console.log('[Notifications] All reminders scheduled');
+}
+
+export async function sendTestNotification(): Promise<void> {
+  if (Platform.OS === 'web') {
+    console.log('[Notifications] Web platform, test notification skipped');
+    return;
+  }
+
+  const hasPermission = await requestPermissions();
+  if (!hasPermission) {
+    console.log('[Notifications] No permission for test notification');
+    return;
+  }
+
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: '✅ Test notifikace',
+        body: 'Notifikace fungují správně!',
         sound: true,
       },
       trigger: {

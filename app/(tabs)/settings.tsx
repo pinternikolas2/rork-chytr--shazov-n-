@@ -166,7 +166,7 @@ export default function SettingsScreen() {
                 </View>
                 <View style={styles.settingContent}>
                   <Text style={styles.settingTitle}>Premium</Text>
-                  <Text style={styles.settingSubtitle}>Všechny funkce odmċněny</Text>
+                  <Text style={styles.settingSubtitle}>Všechny funkce odemčeny</Text>
                 </View>
               </View>
             )}

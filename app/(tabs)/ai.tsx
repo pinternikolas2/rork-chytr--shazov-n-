@@ -146,11 +146,11 @@ Provide clear, actionable, and safe advice based on this data. Always prioritize
       }, 100);
     } catch (error) {
       console.error('AI error:', error);
-      const isChech = t.appName === 'Chytré Shazování';
+      const isCzech = t.appName === 'Chytré Shazování';
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: isChech ? 'Omlouváme se, došlo k chybě. Zkuste to prosím znovu.' : 'Sorry, I encountered an error. Please try again.',
+        content: isCzech ? 'Omlouváme se, došlo k chybě. Zkuste to prosím znovu.' : 'Sorry, I encountered an error. Please try again.',
       };
       setChatMessages((prev) => [...prev, errorMessage]);
     } finally {
