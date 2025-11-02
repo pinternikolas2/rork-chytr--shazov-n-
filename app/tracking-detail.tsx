@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { X, TrendingDown, TrendingUp, Droplets, Calendar, Activity } from 'lucide-react-native';
+import { X, TrendingDown, TrendingUp, Droplets, Calendar, Activity, Target, Zap } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
@@ -66,7 +66,15 @@ export default function TrackingDetailScreen() {
     const oldest = filteredWeightLogs[filteredWeightLogs.length - 1].weight;
     const change = latest - oldest;
     
-    return { max, min, avg, latest, oldest, change };
+    const weeklyAvg = filteredWeightLogs.length >= 7 
+      ? filteredWeightLogs.slice(0, 7).reduce((sum, l) => sum + l.weight, 0) / Math.min(7, filteredWeightLogs.length)
+      : avg;
+    
+    const trend = filteredWeightLogs.length >= 3
+      ? (filteredWeightLogs[0].weight - filteredWeightLogs[Math.min(2, filteredWeightLogs.length - 1)].weight) / Math.min(3, filteredWeightLogs.length)
+      : 0;
+    
+    return { max, min, avg, latest, oldest, change, weeklyAvg, trend };
   }, [filteredWeightLogs]);
 
   const renderWeightChart = () => {
@@ -242,26 +250,73 @@ export default function TrackingDetailScreen() {
           </View>
 
           {weightStats && (
-            <View style={styles.statsGrid}>
-              <View style={styles.statCard}>
-                <Text style={styles.statValue}>{weightStats.latest.toFixed(1)}</Text>
-                <Text style={styles.statLabel}>Aktuální</Text>
+            <>
+              <View style={styles.statsGrid}>
+                <View style={styles.statCard}>
+                  <Text style={styles.statValue}>{weightStats.latest.toFixed(1)}</Text>
+                  <Text style={styles.statLabel}>Aktuální</Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Text style={[styles.statValue, weightStats.change < 0 ? styles.statValueGood : styles.statValueBad]}>
+                    {weightStats.change > 0 ? '+' : ''}{weightStats.change.toFixed(1)}
+                  </Text>
+                  <Text style={styles.statLabel}>Změna</Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Text style={styles.statValue}>{weightStats.avg.toFixed(1)}</Text>
+                  <Text style={styles.statLabel}>Průměr</Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Text style={styles.statValue}>{(weightStats.max - weightStats.min).toFixed(1)}</Text>
+                  <Text style={styles.statLabel}>Rozpětí</Text>
+                </View>
               </View>
-              <View style={styles.statCard}>
-                <Text style={[styles.statValue, weightStats.change < 0 ? styles.statValueGood : styles.statValueBad]}>
-                  {weightStats.change > 0 ? '+' : ''}{weightStats.change.toFixed(1)}
-                </Text>
-                <Text style={styles.statLabel}>Změna</Text>
+
+              <View style={styles.trendCard}>
+                <View style={styles.trendHeader}>
+                  <Zap size={20} color={weightStats.trend < 0 ? Colors.gold : '#ef4444'} />
+                  <Text style={styles.trendTitle}>Týdenní analýza</Text>
+                </View>
+                <View style={styles.trendGrid}>
+                  <View style={styles.trendItem}>
+                    <Text style={styles.trendLabel}>Týdenní průměr</Text>
+                    <Text style={styles.trendValue}>{weightStats.weeklyAvg.toFixed(1)} kg</Text>
+                  </View>
+                  <View style={styles.trendItem}>
+                    <Text style={styles.trendLabel}>Trend</Text>
+                    <View style={styles.trendValueRow}>
+                      {weightStats.trend < 0 ? (
+                        <TrendingDown size={16} color={Colors.gold} />
+                      ) : weightStats.trend > 0 ? (
+                        <TrendingUp size={16} color="#ef4444" />
+                      ) : null}
+                      <Text style={[styles.trendValue, weightStats.trend < 0 ? styles.trendValueGood : styles.trendValueBad]}>
+                        {Math.abs(weightStats.trend).toFixed(2)} kg/den
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                {profile && profile.role === 'fighter' && upcomingFight && (
+                  <View style={styles.predictionBox}>
+                    <Target size={16} color={Colors.textSecondary} />
+                    <Text style={styles.predictionText}>
+                      {(() => {
+                        const daysUntil = Math.ceil((upcomingFight.date.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                        const predictedWeight = weightStats.latest + (weightStats.trend * daysUntil);
+                        const diff = predictedWeight - profile.targetWeight;
+                        if (diff > 0.5) {
+                          return `Při současném trendu budete mít ${diff.toFixed(1)} kg nad cílem`;
+                        } else if (diff < -0.5) {
+                          return `Při současném trendu dosáhnete cíle a budete mít ${Math.abs(diff).toFixed(1)} kg rezervu`;
+                        } else {
+                          return 'Při současném trendu dosáhnete přesně cílové váhy!';
+                        }
+                      })()}
+                    </Text>
+                  </View>
+                )}
               </View>
-              <View style={styles.statCard}>
-                <Text style={styles.statValue}>{weightStats.avg.toFixed(1)}</Text>
-                <Text style={styles.statLabel}>Průměr</Text>
-              </View>
-              <View style={styles.statCard}>
-                <Text style={styles.statValue}>{(weightStats.max - weightStats.min).toFixed(1)}</Text>
-                <Text style={styles.statLabel}>Rozpětí</Text>
-              </View>
-            </View>
+            </>
           )}
 
           <View style={styles.chartContainer}>
@@ -659,5 +714,68 @@ const styles = StyleSheet.create({
   },
   diffTextBad: {
     color: '#ef4444',
+  },
+  trendCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: Colors.gold,
+  },
+  trendHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  trendTitle: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
+  },
+  trendGrid: {
+    gap: 12,
+    marginBottom: 12,
+  },
+  trendItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  trendLabel: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+  },
+  trendValue: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
+  },
+  trendValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  trendValueGood: {
+    color: Colors.gold,
+  },
+  trendValueBad: {
+    color: '#ef4444',
+  },
+  predictionBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: Colors.lightGray,
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 8,
+  },
+  predictionText: {
+    flex: 1,
+    fontSize: 13,
+    color: Colors.textPrimary,
+    lineHeight: 18,
   },
 });

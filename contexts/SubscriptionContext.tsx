@@ -11,11 +11,13 @@ export interface SubscriptionState {
   premiumStartDate?: Date;
   premiumEndDate?: Date;
   hasSeenWelcome: boolean;
+  hasSeenOnboarding: boolean;
 }
 
 const DEFAULT_STATE: SubscriptionState = {
   tier: 'free',
   hasSeenWelcome: false,
+  hasSeenOnboarding: false,
 };
 
 const TRIAL_DAYS = 7;
@@ -133,6 +135,16 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     console.log('[SubscriptionContext] Welcome marked as seen');
   }, [state]);
 
+  const markOnboardingSeen = useCallback(async () => {
+    const newState: SubscriptionState = {
+      ...state,
+      hasSeenOnboarding: true,
+    };
+    
+    await saveState(newState);
+    console.log('[SubscriptionContext] Onboarding marked as seen');
+  }, [state]);
+
   const skipWelcome = useCallback(async () => {
     const newState: SubscriptionState = {
       ...state,
@@ -183,6 +195,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     isLoading,
     tier: state.tier,
     hasSeenWelcome: state.hasSeenWelcome,
+    hasSeenOnboarding: state.hasSeenOnboarding,
     isPremium: state.tier === 'premium',
     isTrial: state.tier === 'trial',
     isFree: state.tier === 'free',
@@ -191,6 +204,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     startPremium,
     cancelSubscription,
     markWelcomeSeen,
+    markOnboardingSeen,
     skipWelcome,
     hasAccessToFeature,
     isFeatureLocked,
@@ -203,6 +217,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     startPremium,
     cancelSubscription,
     markWelcomeSeen,
+    markOnboardingSeen,
     skipWelcome,
     hasAccessToFeature,
     isFeatureLocked,

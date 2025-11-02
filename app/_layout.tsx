@@ -14,7 +14,7 @@ const queryClient = new QueryClient();
 
 function RootLayoutNav() {
   const { settings, isLoading: appLoading } = useApp();
-  const { hasSeenWelcome, isLoading: subLoading } = useSubscription();
+  const { hasSeenWelcome, hasSeenOnboarding, isLoading: subLoading } = useSubscription();
   const segments = useSegments();
   const router = useRouter();
 
@@ -24,11 +24,13 @@ function RootLayoutNav() {
     if (isLoading) return;
 
     const currentSegment = segments[0];
+    const inOnboarding = currentSegment === 'onboarding';
     const inWelcome = currentSegment === 'welcome';
     const inModal = currentSegment === 'add-meal' || currentSegment === 'subscription' || currentSegment === 'support' || currentSegment === 'privacy' || currentSegment === 'terms' || currentSegment === 'tracking-detail' || currentSegment === 'wellness';
     const isRoot = !currentSegment;
 
     console.log('[RootLayoutNav] Navigation check:', { 
+      hasSeenOnboarding,
       hasSeenWelcome, 
       hasCompletedOnboarding: settings.hasCompletedOnboarding, 
       currentSegment,
@@ -36,7 +38,13 @@ function RootLayoutNav() {
       allSegments: segments 
     });
 
-    if (!hasSeenWelcome && !inWelcome && !inModal) {
+    if (!hasSeenOnboarding && !inOnboarding && !inWelcome && !inModal) {
+      console.log('[RootLayoutNav] Redirecting to onboarding - user has not seen onboarding');
+      router.replace('/onboarding');
+      return;
+    }
+
+    if (hasSeenOnboarding && !hasSeenWelcome && !inWelcome && !inModal) {
       console.log('[RootLayoutNav] Redirecting to welcome - user has not seen welcome screen');
       router.replace('/welcome');
       return;
@@ -46,7 +54,7 @@ function RootLayoutNav() {
       console.log('[RootLayoutNav] Redirecting to tabs - user has seen welcome, going to app');
       router.replace('/(tabs)');
     }
-  }, [isLoading, hasSeenWelcome, settings.hasCompletedOnboarding, segments, router]);
+  }, [isLoading, hasSeenOnboarding, hasSeenWelcome, settings.hasCompletedOnboarding, segments, router]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -56,6 +64,7 @@ function RootLayoutNav() {
 
   return (
     <Stack screenOptions={{ headerShown: true }}>
+      <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="welcome" options={{ headerShown: false }} />
       <Stack.Screen name="language-selection" options={{ headerShown: false }} />
       <Stack.Screen name="profile-setup" options={{ headerShown: false }} />
@@ -98,6 +107,13 @@ function RootLayoutNav() {
       />
       <Stack.Screen 
         name="wellness" 
+        options={{ 
+          presentation: "modal",
+          headerShown: false
+        }} 
+      />
+      <Stack.Screen 
+        name="notification-settings" 
         options={{ 
           presentation: "modal",
           headerShown: false

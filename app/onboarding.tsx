@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
-import { useRef, useState } from 'react';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Scale, Droplets, Brain, ChevronRight } from 'lucide-react-native';
+import React, { useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
@@ -8,184 +8,91 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-  ActivityIndicator,
 } from 'react-native';
-import { Target, Droplets, Shield } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
-import { supabase } from '@/lib/supabase';
-import * as AppleAuthentication from 'expo-apple-authentication';
-import * as WebBrowser from 'expo-web-browser';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 
-const { width } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const SLIDES = [
+const slides = [
   {
-    icon: Target,
-    key: 'slide1' as const,
+    icon: Scale,
+    titleCs: 'Sledujte svůj úbytek hmotnosti',
+    titleEn: 'Track Your Weight Cut',
+    descriptionCs: 'Inteligentní systém pro bezpečné a efektivní shazování hmotnosti před zápasem',
+    descriptionEn: 'Smart system for safe and effective weight cutting before fights',
+    color: Colors.gold,
   },
   {
     icon: Droplets,
-    key: 'slide2' as const,
+    titleCs: 'Zůstaňte hydratovaní',
+    titleEn: 'Stay Hydrated',
+    descriptionCs: 'Personalizované doporučení pro příjem vody a elektrolytů během přípravy',
+    descriptionEn: 'Personalized recommendations for water and electrolyte intake during prep',
+    color: '#3B82F6',
   },
   {
-    icon: Shield,
-    key: 'slide3' as const,
+    icon: Brain,
+    titleCs: 'AI poradce',
+    titleEn: 'AI Coach',
+    descriptionCs: 'Chytrý asistent vás provede každým krokem až k vážení',
+    descriptionEn: 'Smart assistant guides you through every step to weigh-in',
+    color: '#8B5CF6',
   },
 ];
 
-const TOTAL_SLIDES = SLIDES.length + 1;
-
 export default function OnboardingScreen() {
+  const { t, settings } = useApp();
+  const { markOnboardingSeen } = useSubscription();
   const router = useRouter();
-  const { t } = useApp();
   const insets = useSafeAreaInsets();
-  const [currentIndex, setCurrentIndex] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
-  
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isRegistering, setIsRegistering] = useState(false);
-  const [isLogin, setIsLogin] = useState(false);
 
-  const handleScroll = Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
-    useNativeDriver: false,
-  });
-
-  const handleNext = async () => {
-    if (currentIndex < TOTAL_SLIDES - 1) {
+  const handleNext = () => {
+    if (currentIndex < slides.length - 1) {
       const nextIndex = currentIndex + 1;
-      scrollViewRef.current?.scrollTo({ x: width * nextIndex, animated: true });
+      scrollViewRef.current?.scrollTo({
+        x: nextIndex * SCREEN_WIDTH,
+        animated: true,
+      });
       setCurrentIndex(nextIndex);
-    } else {
-      if (email && password) {
-        await handleRegistration();
-      }
     }
   };
 
-  const handleRegistration = async () => {
-    setIsRegistering(true);
-    try {
-      if (isLogin) {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password,
-        });
-
-        if (error) {
-          Alert.alert(t.auth.error, error.message);
-          return;
-        }
-
-        if (data.user) {
-          router.replace('/profile-setup');
-        }
-      } else {
-        const { data, error } = await supabase.auth.signUp({
-          email: email.trim(),
-          password,
-          options: {
-            data: {
-              role: 'fighter',
-            },
-          },
-        });
-
-        if (error) {
-          Alert.alert(t.auth.error, error.message);
-          return;
-        }
-
-        if (data.user) {
-          router.replace('/profile-setup');
-        }
-      }
-    } catch (error) {
-      console.error('Auth error:', error);
-      Alert.alert(t.auth.error, t.auth.unexpectedError);
-    } finally {
-      setIsRegistering(false);
-    }
+  const handleGetStarted = async () => {
+    await markOnboardingSeen();
+    router.replace('/welcome');
   };
-
-  const handleGoogleAuth = async () => {
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: 'exp://localhost:8081/profile-setup',
-        },
-      });
-
-      if (error) {
-        Alert.alert(t.auth.error, error.message);
-        return;
-      }
-
-      if (data?.url) {
-        const result = await WebBrowser.openAuthSessionAsync(
-          data.url,
-          'exp://localhost:8081/profile-setup'
-        );
-
-        if (result.type === 'success') {
-          router.replace('/profile-setup');
-        }
-      }
-    } catch (error) {
-      console.error('Google auth error:', error);
-      Alert.alert(t.auth.error, t.auth.unexpectedError);
-    }
-  };
-
-  const handleAppleAuth = async () => {
-    try {
-      const credential = await AppleAuthentication.signInAsync({
-        requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL,
-        ],
-      });
-
-      const { data, error } = await supabase.auth.signInWithIdToken({
-        provider: 'apple',
-        token: credential.identityToken!,
-      });
-
-      if (error) {
-        Alert.alert(t.auth.error, error.message);
-        return;
-      }
-
-      if (data.user) {
-        router.replace('/profile-setup');
-      }
-    } catch (error: any) {
-      if (error.code === 'ERR_REQUEST_CANCELED') {
-        return;
-      }
-      console.error('Apple auth error:', error);
-      Alert.alert(t.auth.error, t.auth.unexpectedError);
-    }
-  };
-
-  const isLastSlideValid = email.trim() !== '' && password.length >= 6;
 
   const handleSkip = async () => {
-    router.replace('/profile-setup');
+    await markOnboardingSeen();
+    router.replace('/welcome');
   };
 
+  const handleScroll = Animated.event(
+    [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+    {
+      useNativeDriver: false,
+      listener: (event: any) => {
+        const offsetX = event.nativeEvent.contentOffset.x;
+        const index = Math.round(offsetX / SCREEN_WIDTH);
+        setCurrentIndex(index);
+      },
+    }
+  );
+
+  const isLastSlide = currentIndex === slides.length - 1;
+  const isCs = settings.language === 'cs';
+
   return (
-    <View style={styles.container}>
-      <View style={[styles.skipContainer, { paddingTop: insets.top + 20 }]}>
-        <Pressable onPress={handleSkip}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.header}>
+        <Pressable onPress={handleSkip} style={styles.skipButton}>
           <Text style={styles.skipText}>{t.onboarding.skip}</Text>
         </Pressable>
       </View>
@@ -197,121 +104,63 @@ export default function OnboardingScreen() {
         showsHorizontalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
-        scrollEnabled={false}
-        onMomentumScrollEnd={(event) => {
-          const newIndex = Math.round(event.nativeEvent.contentOffset.x / width);
-          setCurrentIndex(newIndex);
-        }}
+        style={styles.scrollView}
       >
-        {SLIDES.map((slide, index) => {
-          const Icon = slide.icon;
-          const slideData = t.onboarding[slide.key];
-          return (
-            <View key={index} style={styles.slide}>
-              <View style={styles.iconContainer}>
-                <Icon size={120} color={Colors.gold} strokeWidth={1.5} />
+        {slides.map((slide, index) => (
+          <View key={index} style={[styles.slide, { width: SCREEN_WIDTH }]}>
+            <View style={styles.slideContent}>
+              <View style={[styles.iconContainer, { backgroundColor: slide.color }]}>
+                <slide.icon size={80} color={Colors.white} strokeWidth={1.5} />
               </View>
-              <Text style={styles.slideTitle}>{slideData.title}</Text>
-              <Text style={styles.slideDescription}>{slideData.description}</Text>
-            </View>
-          );
-        })}
-        
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.slide}
-        >
-          <View style={styles.registrationSlide}>
-            <Text style={styles.slideTitle}>{isLogin ? t.auth.login : t.auth.register}</Text>
-            <Text style={styles.slideDescription}>{isLogin ? t.auth.loginSubtitle : t.auth.registerSubtitle}</Text>
-            
-            <View style={styles.oauthButtons}>
-              {Platform.OS === 'ios' && (
-                <Pressable style={styles.appleButton} onPress={handleAppleAuth}>
-                  <View style={styles.oauthContent}>
-                    <View style={styles.appleLogo}>
-                      <View style={styles.appleIcon} />
-                    </View>
-                    <Text style={styles.appleText}>{t.auth.continueWithApple}</Text>
-                  </View>
-                </Pressable>
-              )}
-              <Pressable style={styles.googleButton} onPress={handleGoogleAuth}>
-                <View style={styles.oauthContent}>
-                  <View style={styles.googleIconContainer}>
-                    <View style={styles.googleRedPart} />
-                    <View style={styles.googleYellowPart} />
-                    <View style={styles.googleGreenPart} />
-                    <View style={styles.googleBluePart} />
-                  </View>
-                  <Text style={styles.googleText}>{t.auth.continueWithGoogle}</Text>
-                </View>
-              </Pressable>
-            </View>
 
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>{t.auth.orContinueWith}</Text>
-              <View style={styles.dividerLine} />
+              <View style={styles.textContainer}>
+                <Text style={styles.title}>
+                  {isCs ? slide.titleCs : slide.titleEn}
+                </Text>
+                <Text style={styles.description}>
+                  {isCs ? slide.descriptionCs : slide.descriptionEn}
+                </Text>
+              </View>
             </View>
-
-            <View style={styles.registrationForm}>
-              <TextInput
-                style={styles.registrationInput}
-                value={email}
-                onChangeText={setEmail}
-                placeholder={t.auth.email}
-                placeholderTextColor={Colors.textLight}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-              <TextInput
-                style={styles.registrationInput}
-                value={password}
-                onChangeText={setPassword}
-                placeholder={t.auth.password}
-                placeholderTextColor={Colors.textLight}
-                secureTextEntry
-                autoCapitalize="none"
-              />
-            </View>
-
-            <Pressable onPress={() => setIsLogin(!isLogin)}>
-              <Text style={styles.switchAuthText}>
-                {isLogin ? t.auth.noAccount : t.auth.hasAccount}
-              </Text>
-            </Pressable>
           </View>
-        </KeyboardAvoidingView>
+        ))}
       </ScrollView>
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 24 }]}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
         <View style={styles.pagination}>
-          {Array.from({ length: TOTAL_SLIDES }).map((_, index) => (
+          {slides.map((_, index) => (
             <View
               key={index}
-              style={[styles.dot, currentIndex === index && styles.dotActive]}
+              style={[
+                styles.dot,
+                currentIndex === index && styles.dotActive,
+              ]}
             />
           ))}
         </View>
 
-        <Pressable
-          style={[
-            styles.nextButton,
-            (currentIndex === TOTAL_SLIDES - 1 && !isLastSlideValid) || isRegistering && styles.nextButtonDisabled
-          ]}
-          onPress={handleNext}
-          disabled={(currentIndex === TOTAL_SLIDES - 1 && !isLastSlideValid) || isRegistering}
-        >
-          {isRegistering ? (
-            <ActivityIndicator color={Colors.black} />
-          ) : (
-            <Text style={styles.nextButtonText}>
-              {currentIndex === TOTAL_SLIDES - 1 ? (isLogin ? t.auth.loginButton : t.auth.registerButton) : t.onboarding.next}
-            </Text>
-          )}
-        </Pressable>
+        {isLastSlide ? (
+          <Pressable
+            style={({ pressed }) => [
+              styles.button,
+              pressed && styles.buttonPressed,
+            ]}
+            onPress={handleGetStarted}
+          >
+            <Text style={styles.buttonText}>{t.onboarding.getStarted}</Text>
+          </Pressable>
+        ) : (
+          <Pressable
+            style={({ pressed }) => [
+              styles.button,
+              pressed && styles.buttonPressed,
+            ]}
+            onPress={handleNext}
+          >
+            <Text style={styles.buttonText}>{t.onboarding.next}</Text>
+            <ChevronRight size={20} color={Colors.black} />
+          </Pressable>
+        )}
       </View>
     </View>
   );
@@ -322,210 +171,107 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.white,
   },
-  skipContainer: {
-    paddingHorizontal: 24,
-    paddingBottom: 20,
+  header: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     alignItems: 'flex-end',
   },
+  skipButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
   skipText: {
-    color: Colors.textSecondary,
     fontSize: 16,
+    color: Colors.textSecondary,
     fontWeight: '600' as const,
   },
+  scrollView: {
+    flex: 1,
+  },
   slide: {
-    width,
-    paddingHorizontal: 32,
-    alignItems: 'center',
+    flex: 1,
     justifyContent: 'center',
   },
-  iconContainer: {
-    marginBottom: 48,
+  slideContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 40,
   },
-  slideTitle: {
-    fontSize: 28,
+  iconContainer: {
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 48,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  textContainer: {
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 32,
     fontWeight: '700' as const,
     color: Colors.textPrimary,
     textAlign: 'center',
     marginBottom: 16,
-    paddingHorizontal: 20,
+    letterSpacing: -0.5,
   },
-  slideDescription: {
-    fontSize: 16,
+  description: {
+    fontSize: 17,
     color: Colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 26,
     paddingHorizontal: 20,
   },
   footer: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 32,
+    paddingTop: 20,
   },
   pagination: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 32,
+    alignItems: 'center',
     gap: 8,
+    marginBottom: 32,
   },
   dot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.mediumGray,
+    backgroundColor: Colors.lightGray,
   },
   dotActive: {
+    width: 32,
     backgroundColor: Colors.gold,
-    width: 24,
   },
-  nextButton: {
+  button: {
+    flexDirection: 'row',
     backgroundColor: Colors.gold,
     borderRadius: 16,
-    padding: 18,
+    paddingVertical: 18,
+    paddingHorizontal: 32,
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 4,
   },
-  nextButtonText: {
-    color: Colors.black,
+  buttonPressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.98 }],
+  },
+  buttonText: {
     fontSize: 18,
     fontWeight: '700' as const,
-  },
-  nextButtonDisabled: {
-    opacity: 0.4,
-  },
-  registrationSlide: {
-    flex: 1,
-    paddingHorizontal: 32,
-    paddingVertical: 20,
-    justifyContent: 'center',
-  },
-  oauthButtons: {
-    gap: 12,
-    marginTop: 24,
-  },
-  appleButton: {
-    backgroundColor: Colors.black,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  googleButton: {
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1.5,
-    borderColor: Colors.border.light,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  oauthContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-  },
-  appleLogo: {
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  appleIcon: {
-    width: 20,
-    height: 24,
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-  },
-  appleText: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: Colors.white,
-  },
-  googleIconContainer: {
-    width: 24,
-    height: 24,
-    position: 'relative' as const,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  googleRedPart: {
-    position: 'absolute' as const,
-    top: 0,
-    left: 0,
-    width: 12,
-    height: 12,
-    backgroundColor: '#EA4335',
-    borderTopLeftRadius: 12,
-  },
-  googleYellowPart: {
-    position: 'absolute' as const,
-    top: 0,
-    right: 0,
-    width: 12,
-    height: 12,
-    backgroundColor: '#FBBC04',
-    borderTopRightRadius: 12,
-  },
-  googleGreenPart: {
-    position: 'absolute' as const,
-    bottom: 0,
-    left: 0,
-    width: 12,
-    height: 12,
-    backgroundColor: '#34A853',
-    borderBottomLeftRadius: 12,
-  },
-  googleBluePart: {
-    position: 'absolute' as const,
-    bottom: 0,
-    right: 0,
-    width: 12,
-    height: 12,
-    backgroundColor: '#4285F4',
-    borderBottomRightRadius: 12,
-  },
-  googleText: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: Colors.textPrimary,
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 20,
-    gap: 12,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: Colors.border.light,
-  },
-  dividerText: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-    textTransform: 'uppercase' as const,
-    fontWeight: '600' as const,
-  },
-  switchAuthText: {
-    fontSize: 14,
-    color: Colors.gold,
-    textAlign: 'center',
-    marginTop: 16,
-    fontWeight: '600' as const,
-  },
-  registrationForm: {
-    gap: 12,
-  },
-  registrationInput: {
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    color: Colors.textPrimary,
-    borderWidth: 1,
-    borderColor: Colors.border.light,
+    color: Colors.black,
   },
 });
