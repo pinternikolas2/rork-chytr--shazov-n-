@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Home, Activity, Swords, Brain, User, UtensilsCrossed } from "lucide-react-native";
+import { Home, Activity, Swords, Brain, User2, UtensilsCrossed } from "lucide-react-native";
 import React from "react";
 import { Colors } from "@/constants/colors";
 import { useApp } from "@/contexts/AppContext";
@@ -103,7 +103,7 @@ export default function TabLayout() {
         options={{
           title: t.settings.title,
           tabBarIcon: ({ color, focused }) => (
-            <User 
+            <User2 
               color={color} 
               size={focused ? 26 : 24} 
               strokeWidth={focused ? 2.5 : 2}

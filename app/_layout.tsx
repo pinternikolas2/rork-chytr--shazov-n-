@@ -24,10 +24,7 @@ function RootLayoutNav() {
     if (isLoading) return;
 
     const currentSegment = segments[0];
-    const inTabs = currentSegment === '(tabs)';
-    const inAuth = currentSegment === 'profile-setup';
     const inWelcome = currentSegment === 'welcome';
-    const inLanguage = currentSegment === 'language-selection';
     const inModal = currentSegment === 'add-meal' || currentSegment === 'subscription' || currentSegment === 'support' || currentSegment === 'privacy' || currentSegment === 'terms' || currentSegment === 'tracking-detail' || currentSegment === 'wellness';
     const isRoot = !currentSegment;
 
@@ -39,10 +36,13 @@ function RootLayoutNav() {
       allSegments: segments 
     });
 
-    if (!hasSeenWelcome && !inWelcome && !inLanguage && !inModal) {
+    if (!hasSeenWelcome && !inWelcome && !inModal) {
       console.log('[RootLayoutNav] Redirecting to welcome - user has not seen welcome screen');
       router.replace('/welcome');
-    } else if (hasSeenWelcome && !inTabs && !inModal && !inAuth && !inWelcome && !inLanguage && isRoot) {
+      return;
+    }
+
+    if (hasSeenWelcome && isRoot) {
       console.log('[RootLayoutNav] Redirecting to tabs - user has seen welcome, going to app');
       router.replace('/(tabs)');
     }

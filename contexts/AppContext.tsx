@@ -575,9 +575,9 @@ export const [AppProvider, useApp] = createContextHook(() => {
     setRegenerationLogs([]);
     setSleepLogs([]);
     setDailyNotes([]);
-    await AsyncStorage.multiRemove(['profile', 'fights', 'weightLogs', 'hydrationLogs', 'mealLogs', 'customFoods', 'supplementLogs', 'regenerationLogs', 'sleepLogs', 'dailyNotes']);
+    await AsyncStorage.multiRemove(['profile', 'fights', 'weightLogs', 'hydrationLogs', 'mealLogs', 'customFoods', 'supplementLogs', 'regenerationLogs', 'sleepLogs', 'dailyNotes', 'subscriptionState']);
     await updateSettings({ hasCompletedOnboarding: false });
-    console.log('[AppContext] Local data cleared, onboarding reset');
+    console.log('[AppContext] Local data cleared, onboarding reset, subscription state cleared');
   }, [updateSettings]);
 
   const t = useMemo(() => translations[settings.language], [settings.language]);
