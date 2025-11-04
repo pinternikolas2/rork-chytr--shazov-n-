@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Brain, Send, Sparkles } from 'lucide-react-native';
+import { Brain, Send, Sparkles, Bot, User } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 import { generateText } from '@rork/toolkit-sdk';
@@ -170,9 +170,14 @@ Provide clear, actionable, and safe advice based on this data. Always prioritize
         keyboardVerticalOffset={0}
       >
         <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <Brain size={28} color={Colors.gold} />
+          <View style={styles.headerIconContainer}>
+            <View style={styles.headerIconBg}>
+              <Brain size={24} color={Colors.gold} strokeWidth={2.5} />
+            </View>
+          </View>
+          <View style={styles.headerTextContent}>
             <Text style={styles.title}>{t.ai.title}</Text>
+            <Text style={styles.subtitle}>{t.ai.helpText}</Text>
           </View>
         </View>
 
@@ -184,11 +189,12 @@ Provide clear, actionable, and safe advice based on this data. Always prioritize
         >
           {chatMessages.length === 0 ? (
             <View style={styles.emptyState}>
-              <Sparkles size={64} color={Colors.gold} strokeWidth={1.5} />
+              <View style={styles.emptyIconContainer}>
+                <View style={styles.emptyIconBg}>
+                  <Sparkles size={40} color={Colors.gold} strokeWidth={2} />
+                </View>
+              </View>
               <Text style={styles.emptyTitle}>{t.ai.askMeAnything}</Text>
-              <Text style={styles.emptySubtitle}>
-                {t.ai.helpText}
-              </Text>
 
               <View style={styles.suggestionsContainer}>
                 <Text style={styles.suggestionsTitle}>{t.ai.suggestions}</Text>
@@ -196,10 +202,16 @@ Provide clear, actionable, and safe advice based on this data. Always prioritize
                   {suggestions.map((suggestion, index) => (
                     <Pressable
                       key={index}
-                      style={styles.suggestionButton}
+                      style={({ pressed }) => [
+                        styles.suggestionButton,
+                        pressed && styles.suggestionButtonPressed,
+                      ]}
                       onPress={() => handleSuggestion(suggestion)}
                     >
-                      <Text style={styles.suggestionText}>{suggestion}</Text>
+                      <View style={styles.suggestionContent}>
+                        <Sparkles size={18} color={Colors.gold} strokeWidth={2} />
+                        <Text style={styles.suggestionText}>{suggestion}</Text>
+                      </View>
                     </Pressable>
                   ))}
                 </View>
@@ -211,24 +223,54 @@ Provide clear, actionable, and safe advice based on this data. Always prioritize
                 <View
                   key={message.id}
                   style={[
-                    styles.messageBox,
-                    message.role === 'user' ? styles.userMessage : styles.assistantMessage,
+                    styles.messageRow,
+                    message.role === 'user' ? styles.userMessageRow : styles.assistantMessageRow,
                   ]}
                 >
-                  <Text
+                  {message.role === 'assistant' && (
+                    <View style={styles.messageAvatar}>
+                      <View style={styles.avatarBg}>
+                        <Bot size={18} color={Colors.gold} strokeWidth={2.5} />
+                      </View>
+                    </View>
+                  )}
+                  <View
                     style={[
-                      styles.messageText,
-                      message.role === 'user' ? styles.userMessageText : styles.assistantMessageText,
+                      styles.messageBox,
+                      message.role === 'user' ? styles.userMessage : styles.assistantMessage,
                     ]}
                   >
-                    {message.content}
-                  </Text>
+                    <Text
+                      style={[
+                        styles.messageText,
+                        message.role === 'user' ? styles.userMessageText : styles.assistantMessageText,
+                      ]}
+                    >
+                      {message.content}
+                    </Text>
+                  </View>
+                  {message.role === 'user' && (
+                    <View style={styles.messageAvatar}>
+                      <View style={[styles.avatarBg, styles.userAvatarBg]}>
+                        <User size={18} color={Colors.black} strokeWidth={2.5} />
+                      </View>
+                    </View>
+                  )}
                 </View>
               ))}
               {isGenerating && (
-                <View style={[styles.messageBox, styles.assistantMessage]}>
-                  <ActivityIndicator size="small" color={Colors.gold} />
-                  <Text style={styles.generatingText}>{t.ai.generating}</Text>
+                <View style={[styles.messageRow, styles.assistantMessageRow]}>
+                  <View style={styles.messageAvatar}>
+                    <View style={styles.avatarBg}>
+                      <Bot size={18} color={Colors.gold} strokeWidth={2.5} />
+                    </View>
+                  </View>
+                  <View style={[styles.messageBox, styles.assistantMessage, styles.generatingBox]}>
+                    <View style={styles.generatingContent}>
+                      <ActivityIndicator size="small" color={Colors.gold} />
+                      <Text style={styles.generatingText}>{t.ai.generating}</Text>
+                    </View>
+                  </View>
                 </View>
               )}
             </View>
@@ -236,23 +278,29 @@ Provide clear, actionable, and safe advice based on this data. Always prioritize
         </ScrollView>
 
         <View style={[styles.inputContainer, { paddingBottom: insets.bottom || 16 }]}>
-          <TextInput
-            style={styles.input}
-            value={input}
-            onChangeText={setInput}
-            placeholder={t.ai.askQuestion}
-            placeholderTextColor={Colors.textLight}
-            multiline
-            maxLength={500}
-            editable={!isGenerating}
-          />
-          <Pressable
-            style={[styles.sendButton, (!input.trim() || isGenerating) && styles.sendButtonDisabled]}
-            onPress={() => handleSendMessage(input)}
-            disabled={!input.trim() || isGenerating}
-          >
-            <Send size={20} color={Colors.black} />
-          </Pressable>
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={styles.input}
+              value={input}
+              onChangeText={setInput}
+              placeholder={t.ai.askQuestion}
+              placeholderTextColor={Colors.textLight}
+              multiline
+              maxLength={500}
+              editable={!isGenerating}
+            />
+            <Pressable
+              style={({ pressed }) => [
+                styles.sendButton,
+                (!input.trim() || isGenerating) && styles.sendButtonDisabled,
+                pressed && input.trim() && !isGenerating && styles.sendButtonPressed,
+              ]}
+              onPress={() => handleSendMessage(input)}
+              disabled={!input.trim() || isGenerating}
+            >
+              <Send size={20} color={Colors.black} />
+            </Pressable>
+          </View>
         </View>
       </KeyboardAvoidingView>
     </View>
@@ -262,7 +310,7 @@ Provide clear, actionable, and safe advice based on this data. Always prioritize
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.background.secondary,
   },
   keyboardView: {
     flex: 1,
@@ -270,18 +318,40 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 20,
     paddingVertical: 16,
+    backgroundColor: Colors.white,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border.light,
-  },
-  headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
+  headerIconContainer: {
+    marginRight: 4,
+  },
+  headerIconBg: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.lightGray,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: Colors.gold,
+  },
+  headerTextContent: {
+    flex: 1,
+    gap: 2,
+  },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '700' as const,
     color: Colors.textPrimary,
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    lineHeight: 18,
   },
   scrollView: {
     flex: 1,
@@ -292,112 +362,191 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     alignItems: 'center',
-    paddingVertical: 48,
+    paddingVertical: 32,
+  },
+  emptyIconContainer: {
+    marginBottom: 20,
+  },
+  emptyIconBg: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: Colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: Colors.gold,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 8,
   },
   emptyTitle: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: '700' as const,
     color: Colors.textPrimary,
-    marginTop: 24,
-    marginBottom: 12,
-  },
-  emptySubtitle: {
-    fontSize: 15,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
-    paddingHorizontal: 20,
+    marginBottom: 8,
+    letterSpacing: -0.5,
   },
   suggestionsContainer: {
     width: '100%',
-    marginTop: 32,
+    marginTop: 40,
   },
   suggestionsTitle: {
-    fontSize: 14,
-    fontWeight: '700' as const,
+    fontSize: 13,
+    fontWeight: '600' as const,
     color: Colors.textSecondary,
-    marginBottom: 12,
+    marginBottom: 16,
     textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
   },
   suggestions: {
-    gap: 8,
+    gap: 12,
   },
   suggestionButton: {
     backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 16,
+    padding: 18,
     borderWidth: 1,
     borderColor: Colors.border.light,
+    shadowColor: Colors.shadow.light,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  suggestionText: {
-    fontSize: 14,
-    color: Colors.textPrimary,
-    fontWeight: '600' as const,
+  suggestionButtonPressed: {
+    transform: [{ scale: 0.98 }],
+    opacity: 0.8,
   },
-  messagesContainer: {
+  suggestionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
   },
+  suggestionText: {
+    fontSize: 15,
+    color: Colors.textPrimary,
+    fontWeight: '600' as const,
+    flex: 1,
+  },
+  messagesContainer: {
+    gap: 16,
+  },
+  messageRow: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'flex-end',
+  },
+  userMessageRow: {
+    justifyContent: 'flex-end',
+  },
+  assistantMessageRow: {
+    justifyContent: 'flex-start',
+  },
+  messageAvatar: {
+    marginBottom: 2,
+  },
+  avatarBg: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: Colors.gold,
+  },
+  userAvatarBg: {
+    backgroundColor: Colors.gold,
+    borderColor: Colors.gold,
+  },
   messageBox: {
-    maxWidth: '80%',
+    maxWidth: '75%',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderRadius: 16,
+    borderRadius: 20,
   },
   userMessage: {
-    alignSelf: 'flex-end',
     backgroundColor: Colors.gold,
+    borderBottomRightRadius: 4,
   },
   assistantMessage: {
-    alignSelf: 'flex-start',
-    backgroundColor: Colors.lightGray,
-    borderWidth: 1,
-    borderColor: Colors.border.light,
+    backgroundColor: Colors.white,
+    borderBottomLeftRadius: 4,
+    shadowColor: Colors.shadow.light,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  generatingBox: {
+    paddingVertical: 16,
+  },
+  generatingContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
   messageText: {
     fontSize: 15,
-    lineHeight: 20,
+    lineHeight: 22,
   },
   userMessageText: {
     color: Colors.black,
+    fontWeight: '500' as const,
   },
   assistantMessageText: {
     color: Colors.textPrimary,
   },
   generatingText: {
-    fontSize: 13,
+    fontSize: 14,
     color: Colors.textSecondary,
-    marginLeft: 8,
+    fontWeight: '500' as const,
   },
   inputContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingTop: 12,
-    gap: 12,
+    backgroundColor: Colors.white,
     borderTopWidth: 1,
     borderTopColor: Colors.border.light,
-    backgroundColor: Colors.white,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 10,
+    backgroundColor: Colors.lightGray,
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
   },
   input: {
     flex: 1,
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
     fontSize: 15,
     color: Colors.textPrimary,
-    borderWidth: 1,
-    borderColor: Colors.border.light,
     maxHeight: 100,
+    paddingVertical: 8,
+    paddingHorizontal: 0,
   },
   sendButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: Colors.gold,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: Colors.gold,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   sendButtonDisabled: {
     opacity: 0.5,
+    shadowOpacity: 0,
+  },
+  sendButtonPressed: {
+    transform: [{ scale: 0.95 }],
   },
 });
