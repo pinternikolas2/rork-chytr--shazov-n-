@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import {
   Alert,
+  Image,
   Modal,
   Pressable,
   ScrollView,
@@ -12,7 +13,6 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  User,
   Globe,
   Bell,
   CreditCard,
@@ -22,6 +22,7 @@ import {
   ChevronRight,
   X,
   Crown,
+  MoreVertical,
 } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
@@ -128,37 +129,135 @@ export default function SettingsScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Profil</Text>
+        <Pressable style={styles.menuButton}>
+          <MoreVertical size={24} color={Colors.textPrimary} />
+        </Pressable>
+      </View>
+      
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>{t.settings.title}</Text>
+        {profile && (
+          <View style={styles.profileSection}>
+            <View style={styles.profileImageContainer}>
+              <Image
+                source={{ uri: 'https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=400' }}
+                style={styles.profileImage}
+              />
+            </View>
+            <View style={styles.profileInfo}>
+              <Text style={styles.profileName}>{profile.fullName}</Text>
+              <Text style={styles.profileSubtitle}>
+                {profile.role === 'fighter' ? 'MMA zápasník' : 'Trenér'}
+              </Text>
+            </View>
+          </View>
+        )}
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t.settings.account}</Text>
-          <View style={styles.card}>
-            <SettingItem
-              icon={User}
-              title={t.settings.editProfile}
-              subtitle={profile?.fullName || 'Nastavit profil'}
-              onPress={() => {
-                if (!profile) {
-                  router.push('/profile-setup');
-                  return;
-                }
-                setFullName(profile.fullName);
-                setAge(profile.age.toString());
-                setHeight(profile.height.toString());
-                if (profile.role === 'fighter') {
-                  setCurrentWeight(profile.currentWeight.toString());
-                  setTargetWeight(profile.targetWeight.toString());
-                }
-                setDiscipline(profile.discipline);
-                setIsProfileModalVisible(true);
-              }}
-            />
+          <Text style={styles.sectionTitle}>Moje čísla</Text>
+          <View style={styles.statsGrid}>
+            <View style={styles.statCardHalf}>
+              <Text style={styles.statLabel}>Aktuální váha</Text>
+              <Text style={styles.statValue}>
+                {profile && profile.role === 'fighter'
+                  ? `${profile.currentWeight} kg`
+                  : '— kg'}
+              </Text>
+            </View>
+            <View style={styles.statCardHalf}>
+              <Text style={styles.statLabel}>Cílová váha</Text>
+              <Text style={styles.statValue}>
+                {profile && profile.role === 'fighter'
+                  ? `${profile.targetWeight} kg`
+                  : '— kg'}
+              </Text>
+            </View>
           </View>
+          
+          <View style={styles.statsRow}>
+            <View style={styles.statCardFull}>
+              <View style={styles.statRow}>
+                <Text style={styles.statLabel}>Startovací váha</Text>
+                <Text style={styles.statSecondary}>
+                  {profile && profile.role === 'fighter' && profile.startingWeight
+                    ? new Date().toLocaleDateString('cs-CZ')
+                    : ''}
+                </Text>
+              </View>
+              <Text style={styles.statValue}>
+                {profile && profile.role === 'fighter' && profile.startingWeight
+                  ? `${profile.startingWeight} kg`
+                  : '— kg'}
+              </Text>
+            </View>
+          </View>
+
+          {profile && profile.role === 'fighter' && (
+            <View style={styles.statsRow}>
+              <View style={styles.statCardFull}>
+                <View style={styles.statRow}>
+                  <Text style={styles.statLabel}>Datum vážení</Text>
+                  <Text style={styles.statSecondary}>
+                    {new Date().toLocaleDateString('cs-CZ')}
+                  </Text>
+                </View>
+                <Text style={styles.statValue}>
+                  {profile.targetWeight} kg
+                </Text>
+              </View>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Osobní údaje</Text>
+          <View style={styles.personalInfoCard}>
+            <View style={styles.personalInfoRow}>
+              <Text style={styles.personalInfoLabel}>Věk</Text>
+              <Text style={styles.personalInfoLabel}>Výška</Text>
+            </View>
+            <View style={styles.personalInfoRow}>
+              <Text style={styles.personalInfoValue}>{profile?.age || '—'}</Text>
+              <Text style={styles.personalInfoValue}>{profile?.height ? `${profile.height} cm` : '—'}</Text>
+            </View>
+          </View>
+
+          <Pressable 
+            style={styles.editProfileButton}
+            onPress={() => {
+              if (!profile) {
+                router.push('/profile-setup');
+                return;
+              }
+              setFullName(profile.fullName);
+              setAge(profile.age.toString());
+              setHeight(profile.height.toString());
+              if (profile.role === 'fighter') {
+                setCurrentWeight(profile.currentWeight.toString());
+                setTargetWeight(profile.targetWeight.toString());
+              }
+              setDiscipline(profile.discipline);
+              setIsProfileModalVisible(true);
+            }}
+          >
+            <Text style={styles.editProfileButtonText}>Upravit profil</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Historie zápasů</Text>
+          <Pressable 
+            style={styles.historyButton}
+            onPress={() => router.push('/fights')}
+          >
+            <Text style={styles.historyButtonText}>Zobrazit historii</Text>
+            <ChevronRight size={20} color={Colors.textSecondary} />
+          </Pressable>
         </View>
 
         <View style={styles.section}>
@@ -453,31 +552,181 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.lightGray,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     backgroundColor: Colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border.light,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
+  },
+  menuButton: {
+    padding: 4,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 20,
     paddingBottom: 24,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: '700' as const,
-    color: Colors.textPrimary,
-    marginBottom: 24,
-  },
-  section: {
+  profileSection: {
+    alignItems: 'center',
     marginBottom: 32,
   },
-  sectionTitle: {
-    fontSize: 14,
+  profileImageContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginBottom: 16,
+    backgroundColor: Colors.border.light,
+  },
+  profileImage: {
+    width: '100%',
+    height: '100%',
+  },
+  profileInfo: {
+    alignItems: 'center',
+  },
+  profileName: {
+    fontSize: 24,
     fontWeight: '700' as const,
+    color: Colors.textPrimary,
+    marginBottom: 4,
+  },
+  profileSubtitle: {
+    fontSize: 15,
     color: Colors.textSecondary,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
+    marginBottom: 16,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    gap: 12,
     marginBottom: 12,
-    textTransform: 'uppercase' as const,
+  },
+  statCardHalf: {
+    flex: 1,
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  statCardFull: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  statsRow: {
+    marginBottom: 12,
+  },
+  statRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  statLabel: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginBottom: 8,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
+  },
+  statSecondary: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+  },
+  personalInfoCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  personalInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  personalInfoLabel: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    flex: 1,
+  },
+  personalInfoValue: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.textPrimary,
+    flex: 1,
+  },
+  editProfileButton: {
+    backgroundColor: Colors.gold,
+    borderRadius: 16,
+    paddingVertical: 16,
+    alignItems: 'center',
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  editProfileButtonText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: Colors.black,
+  },
+  historyButton: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  historyButtonText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.textPrimary,
   },
   card: {
     backgroundColor: Colors.white,
