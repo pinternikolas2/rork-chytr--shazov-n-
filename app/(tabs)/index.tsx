@@ -166,51 +166,47 @@ export default function DashboardScreen() {
             transform: [{ translateY: slideAnim }],
           }}
         >
-          <View style={styles.metricsGrid}>
-            <View style={[styles.metricCard, styles.calorieCard]}>
-              <View style={styles.metricIconContainer}>
-                <Flame size={24} color="#FF6B35" />
-              </View>
-              <View style={styles.metricContent}>
-                <Text style={styles.metricLabel}>Kalorie</Text>
-                <Text style={styles.metricValue}>
-                  {todayNutrition.calories} <Text style={styles.metricGoal}>/ {nutritionGoals.calories}</Text>
-                </Text>
-                <View style={styles.miniProgressBar}>
-                  <View style={[styles.miniProgressFill, { width: `${Math.min(100, calorieProgress)}%`, backgroundColor: '#FF6B35' }]} />
-                </View>
-              </View>
-            </View>
-
-            <View style={[styles.metricCard, styles.proteinCard]}>
-              <View style={styles.metricIconContainer}>
-                <Target size={24} color="#4ECDC4" />
-              </View>
-              <View style={styles.metricContent}>
-                <Text style={styles.metricLabel}>Bílkoviny</Text>
-                <Text style={styles.metricValue}>
-                  {todayNutrition.protein}g <Text style={styles.metricGoal}>/ {nutritionGoals.protein}g</Text>
-                </Text>
-                <View style={styles.miniProgressBar}>
-                  <View style={[styles.miniProgressFill, { width: `${Math.min(100, proteinProgress)}%`, backgroundColor: '#4ECDC4' }]} />
-                </View>
-              </View>
-            </View>
-          </View>
-
           <View style={styles.metricsRow}>
+            <View style={[styles.smallMetricCard, styles.calorieCard]}>
+              <Flame size={20} color="#FF6B35" />
+              <Text style={styles.smallMetricLabel}>Kalorie</Text>
+              <Text style={styles.smallMetricValue}>{todayNutrition.calories}</Text>
+              <Text style={styles.smallMetricGoal}>/ {nutritionGoals.calories}</Text>
+              <View style={styles.miniProgressBar}>
+                <View style={[styles.miniProgressFill, { width: `${Math.min(100, calorieProgress)}%`, backgroundColor: '#FF6B35' }]} />
+              </View>
+            </View>
+
+            <View style={[styles.smallMetricCard, styles.proteinCard]}>
+              <Target size={20} color="#4ECDC4" />
+              <Text style={styles.smallMetricLabel}>Bílkoviny</Text>
+              <Text style={styles.smallMetricValue}>{todayNutrition.protein}g</Text>
+              <Text style={styles.smallMetricGoal}>/ {nutritionGoals.protein}g</Text>
+              <View style={styles.miniProgressBar}>
+                <View style={[styles.miniProgressFill, { width: `${Math.min(100, proteinProgress)}%`, backgroundColor: '#4ECDC4' }]} />
+              </View>
+            </View>
+
             <View style={[styles.smallMetricCard, styles.hydrationCard]}>
               <Droplets size={20} color="#3B9AE1" />
               <Text style={styles.smallMetricLabel}>Voda</Text>
               <Text style={styles.smallMetricValue}>{(todayHydration / 1000).toFixed(1)}L</Text>
               <Text style={styles.smallMetricGoal}>/ {(dailyHydrationGoal / 1000).toFixed(1)}L</Text>
+              <View style={styles.miniProgressBar}>
+                <View style={[styles.miniProgressFill, { width: `${Math.min(100, hydrationProgress)}%`, backgroundColor: '#3B9AE1' }]} />
+              </View>
             </View>
+          </View>
 
+          <View style={styles.metricsRow}>
             <View style={[styles.smallMetricCard, styles.carbsCard]}>
               <Zap size={20} color="#F4C430" />
               <Text style={styles.smallMetricLabel}>Sacharidy</Text>
               <Text style={styles.smallMetricValue}>{todayNutrition.carbs}g</Text>
               <Text style={styles.smallMetricGoal}>/ {nutritionGoals.carbs}g</Text>
+              <View style={styles.miniProgressBar}>
+                <View style={[styles.miniProgressFill, { width: `${Math.min(100, carbsProgress)}%`, backgroundColor: '#F4C430' }]} />
+              </View>
             </View>
 
             <View style={[styles.smallMetricCard, styles.fatsCard]}>
@@ -218,7 +214,12 @@ export default function DashboardScreen() {
               <Text style={styles.smallMetricLabel}>Tuky</Text>
               <Text style={styles.smallMetricValue}>{todayNutrition.fat}g</Text>
               <Text style={styles.smallMetricGoal}>/ {nutritionGoals.fat}g</Text>
+              <View style={styles.miniProgressBar}>
+                <View style={[styles.miniProgressFill, { width: `${Math.min(100, fatsProgress)}%`, backgroundColor: '#FF8C42' }]} />
+              </View>
             </View>
+
+            <View style={styles.smallMetricCard} />
           </View>
         </Animated.View>
 
@@ -460,70 +461,24 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     fontWeight: '700' as const,
   },
-  metricsGrid: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 12,
-  },
-  metricCard: {
-    flex: 1,
-    backgroundColor: Colors.white,
-    borderRadius: 20,
-    padding: 20,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
-  },
   calorieCard: {
-    borderLeftWidth: 4,
-    borderLeftColor: '#FF6B35',
+    borderBottomWidth: 3,
+    borderBottomColor: '#FF6B35',
   },
   proteinCard: {
-    borderLeftWidth: 4,
-    borderLeftColor: '#4ECDC4',
-  },
-  metricIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(0,0,0,0.04)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  metricContent: {
-    flex: 1,
-  },
-  metricLabel: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-    fontWeight: '600' as const,
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.5,
-    marginBottom: 8,
-  },
-  metricValue: {
-    fontSize: 22,
-    fontWeight: '700' as const,
-    color: Colors.textPrimary,
-    marginBottom: 12,
-  },
-  metricGoal: {
-    fontSize: 16,
-    fontWeight: '500' as const,
-    color: Colors.textSecondary,
+    borderBottomWidth: 3,
+    borderBottomColor: '#4ECDC4',
   },
   miniProgressBar: {
-    height: 6,
-    backgroundColor: 'rgba(0,0,0,0.06)',
-    borderRadius: 3,
+    height: 4,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+    borderRadius: 2,
     overflow: 'hidden',
+    marginTop: 8,
   },
   miniProgressFill: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: 2,
   },
   metricsRow: {
     flexDirection: 'row',
@@ -534,13 +489,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.white,
     borderRadius: 16,
-    padding: 16,
+    padding: 14,
     alignItems: 'center',
     shadowColor: Colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 2,
+    minHeight: 130,
   },
   hydrationCard: {
     borderBottomWidth: 3,
