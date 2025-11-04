@@ -12,9 +12,12 @@ import {
   Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Scale, Droplets, Calendar, BarChart3, TrendingDown, AlertCircle, Flame, Drumstick, Wheat, Dumbbell, Moon, Activity as ActivityIcon } from 'lucide-react-native';
+import { Scale, Droplets, BarChart3, TrendingDown, AlertCircle, Flame, Drumstick, Wheat, Dumbbell, Moon, Activity as ActivityIcon, ChevronRight, Calendar } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
+
+type MetricType = 'weight' | 'calories' | 'protein' | 'water' | 'sleep' | 'training' | 'bodyFat' | 'sodium';
+type TimeRange = '7days' | 'month' | '3months' | 'year';
 
 export default function TrackingScreen() {
   const { 
@@ -33,10 +36,12 @@ export default function TrackingScreen() {
   const [weightInput, setWeightInput] = useState('');
   const [waterInput, setWaterInput] = useState('');
   const [selectedTime, setSelectedTime] = useState<'morning' | 'evening'>('morning');
-
+  const [bodyFatInput, setBodyFatInput] = useState('');
+  const [muscleMassInput, setMuscleMassInput] = useState('');
+  const [selectedMetric, setSelectedMetric] = useState<MetricType>('weight');
+  const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('7days');
 
   const todayHydration = getTodayHydration();
-
   const todayNutrition = getTodayNutrition();
   const nutritionGoals = getNutritionGoals();
 
@@ -59,14 +64,48 @@ export default function TrackingScreen() {
     setWaterInput('');
   };
 
+  const quickAddWater = async (amount: number) => {
+    await addHydrationLog(amount);
+  };
 
-
-  const sodiumProgress = (todayNutrition.sodium / nutritionGoals.sodium) * 100;
-  const waterProgress = (todayHydration / 3000) * 100;
   const caloriesProgress = (todayNutrition.calories / nutritionGoals.calories) * 100;
   const proteinProgress = (todayNutrition.protein / nutritionGoals.protein) * 100;
   const carbsProgress = (todayNutrition.carbs / nutritionGoals.carbs) * 100;
   const fatProgress = (todayNutrition.fat / nutritionGoals.fat) * 100;
+  const sodiumProgress = (todayNutrition.sodium / nutritionGoals.sodium) * 100;
+  const waterProgress = (todayHydration / 3000) * 100;
+
+  const metrics: { key: MetricType; label: string }[] = [
+    { key: 'weight', label: 'Váha' },
+    { key: 'calories', label: 'Kalorie' },
+    { key: 'protein', label: 'Bílkoviny' },
+    { key: 'water', label: 'Voda' },
+    { key: 'sleep', label: 'Spánek' },
+    { key: 'training', label: 'Trénink' },
+    { key: 'bodyFat', label: 'Tělesný tuk' },
+    { key: 'sodium', label: 'Sodík' },
+  ];
+
+  const timeRanges: { key: TimeRange; label: string }[] = [
+    { key: '7days', label: '7 dní' },
+    { key: 'month', label: 'Měsíc' },
+    { key: '3months', label: '3 měsíce' },
+    { key: 'year', label: 'Rok' },
+  ];
+
+  const getFilteredData = () => {
+    if (selectedMetric !== 'weight') return [];
+    const now = new Date();
+    let daysBack = 7;
+    if (selectedTimeRange === 'month') daysBack = 30;
+    if (selectedTimeRange === '3months') daysBack = 90;
+    if (selectedTimeRange === 'year') daysBack = 365;
+    
+    const cutoffDate = new Date(now.getTime() - daysBack * 24 * 60 * 60 * 1000);
+    return weightLogs.filter(log => log.date >= cutoffDate).reverse();
+  };
+
+  const filteredData = getFilteredData();
 
   return (
     <View style={styles.container}>
@@ -85,7 +124,6 @@ export default function TrackingScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <Scale size={24} color={Colors.gold} />
@@ -170,28 +208,19 @@ export default function TrackingScreen() {
             <View style={styles.quickButtons}>
               <Pressable
                 style={styles.quickButton}
-                onPress={() => {
-                  setWaterInput('250');
-                  setTimeout(() => handleLogWater(), 100);
-                }}
+                onPress={() => quickAddWater(250)}
               >
                 <Text style={styles.quickButtonText}>250ml</Text>
               </Pressable>
               <Pressable
                 style={styles.quickButton}
-                onPress={() => {
-                  setWaterInput('500');
-                  setTimeout(() => handleLogWater(), 100);
-                }}
+                onPress={() => quickAddWater(500)}
               >
                 <Text style={styles.quickButtonText}>500ml</Text>
               </Pressable>
               <Pressable
                 style={styles.quickButton}
-                onPress={() => {
-                  setWaterInput('1000');
-                  setTimeout(() => handleLogWater(), 100);
-                }}
+                onPress={() => quickAddWater(1000)}
               >
                 <Text style={styles.quickButtonText}>1L</Text>
               </Pressable>
@@ -209,153 +238,32 @@ export default function TrackingScreen() {
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <ActivityIcon size={24} color={Colors.gold} />
-              <Text style={styles.cardTitle}>Dnešní metriky</Text>
+              <Text style={styles.cardTitle}>Jídlo & Makroživiny</Text>
             </View>
 
-            <View style={styles.progressGrid}>
-              <View style={styles.progressCard}>
-                <View style={[styles.progressIconContainer, { backgroundColor: '#FF6B6B20' }]}>
-                  <Flame size={24} color="#FF6B6B" />
-                </View>
-                <Text style={styles.progressLabel}>{t.nutrition.calories}</Text>
-                <View style={styles.circularProgress}>
-                  <View style={styles.circularProgressInner}>
-                    <Text style={[styles.progressValue, { color: '#FF6B6B' }]}>
-                      {Math.round(todayNutrition.calories)}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.progressBar}>
-                  <View style={[styles.progressFill, { 
-                    width: `${Math.min(100, caloriesProgress)}%`,
-                    backgroundColor: '#FF6B6B'
-                  }]} />
-                </View>
-                <View style={styles.progressStats}>
-                  <Text style={styles.progressGoal}>{nutritionGoals.calories}</Text>
-                  <Text style={styles.progressUnit}>{t.common.kcal}</Text>
-                </View>
-              </View>
+            <View style={styles.nutritionSummary}>
+              <Text style={styles.nutritionSummaryTitle}>Dnešní součet:</Text>
+              <Text style={styles.nutritionSummaryText}>
+                {todayNutrition.calories} Kalorií, {todayNutrition.protein}g Bílkovin, {todayNutrition.carbs}g Sacharidů, {todayNutrition.fat}g Tuků, {todayNutrition.sodium}mg Sodíku
+              </Text>
+            </View>
 
-              <View style={styles.progressCard}>
-                <View style={[styles.progressIconContainer, { backgroundColor: '#6366F120' }]}>
-                  <Drumstick size={24} color="#6366F1" />
-                </View>
-                <Text style={styles.progressLabel}>{t.nutrition.protein}</Text>
-                <View style={styles.circularProgress}>
-                  <View style={styles.circularProgressInner}>
-                    <Text style={[styles.progressValue, { color: '#6366F1' }]}>
-                      {Math.round(todayNutrition.protein)}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.progressBar}>
-                  <View style={[styles.progressFill, { 
-                    width: `${Math.min(100, proteinProgress)}%`,
-                    backgroundColor: '#6366F1'
-                  }]} />
-                </View>
-                <View style={styles.progressStats}>
-                  <Text style={styles.progressGoal}>{nutritionGoals.protein}</Text>
-                  <Text style={styles.progressUnit}>{t.common.g}</Text>
-                </View>
-              </View>
+            <Pressable style={styles.navigateButton} onPress={() => router.push('/nutrition')}>
+              <Text style={styles.navigateButtonText}>Přejít do Výživy</Text>
+              <ChevronRight size={20} color={Colors.black} />
+            </Pressable>
+          </View>
 
-              <View style={styles.progressCard}>
-                <View style={[styles.progressIconContainer, { backgroundColor: '#3B82F620' }]}>
-                  <Droplets size={24} color="#3B82F6" />
-                </View>
-                <Text style={styles.progressLabel}>{t.tracking.hydration}</Text>
-                <View style={styles.circularProgress}>
-                  <View style={styles.circularProgressInner}>
-                    <Text style={[styles.progressValue, { color: '#3B82F6' }]}>
-                      {todayHydration}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.progressBar}>
-                  <View style={[styles.progressFill, { 
-                    width: `${Math.min(100, waterProgress)}%`,
-                    backgroundColor: '#3B82F6'
-                  }]} />
-                </View>
-                <View style={styles.progressStats}>
-                  <Text style={styles.progressGoal}>3000</Text>
-                  <Text style={styles.progressUnit}>{t.common.ml}</Text>
-                </View>
-              </View>
-
-              <View style={styles.progressCard}>
-                <View style={[styles.progressIconContainer, { backgroundColor: '#F59E0B20' }]}>
-                  <Wheat size={24} color="#F59E0B" />
-                </View>
-                <Text style={styles.progressLabel}>{t.nutrition.carbs}</Text>
-                <View style={styles.circularProgress}>
-                  <View style={styles.circularProgressInner}>
-                    <Text style={[styles.progressValue, { color: '#F59E0B' }]}>
-                      {Math.round(todayNutrition.carbs)}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.progressBar}>
-                  <View style={[styles.progressFill, { 
-                    width: `${Math.min(100, carbsProgress)}%`,
-                    backgroundColor: '#F59E0B'
-                  }]} />
-                </View>
-                <View style={styles.progressStats}>
-                  <Text style={styles.progressGoal}>{nutritionGoals.carbs}</Text>
-                  <Text style={styles.progressUnit}>{t.common.g}</Text>
-                </View>
-              </View>
-
-              <View style={styles.progressCard}>
-                <View style={[styles.progressIconContainer, { backgroundColor: '#10B98120' }]}>
-                  <Droplets size={24} color="#10B981" style={{ transform: [{ rotate: '180deg' }] }} />
-                </View>
-                <Text style={styles.progressLabel}>{t.nutrition.fat}</Text>
-                <View style={styles.circularProgress}>
-                  <View style={styles.circularProgressInner}>
-                    <Text style={[styles.progressValue, { color: '#10B981' }]}>
-                      {Math.round(todayNutrition.fat)}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.progressBar}>
-                  <View style={[styles.progressFill, { 
-                    width: `${Math.min(100, fatProgress)}%`,
-                    backgroundColor: '#10B981'
-                  }]} />
-                </View>
-                <View style={styles.progressStats}>
-                  <Text style={styles.progressGoal}>{nutritionGoals.fat}</Text>
-                  <Text style={styles.progressUnit}>{t.common.g}</Text>
-                </View>
-              </View>
-
-              <View style={styles.progressCard}>
-                <View style={[styles.progressIconContainer, { backgroundColor: '#EF444420' }]}>
-                  <AlertCircle size={24} color="#EF4444" />
-                </View>
-                <Text style={styles.progressLabel}>{t.tracking.sodium}</Text>
-                <View style={styles.circularProgress}>
-                  <View style={styles.circularProgressInner}>
-                    <Text style={[styles.progressValue, { color: '#EF4444' }]}>
-                      {todayNutrition.sodium}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.progressBar}>
-                  <View style={[styles.progressFill, { 
-                    width: `${Math.min(100, sodiumProgress)}%`,
-                    backgroundColor: sodiumProgress > 100 ? '#EF4444' : '#EF4444'
-                  }]} />
-                </View>
-                <View style={styles.progressStats}>
-                  <Text style={styles.progressGoal}>{nutritionGoals.sodium}</Text>
-                  <Text style={styles.progressUnit}>{t.common.mg}</Text>
-                </View>
-              </View>
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Dumbbell size={24} color={Colors.gold} />
+              <Text style={styles.cardTitle}>Trénink</Text>
+            </View>
+            <View style={styles.trainingEmptyState}>
+              <Text style={styles.emptyStateText}>Zatím žádný trénink zaznamenán</Text>
+              <Pressable style={styles.addTrainingButton}>
+                <Text style={styles.addTrainingButtonText}>+ Přidat trénink</Text>
+              </Pressable>
             </View>
           </View>
 
@@ -383,86 +291,130 @@ export default function TrackingScreen() {
 
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <Dumbbell size={24} color={Colors.gold} />
-              <Text style={styles.cardTitle}>Dnešní trénink</Text>
+              <ActivityIcon size={24} color={Colors.gold} />
+              <Text style={styles.cardTitle}>Tělesné složení</Text>
             </View>
-            <View style={styles.trainingEmptyState}>
-              <Text style={styles.emptyStateText}>Zatím žádný trénink zaznamenán</Text>
-              <Pressable style={styles.addTrainingButton}>
-                <Text style={styles.addTrainingButtonText}>+ Přidat trénink</Text>
+            <View style={styles.bodyCompositionForm}>
+              <TextInput
+                style={styles.input}
+                value={bodyFatInput}
+                onChangeText={setBodyFatInput}
+                placeholder="Tělesný tuk (%)"
+                placeholderTextColor={Colors.textLight}
+                keyboardType="decimal-pad"
+              />
+              <TextInput
+                style={styles.input}
+                value={muscleMassInput}
+                onChangeText={setMuscleMassInput}
+                placeholder="Svalová hmota (kg)"
+                placeholderTextColor={Colors.textLight}
+                keyboardType="decimal-pad"
+              />
+              <Pressable
+                style={[styles.button, (!bodyFatInput && !muscleMassInput) && styles.buttonDisabled]}
+                disabled={!bodyFatInput && !muscleMassInput}
+              >
+                <Text style={styles.buttonText}>{t.tracking.save}</Text>
               </Pressable>
             </View>
           </View>
 
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <ActivityIcon size={24} color={Colors.gold} />
-              <Text style={styles.cardTitle}>Tělesné složení</Text>
+              <Calendar size={24} color={Colors.gold} />
+              <Text style={styles.cardTitle}>Historie & Trendy</Text>
             </View>
-            <View style={styles.bodyCompositionGrid}>
-              <View style={styles.bodyCompCard}>
-                <Text style={styles.bodyCompValue}>-</Text>
-                <Text style={styles.bodyCompLabel}>Tělesný tuk (%)</Text>
-              </View>
-              <View style={styles.bodyCompCard}>
-                <Text style={styles.bodyCompValue}>-</Text>
-                <Text style={styles.bodyCompLabel}>Svalová hmota (kg)</Text>
-              </View>
-            </View>
-            <Text style={styles.estimateNote}>Odhad na základě aktuální váhy a profilu</Text>
-          </View>
 
-          {weightLogs.length > 0 && (
-            <View style={styles.card}>
-              <View style={styles.cardHeader}>
-                <Calendar size={24} color={Colors.gold} />
-                <Text style={styles.cardTitle}>{t.tracking.history}</Text>
-              </View>
-
-              <View style={styles.quickStatsGrid}>
-                <View style={styles.quickStatItem}>
-                  <Text style={styles.quickStatValue}>
-                    {weightLogs[weightLogs.length - 1].weight.toFixed(1)}
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              style={styles.metricSelector}
+              contentContainerStyle={styles.metricSelectorContent}
+            >
+              {metrics.map((metric) => (
+                <Pressable
+                  key={metric.key}
+                  style={[
+                    styles.metricButton,
+                    selectedMetric === metric.key && styles.metricButtonActive,
+                  ]}
+                  onPress={() => setSelectedMetric(metric.key)}
+                >
+                  <Text
+                    style={[
+                      styles.metricButtonText,
+                      selectedMetric === metric.key && styles.metricButtonTextActive,
+                    ]}
+                  >
+                    {metric.label}
                   </Text>
-                  <Text style={styles.quickStatLabel}>Poslední váha (kg)</Text>
-                </View>
-                {profile && profile.role === 'fighter' && (
-                  <View style={styles.quickStatItem}>
-                    <View style={styles.quickStatValueRow}>
-                      {profile.currentWeight > profile.targetWeight ? (
-                        <TrendingDown size={20} color={Colors.gold} />
-                      ) : null}
-                      <Text style={styles.quickStatValue}>
-                        {(profile.currentWeight - profile.targetWeight).toFixed(1)}
-                      </Text>
-                    </View>
-                    <Text style={styles.quickStatLabel}>Zbývá shodit (kg)</Text>
-                  </View>
-                )}
-              </View>
-
-              <View style={styles.historyList}>
-                {weightLogs.slice(-5).reverse().map((log) => (
-                  <View key={log.id} style={styles.historyItem}>
-                    <View>
-                      <Text style={styles.historyValue}>
-                        {log.weight.toFixed(1)} {t.common.kg}
-                      </Text>
-                      <Text style={styles.historyDate}>
-                        {log.date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short' })} - {t.tracking[log.time]}
-                      </Text>
-                    </View>
-                  </View>
-                ))}
-              </View>
-
-              {weightLogs.length > 5 && (
-                <Pressable style={styles.seeAllButton} onPress={() => router.push('/tracking-detail')}>
-                  <Text style={styles.seeAllButtonText}>Zobrazit vše ({weightLogs.length} záznamů)</Text>
                 </Pressable>
-              )}
+              ))}
+            </ScrollView>
+
+            <View style={styles.timeRangeSelector}>
+              {timeRanges.map((range) => (
+                <Pressable
+                  key={range.key}
+                  style={[
+                    styles.timeRangeButton,
+                    selectedTimeRange === range.key && styles.timeRangeButtonActive,
+                  ]}
+                  onPress={() => setSelectedTimeRange(range.key)}
+                >
+                  <Text
+                    style={[
+                      styles.timeRangeButtonText,
+                      selectedTimeRange === range.key && styles.timeRangeButtonTextActive,
+                    ]}
+                  >
+                    {range.label}
+                  </Text>
+                </Pressable>
+              ))}
             </View>
-          )}
+
+            {selectedMetric === 'weight' && filteredData.length > 0 ? (
+              <>
+                <View style={styles.historyChart}>
+                  {filteredData.slice(0, 10).map((log, i, arr) => {
+                    if (i === 0) return null;
+                    const maxWeight = Math.max(...arr.map(l => l.weight));
+                    const minWeight = Math.min(...arr.map(l => l.weight));
+                    const range = maxWeight - minWeight || 1;
+                    const currentHeight = ((arr[i].weight - minWeight) / range) * 80;
+                    
+                    return (
+                      <View key={log.id} style={styles.historyChartBar}>
+                        <View style={[styles.historyChartLine, { 
+                          height: Math.max(6, currentHeight),
+                          backgroundColor: arr[i].weight < arr[i - 1].weight ? '#10B981' : '#ef4444'
+                        }]} />
+                      </View>
+                    );
+                  })}
+                </View>
+
+                <View style={styles.historyList}>
+                  {filteredData.slice(0, 10).map((log) => (
+                    <View key={log.id} style={styles.historyItem}>
+                      <View>
+                        <Text style={styles.historyValue}>
+                          {log.weight.toFixed(1)} {t.common.kg}
+                        </Text>
+                        <Text style={styles.historyDate}>
+                          {log.date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short', year: 'numeric' })} - {log.date.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })} ({t.tracking[log.time]})
+                        </Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              </>
+            ) : (
+              <Text style={styles.noDataText}>Žádná data pro vybranou metriku a časový rozsah</Text>
+            )}
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -506,43 +458,43 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingHorizontal: 16,
+    paddingTop: 16,
     paddingBottom: 24,
   },
   card: {
     backgroundColor: Colors.white,
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 20,
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 14,
     borderWidth: 1,
     borderColor: Colors.border.light,
     shadowColor: Colors.black,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
     elevation: 2,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 16,
+    gap: 10,
+    marginBottom: 14,
   },
   cardTitle: {
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: '700' as const,
     color: Colors.textPrimary,
   },
   timeSelector: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
+    gap: 10,
+    marginBottom: 14,
   },
   timeButton: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 12,
+    paddingVertical: 11,
+    borderRadius: 10,
     backgroundColor: Colors.white,
     borderWidth: 2,
     borderColor: Colors.border.light,
@@ -550,7 +502,7 @@ const styles = StyleSheet.create({
   },
   timeButtonActive: {
     borderColor: Colors.gold,
-    backgroundColor: Colors.lightGray,
+    backgroundColor: '#FEF9E7',
   },
   timeButtonText: {
     fontSize: 14,
@@ -562,19 +514,18 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
+    borderRadius: 10,
+    padding: 14,
+    fontSize: 15,
     color: Colors.textPrimary,
     borderWidth: 1,
     borderColor: Colors.border.light,
-    marginBottom: 16,
+    marginBottom: 14,
   },
-
   button: {
     backgroundColor: Colors.gold,
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 10,
+    padding: 14,
     alignItems: 'center',
   },
   buttonDisabled: {
@@ -582,22 +533,22 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: Colors.black,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700' as const,
   },
   hydrationStats: {
     flexDirection: 'row',
-    marginBottom: 16,
+    marginBottom: 14,
   },
   statBox: {
     flex: 1,
     backgroundColor: Colors.lightGray,
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 10,
+    padding: 14,
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700' as const,
     color: Colors.gold,
     marginBottom: 4,
@@ -610,7 +561,7 @@ const styles = StyleSheet.create({
   quickButtons: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   quickButton: {
     flex: 1,
@@ -619,178 +570,86 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.lightGray,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Colors.border.light,
+    borderColor: Colors.gold,
   },
   quickButtonText: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: Colors.textPrimary,
+    color: Colors.gold,
   },
-
-  progressGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    marginTop: 16,
+  nutritionSummary: {
+    backgroundColor: Colors.lightGray,
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 14,
   },
-  progressCard: {
-    flex: 1,
-    minWidth: '47%',
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: Colors.border.light,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  progressIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  progressLabel: {
+  nutritionSummaryTitle: {
     fontSize: 13,
-    color: Colors.textSecondary,
-    marginBottom: 12,
-    fontWeight: '600' as const,
-  },
-  circularProgress: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: Colors.lightGray,
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    marginBottom: 12,
-  },
-  circularProgressInner: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: Colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  progressValue: {
-    fontSize: 20,
-    fontWeight: '700' as const,
-  },
-  progressStats: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'center',
-    marginTop: 4,
-  },
-  progressGoal: {
-    fontSize: 15,
-    color: Colors.textSecondary,
-    fontWeight: '600' as const,
-  },
-  progressUnit: {
-    fontSize: 11,
-    color: Colors.textSecondary,
-    marginLeft: 3,
-  },
-  progressBar: {
-    height: 6,
-    backgroundColor: '#E5E5EA',
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  historyList: {
-    gap: 8,
-  },
-  historyItem: {
-    padding: 12,
-    borderRadius: 12,
-    backgroundColor: Colors.lightGray,
-    borderWidth: 1,
-    borderColor: Colors.border.light,
-  },
-  historyValue: {
-    fontSize: 16,
     fontWeight: '700' as const,
     color: Colors.textPrimary,
-    marginBottom: 4,
+    marginBottom: 6,
   },
-  historyDate: {
+  nutritionSummaryText: {
     fontSize: 12,
     color: Colors.textSecondary,
+    lineHeight: 18,
   },
-  quickStatsGrid: {
+  navigateButton: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
-  },
-  quickStatItem: {
-    flex: 1,
-    backgroundColor: Colors.lightGray,
-    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.gold,
+    borderRadius: 10,
     padding: 14,
-    alignItems: 'center',
+    gap: 6,
   },
-  quickStatValueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+  navigateButtonText: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: Colors.black,
   },
-  quickStatValue: {
-    fontSize: 22,
+  trainingEmptyState: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  emptyStateText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginBottom: 14,
+  },
+  addTrainingButton: {
+    backgroundColor: Colors.lightGray,
+    borderRadius: 10,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderWidth: 2,
+    borderColor: Colors.gold,
+  },
+  addTrainingButtonText: {
+    fontSize: 14,
     fontWeight: '700' as const,
     color: Colors.gold,
-    marginBottom: 4,
-  },
-  quickStatLabel: {
-    fontSize: 11,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-  },
-  seeAllButton: {
-    backgroundColor: Colors.lightGray,
-    borderRadius: 8,
-    padding: 10,
-    alignItems: 'center',
-    marginTop: 8,
-    borderWidth: 1,
-    borderColor: Colors.border.light,
-  },
-  seeAllButtonText: {
-    fontSize: 13,
-    fontWeight: '600' as const,
-    color: Colors.textPrimary,
   },
   wellnessGrid: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
+    gap: 10,
+    marginBottom: 14,
   },
   wellnessCard: {
     flex: 1,
     backgroundColor: Colors.lightGray,
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 10,
+    padding: 14,
     alignItems: 'center',
   },
   wellnessLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.textSecondary,
     marginBottom: 8,
     fontWeight: '600' as const,
   },
   wellnessValue: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '700' as const,
     color: Colors.gold,
     marginBottom: 4,
@@ -802,7 +661,7 @@ const styles = StyleSheet.create({
   },
   addDataButton: {
     backgroundColor: Colors.gold,
-    borderRadius: 12,
+    borderRadius: 10,
     padding: 14,
     alignItems: 'center',
   },
@@ -811,55 +670,108 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700' as const,
   },
-  trainingEmptyState: {
-    alignItems: 'center',
-    paddingVertical: 24,
+  bodyCompositionForm: {
+    gap: 0,
   },
-  emptyStateText: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    marginBottom: 16,
-  },
-  addTrainingButton: {
-    backgroundColor: Colors.lightGray,
-    borderRadius: 10,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderWidth: 2,
-    borderColor: Colors.gold,
-  },
-  addTrainingButtonText: {
-    fontSize: 14,
-    fontWeight: '700' as const,
-    color: Colors.gold,
-  },
-  bodyCompositionGrid: {
-    flexDirection: 'row',
-    gap: 12,
+  metricSelector: {
     marginBottom: 12,
   },
-  bodyCompCard: {
-    flex: 1,
-    backgroundColor: Colors.lightGray,
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
+  metricSelectorContent: {
+    gap: 8,
+    paddingRight: 16,
   },
-  bodyCompValue: {
-    fontSize: 24,
+  metricButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: Colors.lightGray,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+  },
+  metricButtonActive: {
+    backgroundColor: Colors.gold,
+    borderColor: Colors.gold,
+  },
+  metricButtonText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+  },
+  metricButtonTextActive: {
+    color: Colors.black,
+  },
+  timeRangeSelector: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
+  },
+  timeRangeButton: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: Colors.lightGray,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+  },
+  timeRangeButtonActive: {
+    backgroundColor: Colors.gold,
+    borderColor: Colors.gold,
+  },
+  timeRangeButtonText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+  },
+  timeRangeButtonTextActive: {
+    color: Colors.black,
+  },
+  historyChart: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-around',
+    height: 100,
+    paddingHorizontal: 8,
+    marginBottom: 16,
+    backgroundColor: Colors.lightGray,
+    borderRadius: 10,
+    padding: 12,
+  },
+  historyChartBar: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 2,
+  },
+  historyChartLine: {
+    width: '100%',
+    borderRadius: 3,
+    minHeight: 6,
+  },
+  historyList: {
+    gap: 8,
+  },
+  historyItem: {
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: Colors.lightGray,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+  },
+  historyValue: {
+    fontSize: 15,
     fontWeight: '700' as const,
-    color: Colors.gold,
+    color: Colors.textPrimary,
     marginBottom: 4,
   },
-  bodyCompLabel: {
+  historyDate: {
     fontSize: 11,
     color: Colors.textSecondary,
-    textAlign: 'center',
   },
-  estimateNote: {
-    fontSize: 11,
-    color: Colors.textLight,
+  noDataText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
     textAlign: 'center',
-    fontStyle: 'italic' as const,
+    paddingVertical: 24,
   },
 });
