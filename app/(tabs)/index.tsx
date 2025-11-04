@@ -1,7 +1,7 @@
 import { useMemo, useEffect, useRef } from 'react';
 import { Animated, Image, Pressable, ScrollView, StyleSheet, Text, View, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Plus, Droplets, TrendingDown, AlertTriangle, Activity, Brain as BrainIcon, Flame, Target, Clock, User, ChevronRight, Award, Zap } from 'lucide-react-native';
+import { Plus, Droplets, TrendingDown, AlertTriangle, Activity, Brain as BrainIcon, Flame, Target, Clock, User, ChevronRight, Award, Zap, X } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
@@ -22,7 +22,9 @@ export default function DashboardScreen() {
     getWeightProgress,
     weightLogs,
     getTodayNutrition,
-    getNutritionGoals 
+    getNutritionGoals,
+    dangerBannerDismissed,
+    dismissDangerBanner 
   } = useApp();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -128,7 +130,7 @@ export default function DashboardScreen() {
           </Pressable>
         </Animated.View>
 
-        {safetyStatus && safetyStatus.level === 'danger' && (
+        {safetyStatus && safetyStatus.level === 'danger' && !dangerBannerDismissed && (
           <Animated.View 
             style={[
               styles.dangerBanner,
@@ -140,6 +142,9 @@ export default function DashboardScreen() {
           >
             <AlertTriangle size={20} color={Colors.white} />
             <Text style={styles.dangerBannerText}>NEBEZPEČÍ - OKAMŽITÁ AKCE VYŽADOVÁNA</Text>
+            <Pressable onPress={dismissDangerBanner} style={styles.dismissButton}>
+              <X size={18} color={Colors.white} />
+            </Pressable>
           </Animated.View>
         )}
 
@@ -491,6 +496,11 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     color: Colors.white,
     flex: 1,
+  },
+  dismissButton: {
+    padding: 4,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
   fightCard: {
     backgroundColor: Colors.white,

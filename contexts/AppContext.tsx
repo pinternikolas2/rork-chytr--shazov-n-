@@ -30,6 +30,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
   const [sleepLogs, setSleepLogs] = useState<SleepLog[]>([]);
   const [dailyNotes, setDailyNotes] = useState<DailyNote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [dangerBannerDismissed, setDangerBannerDismissed] = useState(false);
 
   useEffect(() => {
     loadStoredData();
@@ -92,7 +93,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
       const { data: { session } } = await supabase.auth.getSession();
       console.log('[AppContext] Current session:', session?.user?.id);
       
-      const [storedSettings, storedProfile, storedFights, storedWeightLogs, storedHydrationLogs, storedMealLogs, storedCustomFoods, storedSupplementLogs, storedRegenerationLogs, storedSleepLogs, storedDailyNotes] =
+      const [storedSettings, storedProfile, storedFights, storedWeightLogs, storedHydrationLogs, storedMealLogs, storedCustomFoods, storedSupplementLogs, storedRegenerationLogs, storedSleepLogs, storedDailyNotes, storedDangerBannerDismissed] =
         await Promise.all([
           AsyncStorage.getItem('settings'),
           AsyncStorage.getItem('profile'),
@@ -105,6 +106,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
           AsyncStorage.getItem('regenerationLogs'),
           AsyncStorage.getItem('sleepLogs'),
           AsyncStorage.getItem('dailyNotes'),
+          AsyncStorage.getItem('dangerBannerDismissed'),
         ]);
 
       if (storedSettings) {
@@ -176,6 +178,10 @@ export const [AppProvider, useApp] = createContextHook(() => {
         const parsedNotes = JSON.parse(storedDailyNotes);
         console.log('[AppContext] Loaded', parsedNotes.length, 'daily notes');
         setDailyNotes(parsedNotes.map((n: DailyNote) => ({ ...n, date: new Date(n.date) })));
+      }
+      if (storedDangerBannerDismissed) {
+        const dismissed = storedDangerBannerDismissed === 'true';
+        setDangerBannerDismissed(dismissed);
       }
       console.log('[AppContext] Finished loading stored data');
       
@@ -653,6 +659,11 @@ export const [AppProvider, useApp] = createContextHook(() => {
     return Math.max(0, Math.min(100, progress));
   }, [profile]);
 
+  const dismissDangerBanner = useCallback(async () => {
+    setDangerBannerDismissed(true);
+    await AsyncStorage.setItem('dangerBannerDismissed', 'true');
+  }, []);
+
   const signOut = useCallback(async () => {
     console.log('[AppContext] Signing out...');
     try {
@@ -672,7 +683,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
     setRegenerationLogs([]);
     setSleepLogs([]);
     setDailyNotes([]);
-    await AsyncStorage.multiRemove(['profile', 'fights', 'weightLogs', 'hydrationLogs', 'mealLogs', 'customFoods', 'supplementLogs', 'regenerationLogs', 'sleepLogs', 'dailyNotes', 'subscriptionState']);
+    setDangerBannerDismissed(false);
+    await AsyncStorage.multiRemove(['profile', 'fights', 'weightLogs', 'hydrationLogs', 'mealLogs', 'customFoods', 'supplementLogs', 'regenerationLogs', 'sleepLogs', 'dailyNotes', 'subscriptionState', 'dangerBannerDismissed']);
     await updateSettings({ hasCompletedOnboarding: false });
     console.log('[AppContext] Local data cleared, onboarding reset, subscription state cleared');
   }, [updateSettings]);
@@ -692,6 +704,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
     sleepLogs,
     dailyNotes,
     isLoading,
+    dangerBannerDismissed,
     t,
     setLanguage,
     updateSettings,
@@ -728,6 +741,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
     getBodyComposition,
     getMetabolicData,
     getWeightProgress,
+    dismissDangerBanner,
     signOut,
   }), [
     settings,
@@ -742,6 +756,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
     sleepLogs,
     dailyNotes,
     isLoading,
+    dangerBannerDismissed,
     t,
     setLanguage,
     updateSettings,
@@ -778,6 +793,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
     getBodyComposition,
     getMetabolicData,
     getWeightProgress,
+    dismissDangerBanner,
     signOut,
   ]);
 });
