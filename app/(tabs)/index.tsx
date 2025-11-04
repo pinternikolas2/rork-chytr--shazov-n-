@@ -1,7 +1,7 @@
 import { useMemo, useEffect, useRef } from 'react';
 import { Animated, Image, Pressable, ScrollView, StyleSheet, Text, View, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Plus, Droplets, TrendingDown, AlertTriangle, Activity, Brain as BrainIcon, Flame, Target, Zap } from 'lucide-react-native';
+import { Plus, Droplets, TrendingDown, AlertTriangle, Activity, Brain as BrainIcon, Flame, Target, Zap, Clock } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
@@ -122,7 +122,10 @@ export default function DashboardScreen() {
             <View style={styles.fightCardHeader}>
               <Text style={styles.fightCardTitle}>{upcomingFight.name}</Text>
               <View style={styles.daysContainer}>
-                <Text style={styles.daysNumber}>{daysUntilFight}</Text>
+                <View style={styles.daysRow}>
+                  <Clock size={20} color={Colors.gold} />
+                  <Text style={styles.daysNumber}>{daysUntilFight}</Text>
+                </View>
                 <Text style={styles.daysLabel}>{t.dashboard.daysUntilWeighIn}</Text>
               </View>
             </View>
@@ -166,7 +169,50 @@ export default function DashboardScreen() {
             transform: [{ translateY: slideAnim }],
           }}
         >
+          <View style={styles.weightTrendSection}>
+            <View style={styles.weightTrendHeader}>
+              <TrendingDown size={18} color={Colors.gold} />
+              <Text style={styles.weightTrendTitle}>Trend váhy (7 dní)</Text>
+            </View>
+            {recentWeightLogs.length >= 2 ? (
+              <View style={styles.miniChart}>
+                {recentWeightLogs.slice().reverse().map((log, i, arr) => {
+                  if (i === 0) return null;
+                  const maxWeight = Math.max(...arr.map(l => l.weight));
+                  const minWeight = Math.min(...arr.map(l => l.weight));
+                  const range = maxWeight - minWeight || 1;
+                  const prevHeight = ((arr[i - 1].weight - minWeight) / range) * 40;
+                  const currentHeight = ((arr[i].weight - minWeight) / range) * 40;
+                  
+                  return (
+                    <View key={log.id} style={styles.miniChartBar}>
+                      <View style={[styles.miniChartLine, { 
+                        height: Math.max(2, prevHeight),
+                        backgroundColor: arr[i].weight < arr[i - 1].weight ? Colors.gold : '#ef4444'
+                      }]} />
+                    </View>
+                  );
+                })}
+              </View>
+            ) : (
+              <Text style={styles.noDataText}>Nedostatek dat</Text>
+            )}
+          </View>
+
           <View style={styles.metricsRow}>
+            <View style={[styles.smallMetricCard, styles.sodiumCard]}>
+              <AlertTriangle size={20} color="#EF4444" />
+              <Text style={styles.smallMetricLabel}>Sodík</Text>
+              <Text style={styles.smallMetricValue}>{todayNutrition.sodium}</Text>
+              <Text style={styles.smallMetricGoal}>/ {nutritionGoals.sodium} mg</Text>
+              <View style={styles.miniProgressBar}>
+                <View style={[styles.miniProgressFill, { 
+                  width: `${Math.min(100, (todayNutrition.sodium / nutritionGoals.sodium) * 100)}%`, 
+                  backgroundColor: todayNutrition.sodium > nutritionGoals.sodium ? '#EF4444' : '#10B981'
+                }]} />
+              </View>
+            </View>
+
             <View style={[styles.smallMetricCard, styles.calorieCard]}>
               <Flame size={20} color="#FF6B35" />
               <Text style={styles.smallMetricLabel}>Kalorie</Text>
@@ -528,6 +574,58 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontWeight: '500' as const,
   },
+  sodiumCard: {
+    borderBottomWidth: 3,
+    borderBottomColor: '#EF4444',
+  },
+  weightTrendSection: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  weightTrendHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  weightTrendTitle: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
+  },
+  miniChart: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-around',
+    height: 50,
+    paddingHorizontal: 8,
+  },
+  miniChartBar: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 2,
+  },
+  miniChartLine: {
+    width: '100%',
+    borderRadius: 2,
+    minHeight: 2,
+  },
+  noDataText: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    paddingVertical: 8,
+  },
   fightCard: {
     backgroundColor: Colors.white,
     borderRadius: 20,
@@ -555,6 +653,11 @@ const styles = StyleSheet.create({
   },
   daysContainer: {
     alignItems: 'center',
+  },
+  daysRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   daysNumber: {
     fontSize: 36,

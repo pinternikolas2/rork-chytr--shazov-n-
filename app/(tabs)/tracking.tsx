@@ -12,7 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Scale, Droplets, Calendar, BarChart3, TrendingDown, AlertCircle, Flame, Drumstick, Wheat } from 'lucide-react-native';
+import { Scale, Droplets, Calendar, BarChart3, TrendingDown, AlertCircle, Flame, Drumstick, Wheat, Dumbbell, Moon, Activity as ActivityIcon } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
@@ -207,7 +207,10 @@ export default function TrackingScreen() {
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Dnešní pokrok</Text>
+            <View style={styles.cardHeader}>
+              <ActivityIcon size={24} color={Colors.gold} />
+              <Text style={styles.cardTitle}>Dnešní metriky</Text>
+            </View>
 
             <View style={styles.progressGrid}>
               <View style={styles.progressCard}>
@@ -354,6 +357,59 @@ export default function TrackingScreen() {
                 </View>
               </View>
             </View>
+          </View>
+
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Moon size={24} color={Colors.gold} />
+              <Text style={styles.cardTitle}>Spánek & Regenerace</Text>
+            </View>
+            <View style={styles.wellnessGrid}>
+              <View style={styles.wellnessCard}>
+                <Text style={styles.wellnessLabel}>Hodiny spánku</Text>
+                <Text style={styles.wellnessValue}>-</Text>
+                <Text style={styles.wellnessSubtext}>Zatím nezaznamenáno</Text>
+              </View>
+              <View style={styles.wellnessCard}>
+                <Text style={styles.wellnessLabel}>Kvalita</Text>
+                <Text style={styles.wellnessValue}>-</Text>
+                <Text style={styles.wellnessSubtext}>Zatím nezaznamenáno</Text>
+              </View>
+            </View>
+            <Pressable style={styles.addDataButton} onPress={() => router.push('/wellness')}>
+              <Text style={styles.addDataButtonText}>Zaznamenat spánek</Text>
+            </Pressable>
+          </View>
+
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Dumbbell size={24} color={Colors.gold} />
+              <Text style={styles.cardTitle}>Dnešní trénink</Text>
+            </View>
+            <View style={styles.trainingEmptyState}>
+              <Text style={styles.emptyStateText}>Zatím žádný trénink zaznamenán</Text>
+              <Pressable style={styles.addTrainingButton}>
+                <Text style={styles.addTrainingButtonText}>+ Přidat trénink</Text>
+              </Pressable>
+            </View>
+          </View>
+
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <ActivityIcon size={24} color={Colors.gold} />
+              <Text style={styles.cardTitle}>Tělesné složení</Text>
+            </View>
+            <View style={styles.bodyCompositionGrid}>
+              <View style={styles.bodyCompCard}>
+                <Text style={styles.bodyCompValue}>-</Text>
+                <Text style={styles.bodyCompLabel}>Tělesný tuk (%)</Text>
+              </View>
+              <View style={styles.bodyCompCard}>
+                <Text style={styles.bodyCompValue}>-</Text>
+                <Text style={styles.bodyCompLabel}>Svalová hmota (kg)</Text>
+              </View>
+            </View>
+            <Text style={styles.estimateNote}>Odhad na základě aktuální váhy a profilu</Text>
           </View>
 
           {weightLogs.length > 0 && (
@@ -714,5 +770,96 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600' as const,
     color: Colors.textPrimary,
+  },
+  wellnessGrid: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  wellnessCard: {
+    flex: 1,
+    backgroundColor: Colors.lightGray,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  wellnessLabel: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginBottom: 8,
+    fontWeight: '600' as const,
+  },
+  wellnessValue: {
+    fontSize: 28,
+    fontWeight: '700' as const,
+    color: Colors.gold,
+    marginBottom: 4,
+  },
+  wellnessSubtext: {
+    fontSize: 10,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+  },
+  addDataButton: {
+    backgroundColor: Colors.gold,
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+  },
+  addDataButtonText: {
+    color: Colors.black,
+    fontSize: 14,
+    fontWeight: '700' as const,
+  },
+  trainingEmptyState: {
+    alignItems: 'center',
+    paddingVertical: 24,
+  },
+  emptyStateText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginBottom: 16,
+  },
+  addTrainingButton: {
+    backgroundColor: Colors.lightGray,
+    borderRadius: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderWidth: 2,
+    borderColor: Colors.gold,
+  },
+  addTrainingButtonText: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: Colors.gold,
+  },
+  bodyCompositionGrid: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
+  bodyCompCard: {
+    flex: 1,
+    backgroundColor: Colors.lightGray,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  bodyCompValue: {
+    fontSize: 24,
+    fontWeight: '700' as const,
+    color: Colors.gold,
+    marginBottom: 4,
+  },
+  bodyCompLabel: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+  },
+  estimateNote: {
+    fontSize: 11,
+    color: Colors.textLight,
+    textAlign: 'center',
+    fontStyle: 'italic' as const,
   },
 });

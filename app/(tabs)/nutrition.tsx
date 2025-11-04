@@ -1,7 +1,7 @@
 
 import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Plus, Camera, Flame, Drumstick, Wheat, Droplet, Pizza, Utensils, Apple, ChefHat } from 'lucide-react-native';
+import { Plus, Camera, Flame, Drumstick, Wheat, Droplet, Pizza, Utensils, Apple, ChefHat, PieChart } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
@@ -109,6 +109,42 @@ export default function NutritionScreen() {
                 </View>
               );
             })}
+          </View>
+        </View>
+
+        <View style={styles.macroBreakdownSection}>
+          <View style={styles.macroHeader}>
+            <PieChart size={20} color={Colors.gold} />
+            <Text style={styles.sectionTitle}>Rozložení makroživin</Text>
+          </View>
+          <View style={styles.macroCircleContainer}>
+            <View style={styles.macroCircle}>
+              <Text style={styles.macroCircleValue}>{todayNutrition.calories}</Text>
+              <Text style={styles.macroCircleLabel}>{t.common.kcal}</Text>
+            </View>
+          </View>
+          <View style={styles.macroBreakdownGrid}>
+            <View style={styles.macroBreakdownItem}>
+              <View style={[styles.macroDot, { backgroundColor: '#6366F1' }]} />
+              <View style={styles.macroBreakdownText}>
+                <Text style={styles.macroBreakdownLabel}>Bílkoviny</Text>
+                <Text style={styles.macroBreakdownValue}>{todayNutrition.protein}g ({Math.round((todayNutrition.protein * 4 / todayNutrition.calories) * 100) || 0}%)</Text>
+              </View>
+            </View>
+            <View style={styles.macroBreakdownItem}>
+              <View style={[styles.macroDot, { backgroundColor: '#F59E0B' }]} />
+              <View style={styles.macroBreakdownText}>
+                <Text style={styles.macroBreakdownLabel}>Sacharidy</Text>
+                <Text style={styles.macroBreakdownValue}>{todayNutrition.carbs}g ({Math.round((todayNutrition.carbs * 4 / todayNutrition.calories) * 100) || 0}%)</Text>
+              </View>
+            </View>
+            <View style={styles.macroBreakdownItem}>
+              <View style={[styles.macroDot, { backgroundColor: '#10B981' }]} />
+              <View style={styles.macroBreakdownText}>
+                <Text style={styles.macroBreakdownLabel}>Tuky</Text>
+                <Text style={styles.macroBreakdownValue}>{todayNutrition.fat}g ({Math.round((todayNutrition.fat * 9 / todayNutrition.calories) * 100) || 0}%)</Text>
+              </View>
+            </View>
           </View>
         </View>
 
@@ -442,5 +478,80 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700' as const,
     color: Colors.textPrimary,
+  },
+  macroBreakdownSection: {
+    marginBottom: 24,
+    backgroundColor: Colors.white,
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  macroHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 20,
+  },
+  macroCircleContainer: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  macroCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: Colors.lightGray,
+    borderWidth: 8,
+    borderColor: Colors.gold,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  macroCircleValue: {
+    fontSize: 32,
+    fontWeight: '700' as const,
+    color: Colors.gold,
+  },
+  macroCircleLabel: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    fontWeight: '600' as const,
+  },
+  macroBreakdownGrid: {
+    gap: 12,
+  },
+  macroBreakdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: Colors.lightGray,
+    borderRadius: 12,
+    padding: 12,
+  },
+  macroDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  macroBreakdownText: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  macroBreakdownLabel: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.textPrimary,
+  },
+  macroBreakdownValue: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: Colors.textSecondary,
   },
 });
