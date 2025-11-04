@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useRouter, Stack } from 'expo-router';
 import {
   Alert,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,12 +11,12 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Scale, Target, Activity } from 'lucide-react-native';
+import { ArrowLeft, Scale } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 import { Discipline, DietType, TrainingIntensity } from '@/constants/types';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Platform } from 'react-native';
+
 
 export default function MeasurementSettingsScreen() {
   const { t, profile, updateProfile, settings } = useApp();
@@ -28,9 +29,7 @@ export default function MeasurementSettingsScreen() {
   const [targetWeight, setTargetWeight] = useState(
     profile && profile.role === 'fighter' ? profile.targetWeight.toString() : ''
   );
-  const [weightClass, setWeightClass] = useState(
-    profile && profile.role === 'fighter' ? profile.weightClass : ''
-  );
+
   const [targetFightDate, setTargetFightDate] = useState<Date | null>(
     profile && profile.role === 'fighter' && profile.targetFightDate
       ? new Date(profile.targetFightDate)
@@ -60,7 +59,6 @@ export default function MeasurementSettingsScreen() {
         if (
           isNaN(parsedCurrentWeight) ||
           isNaN(parsedTargetWeight) ||
-          !weightClass ||
           !targetFightDate
         ) {
           Alert.alert('Chyba', 'Prosím vyplňte všechny hodnoty správně');
@@ -70,7 +68,7 @@ export default function MeasurementSettingsScreen() {
         await updateProfile({
           currentWeight: parsedCurrentWeight,
           targetWeight: parsedTargetWeight,
-          weightClass,
+          weightClass: `${parsedTargetWeight} kg`,
           targetFightDate,
           discipline,
           dietType,
@@ -143,7 +141,7 @@ export default function MeasurementSettingsScreen() {
             <Text style={styles.sectionTitle}>Váha a cíle</Text>
             <View style={styles.card}>
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>{t.profile.currentWeight} (kg)</Text>
+                <Text style={styles.label}>{t.profile.currentWeight}</Text>
                 <TextInput
                   style={styles.input}
                   value={currentWeight}
@@ -155,7 +153,7 @@ export default function MeasurementSettingsScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>{t.profile.targetWeight} (kg)</Text>
+                <Text style={styles.label}>{t.profile.targetWeight}</Text>
                 <TextInput
                   style={styles.input}
                   value={targetWeight}
@@ -163,17 +161,6 @@ export default function MeasurementSettingsScreen() {
                   keyboardType="decimal-pad"
                   placeholderTextColor={Colors.textLight}
                   placeholder="77.0"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>{t.profile.weightClass}</Text>
-                <TextInput
-                  style={styles.input}
-                  value={weightClass}
-                  onChangeText={setWeightClass}
-                  placeholderTextColor={Colors.textLight}
-                  placeholder="77 kg"
                 />
               </View>
 
