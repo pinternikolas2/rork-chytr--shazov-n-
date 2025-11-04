@@ -86,136 +86,136 @@ export default function TrackingScreen() {
           showsVerticalScrollIndicator={false}
         >
 
-          <View style={styles.cardsRow}>
-            <View style={[styles.card, styles.halfCard]}>
-              <View style={styles.cardHeader}>
-                <Scale size={18} color={Colors.gold} />
-                <Text style={styles.cardTitleSmall}>{t.tracking.weight}</Text>
-              </View>
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Scale size={24} color={Colors.gold} />
+              <Text style={styles.cardTitle}>{t.tracking.weight}</Text>
+            </View>
 
-              <View style={styles.timeSelector}>
-                <Pressable
-                  style={[
-                    styles.timeButton,
-                    selectedTime === 'morning' && styles.timeButtonActive,
-                  ]}
-                  onPress={() => setSelectedTime('morning')}
-                >
-                  <Text
-                    style={[
-                      styles.timeButtonText,
-                      selectedTime === 'morning' && styles.timeButtonTextActive,
-                    ]}
-                  >
-                    {t.tracking.morning}
-                  </Text>
-                </Pressable>
-                <Pressable
-                  style={[
-                    styles.timeButton,
-                    selectedTime === 'evening' && styles.timeButtonActive,
-                  ]}
-                  onPress={() => setSelectedTime('evening')}
-                >
-                  <Text
-                    style={[
-                      styles.timeButtonText,
-                      selectedTime === 'evening' && styles.timeButtonTextActive,
-                    ]}
-                  >
-                    {t.tracking.evening}
-                  </Text>
-                </Pressable>
-              </View>
-
-              <TextInput
-                style={styles.input}
-                value={weightInput}
-                onChangeText={setWeightInput}
-                placeholder={t.tracking.enterWeight}
-                placeholderTextColor={Colors.textLight}
-                keyboardType="decimal-pad"
-              />
-
+            <View style={styles.timeSelector}>
               <Pressable
-                style={[styles.button, !weightInput && styles.buttonDisabled]}
-                onPress={handleLogWeight}
-                disabled={!weightInput}
+                style={[
+                  styles.timeButton,
+                  selectedTime === 'morning' && styles.timeButtonActive,
+                ]}
+                onPress={() => setSelectedTime('morning')}
               >
-                <Text style={styles.buttonText}>{t.tracking.save}</Text>
+                <Text
+                  style={[
+                    styles.timeButtonText,
+                    selectedTime === 'morning' && styles.timeButtonTextActive,
+                  ]}
+                >
+                  {t.tracking.morning}
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.timeButton,
+                  selectedTime === 'evening' && styles.timeButtonActive,
+                ]}
+                onPress={() => setSelectedTime('evening')}
+              >
+                <Text
+                  style={[
+                    styles.timeButtonText,
+                    selectedTime === 'evening' && styles.timeButtonTextActive,
+                  ]}
+                >
+                  {t.tracking.evening}
+                </Text>
               </Pressable>
             </View>
 
-            <View style={[styles.card, styles.halfCard]}>
-              <View style={styles.cardHeader}>
-                <Droplets size={18} color={Colors.gold} />
-                <Text style={styles.cardTitleSmall}>{t.tracking.hydration}</Text>
-              </View>
+            <TextInput
+              style={styles.input}
+              value={weightInput}
+              onChangeText={setWeightInput}
+              placeholder={t.tracking.enterWeight}
+              placeholderTextColor={Colors.textLight}
+              keyboardType="decimal-pad"
+            />
 
-              <View style={styles.hydrationStatsSmall}>
-                <Text style={styles.statValue}>{todayHydration}</Text>
-                <Text style={styles.statLabel}>{t.tracking.today} ({t.common.ml})</Text>
-              </View>
-
-              <TextInput
-                style={styles.input}
-                value={waterInput}
-                onChangeText={setWaterInput}
-                placeholder={t.tracking.enterWater}
-                placeholderTextColor={Colors.textLight}
-                keyboardType="number-pad"
-              />
-
-              <View style={styles.quickButtons}>
-                <Pressable
-                  style={styles.quickButton}
-                  onPress={() => {
-                    setWaterInput('250');
-                    setTimeout(() => handleLogWater(), 100);
-                  }}
-                >
-                  <Text style={styles.quickButtonText}>250</Text>
-                </Pressable>
-                <Pressable
-                  style={styles.quickButton}
-                  onPress={() => {
-                    setWaterInput('500');
-                    setTimeout(() => handleLogWater(), 100);
-                  }}
-                >
-                  <Text style={styles.quickButtonText}>500</Text>
-                </Pressable>
-                <Pressable
-                  style={styles.quickButton}
-                  onPress={() => {
-                    setWaterInput('1000');
-                    setTimeout(() => handleLogWater(), 100);
-                  }}
-                >
-                  <Text style={styles.quickButtonText}>1L</Text>
-                </Pressable>
-              </View>
-
-              <Pressable
-                style={[styles.button, !waterInput && styles.buttonDisabled]}
-                onPress={handleLogWater}
-                disabled={!waterInput}
-              >
-                <Text style={styles.buttonText}>{t.tracking.save}</Text>
-              </Pressable>
-            </View>
+            <Pressable
+              style={[styles.button, !weightInput && styles.buttonDisabled]}
+              onPress={handleLogWeight}
+              disabled={!weightInput}
+            >
+              <Text style={styles.buttonText}>{t.tracking.save}</Text>
+            </Pressable>
           </View>
 
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <ActivityIcon size={20} color={Colors.gold} />
+              <Droplets size={24} color={Colors.gold} />
+              <Text style={styles.cardTitle}>{t.tracking.hydration}</Text>
+            </View>
+
+            <View style={styles.hydrationStats}>
+              <View style={styles.statBox}>
+                <Text style={styles.statValue}>{todayHydration}</Text>
+                <Text style={styles.statLabel}>{t.tracking.today} ({t.common.ml})</Text>
+              </View>
+            </View>
+
+            <TextInput
+              style={styles.input}
+              value={waterInput}
+              onChangeText={setWaterInput}
+              placeholder={t.tracking.enterWater}
+              placeholderTextColor={Colors.textLight}
+              keyboardType="number-pad"
+            />
+
+            <View style={styles.quickButtons}>
+              <Pressable
+                style={styles.quickButton}
+                onPress={() => {
+                  setWaterInput('250');
+                  setTimeout(() => handleLogWater(), 100);
+                }}
+              >
+                <Text style={styles.quickButtonText}>250ml</Text>
+              </Pressable>
+              <Pressable
+                style={styles.quickButton}
+                onPress={() => {
+                  setWaterInput('500');
+                  setTimeout(() => handleLogWater(), 100);
+                }}
+              >
+                <Text style={styles.quickButtonText}>500ml</Text>
+              </Pressable>
+              <Pressable
+                style={styles.quickButton}
+                onPress={() => {
+                  setWaterInput('1000');
+                  setTimeout(() => handleLogWater(), 100);
+                }}
+              >
+                <Text style={styles.quickButtonText}>1L</Text>
+              </Pressable>
+            </View>
+
+            <Pressable
+              style={[styles.button, !waterInput && styles.buttonDisabled]}
+              onPress={handleLogWater}
+              disabled={!waterInput}
+            >
+              <Text style={styles.buttonText}>{t.tracking.save}</Text>
+            </Pressable>
+          </View>
+
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <ActivityIcon size={24} color={Colors.gold} />
               <Text style={styles.cardTitle}>Dnešní metriky</Text>
             </View>
 
             <View style={styles.progressGrid}>
               <View style={styles.progressCard}>
                 <View style={[styles.progressIconContainer, { backgroundColor: '#FF6B6B20' }]}>
-                  <Flame size={20} color="#FF6B6B" />
+                  <Flame size={24} color="#FF6B6B" />
                 </View>
                 <Text style={styles.progressLabel}>{t.nutrition.calories}</Text>
                 <View style={styles.circularProgress}>
@@ -239,7 +239,7 @@ export default function TrackingScreen() {
 
               <View style={styles.progressCard}>
                 <View style={[styles.progressIconContainer, { backgroundColor: '#6366F120' }]}>
-                  <Drumstick size={20} color="#6366F1" />
+                  <Drumstick size={24} color="#6366F1" />
                 </View>
                 <Text style={styles.progressLabel}>{t.nutrition.protein}</Text>
                 <View style={styles.circularProgress}>
@@ -263,7 +263,7 @@ export default function TrackingScreen() {
 
               <View style={styles.progressCard}>
                 <View style={[styles.progressIconContainer, { backgroundColor: '#3B82F620' }]}>
-                  <Droplets size={20} color="#3B82F6" />
+                  <Droplets size={24} color="#3B82F6" />
                 </View>
                 <Text style={styles.progressLabel}>{t.tracking.hydration}</Text>
                 <View style={styles.circularProgress}>
@@ -287,7 +287,7 @@ export default function TrackingScreen() {
 
               <View style={styles.progressCard}>
                 <View style={[styles.progressIconContainer, { backgroundColor: '#F59E0B20' }]}>
-                  <Wheat size={20} color="#F59E0B" />
+                  <Wheat size={24} color="#F59E0B" />
                 </View>
                 <Text style={styles.progressLabel}>{t.nutrition.carbs}</Text>
                 <View style={styles.circularProgress}>
@@ -311,7 +311,7 @@ export default function TrackingScreen() {
 
               <View style={styles.progressCard}>
                 <View style={[styles.progressIconContainer, { backgroundColor: '#10B98120' }]}>
-                  <Droplets size={20} color="#10B981" style={{ transform: [{ rotate: '180deg' }] }} />
+                  <Droplets size={24} color="#10B981" style={{ transform: [{ rotate: '180deg' }] }} />
                 </View>
                 <Text style={styles.progressLabel}>{t.nutrition.fat}</Text>
                 <View style={styles.circularProgress}>
@@ -335,7 +335,7 @@ export default function TrackingScreen() {
 
               <View style={styles.progressCard}>
                 <View style={[styles.progressIconContainer, { backgroundColor: '#EF444420' }]}>
-                  <AlertCircle size={20} color="#EF4444" />
+                  <AlertCircle size={24} color="#EF4444" />
                 </View>
                 <Text style={styles.progressLabel}>{t.tracking.sodium}</Text>
                 <View style={styles.circularProgress}>
@@ -361,7 +361,7 @@ export default function TrackingScreen() {
 
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <Moon size={20} color={Colors.gold} />
+              <Moon size={24} color={Colors.gold} />
               <Text style={styles.cardTitle}>Spánek & Regenerace</Text>
             </View>
             <View style={styles.wellnessGrid}>
@@ -383,7 +383,7 @@ export default function TrackingScreen() {
 
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <Dumbbell size={20} color={Colors.gold} />
+              <Dumbbell size={24} color={Colors.gold} />
               <Text style={styles.cardTitle}>Dnešní trénink</Text>
             </View>
             <View style={styles.trainingEmptyState}>
@@ -396,7 +396,7 @@ export default function TrackingScreen() {
 
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <ActivityIcon size={20} color={Colors.gold} />
+              <ActivityIcon size={24} color={Colors.gold} />
               <Text style={styles.cardTitle}>Tělesné složení</Text>
             </View>
             <View style={styles.bodyCompositionGrid}>
@@ -415,7 +415,7 @@ export default function TrackingScreen() {
           {weightLogs.length > 0 && (
             <View style={styles.card}>
               <View style={styles.cardHeader}>
-                <Calendar size={20} color={Colors.gold} />
+                <Calendar size={24} color={Colors.gold} />
                 <Text style={styles.cardTitle}>{t.tracking.history}</Text>
               </View>
 
@@ -510,16 +510,11 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 24,
   },
-  cardsRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 16,
-  },
   card: {
     backgroundColor: Colors.white,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 20,
     borderWidth: 1,
     borderColor: Colors.border.light,
     shadowColor: Colors.black,
@@ -528,36 +523,26 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  halfCard: {
-    flex: 1,
-    marginBottom: 0,
-    padding: 14,
-  },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
+    gap: 12,
+    marginBottom: 16,
   },
   cardTitle: {
-    fontSize: 17,
-    fontWeight: '700' as const,
-    color: Colors.textPrimary,
-  },
-  cardTitleSmall: {
-    fontSize: 14,
+    fontSize: 20,
     fontWeight: '700' as const,
     color: Colors.textPrimary,
   },
   timeSelector: {
     flexDirection: 'row',
-    gap: 6,
-    marginBottom: 10,
+    gap: 12,
+    marginBottom: 16,
   },
   timeButton: {
     flex: 1,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
     backgroundColor: Colors.white,
     borderWidth: 2,
     borderColor: Colors.border.light,
@@ -568,7 +553,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.lightGray,
   },
   timeButtonText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '600' as const,
     color: Colors.textPrimary,
   },
@@ -577,19 +562,19 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: Colors.white,
-    borderRadius: 10,
-    padding: 12,
-    fontSize: 14,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
     color: Colors.textPrimary,
     borderWidth: 1,
     borderColor: Colors.border.light,
-    marginBottom: 10,
+    marginBottom: 16,
   },
 
   button: {
     backgroundColor: Colors.gold,
-    borderRadius: 10,
-    padding: 12,
+    borderRadius: 12,
+    padding: 16,
     alignItems: 'center',
   },
   buttonDisabled: {
@@ -597,19 +582,12 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: Colors.black,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700' as const,
   },
   hydrationStats: {
     flexDirection: 'row',
     marginBottom: 16,
-  },
-  hydrationStatsSmall: {
-    backgroundColor: Colors.lightGray,
-    borderRadius: 10,
-    padding: 10,
-    alignItems: 'center',
-    marginBottom: 10,
   },
   statBox: {
     flex: 1,
@@ -619,24 +597,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: '700' as const,
     color: Colors.gold,
-    marginBottom: 3,
+    marginBottom: 4,
   },
   statLabel: {
-    fontSize: 11,
+    fontSize: 12,
     color: Colors.textSecondary,
     textAlign: 'center',
   },
   quickButtons: {
     flexDirection: 'row',
-    gap: 6,
-    marginBottom: 10,
+    gap: 8,
+    marginBottom: 16,
   },
   quickButton: {
     flex: 1,
-    paddingVertical: 7,
+    paddingVertical: 10,
     borderRadius: 8,
     backgroundColor: Colors.lightGray,
     alignItems: 'center',
@@ -644,7 +622,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.border.light,
   },
   quickButtonText: {
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: '600' as const,
     color: Colors.textPrimary,
   },
@@ -652,15 +630,15 @@ const styles = StyleSheet.create({
   progressGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
-    marginTop: 12,
+    gap: 12,
+    marginTop: 16,
   },
   progressCard: {
     flex: 1,
     minWidth: '47%',
     backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: 16,
+    padding: 16,
     borderWidth: 1,
     borderColor: Colors.border.light,
     shadowColor: Colors.black,
@@ -670,66 +648,66 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   progressIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: 56,
+    height: 56,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   progressLabel: {
-    fontSize: 12,
+    fontSize: 13,
     color: Colors.textSecondary,
-    marginBottom: 8,
+    marginBottom: 12,
     fontWeight: '600' as const,
   },
   circularProgress: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: Colors.lightGray,
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   circularProgressInner: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: Colors.white,
     alignItems: 'center',
     justifyContent: 'center',
   },
   progressValue: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: '700' as const,
   },
   progressStats: {
     flexDirection: 'row',
     alignItems: 'baseline',
     justifyContent: 'center',
-    marginTop: 3,
+    marginTop: 4,
   },
   progressGoal: {
-    fontSize: 13,
+    fontSize: 15,
     color: Colors.textSecondary,
     fontWeight: '600' as const,
   },
   progressUnit: {
-    fontSize: 10,
+    fontSize: 11,
     color: Colors.textSecondary,
-    marginLeft: 2,
+    marginLeft: 3,
   },
   progressBar: {
-    height: 5,
+    height: 6,
     backgroundColor: '#E5E5EA',
-    borderRadius: 2.5,
+    borderRadius: 3,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    borderRadius: 2.5,
+    borderRadius: 3,
   },
   historyList: {
     gap: 8,
@@ -795,91 +773,91 @@ const styles = StyleSheet.create({
   },
   wellnessGrid: {
     flexDirection: 'row',
-    gap: 10,
-    marginBottom: 12,
+    gap: 12,
+    marginBottom: 16,
   },
   wellnessCard: {
     flex: 1,
     backgroundColor: Colors.lightGray,
-    borderRadius: 10,
-    padding: 12,
+    borderRadius: 12,
+    padding: 16,
     alignItems: 'center',
   },
   wellnessLabel: {
-    fontSize: 11,
+    fontSize: 12,
     color: Colors.textSecondary,
-    marginBottom: 6,
+    marginBottom: 8,
     fontWeight: '600' as const,
   },
   wellnessValue: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '700' as const,
     color: Colors.gold,
-    marginBottom: 3,
+    marginBottom: 4,
   },
   wellnessSubtext: {
-    fontSize: 9,
+    fontSize: 10,
     color: Colors.textSecondary,
     textAlign: 'center',
   },
   addDataButton: {
     backgroundColor: Colors.gold,
-    borderRadius: 10,
-    padding: 12,
+    borderRadius: 12,
+    padding: 14,
     alignItems: 'center',
   },
   addDataButtonText: {
     color: Colors.black,
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700' as const,
   },
   trainingEmptyState: {
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: 24,
   },
   emptyStateText: {
-    fontSize: 13,
+    fontSize: 14,
     color: Colors.textSecondary,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   addTrainingButton: {
     backgroundColor: Colors.lightGray,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    borderRadius: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
     borderWidth: 2,
     borderColor: Colors.gold,
   },
   addTrainingButtonText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700' as const,
     color: Colors.gold,
   },
   bodyCompositionGrid: {
     flexDirection: 'row',
-    gap: 10,
-    marginBottom: 10,
+    gap: 12,
+    marginBottom: 12,
   },
   bodyCompCard: {
     flex: 1,
     backgroundColor: Colors.lightGray,
-    borderRadius: 10,
-    padding: 12,
+    borderRadius: 12,
+    padding: 16,
     alignItems: 'center',
   },
   bodyCompValue: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: '700' as const,
     color: Colors.gold,
-    marginBottom: 3,
+    marginBottom: 4,
   },
   bodyCompLabel: {
-    fontSize: 10,
+    fontSize: 11,
     color: Colors.textSecondary,
     textAlign: 'center',
   },
   estimateNote: {
-    fontSize: 10,
+    fontSize: 11,
     color: Colors.textLight,
     textAlign: 'center',
     fontStyle: 'italic' as const,
