@@ -141,9 +141,12 @@ export default function SettingsScreen() {
             <SettingItem
               icon={User}
               title={t.settings.editProfile}
-              subtitle={profile?.fullName}
+              subtitle={profile?.fullName || 'Nastavit profil'}
               onPress={() => {
-                if (!profile) return;
+                if (!profile) {
+                  router.push('/profile-setup');
+                  return;
+                }
                 setFullName(profile.fullName);
                 setAge(profile.age.toString());
                 setHeight(profile.height.toString());
