@@ -89,7 +89,7 @@ export default function TrackingScreen() {
           <View style={styles.cardsRow}>
             <View style={[styles.card, styles.halfCard]}>
               <View style={styles.cardHeader}>
-                <Scale size={20} color={Colors.gold} />
+                <Scale size={18} color={Colors.gold} />
                 <Text style={styles.cardTitleSmall}>{t.tracking.weight}</Text>
               </View>
 
@@ -148,7 +148,7 @@ export default function TrackingScreen() {
 
             <View style={[styles.card, styles.halfCard]}>
               <View style={styles.cardHeader}>
-                <Droplets size={20} color={Colors.gold} />
+                <Droplets size={18} color={Colors.gold} />
                 <Text style={styles.cardTitleSmall}>{t.tracking.hydration}</Text>
               </View>
 
@@ -208,14 +208,14 @@ export default function TrackingScreen() {
 
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <ActivityIcon size={24} color={Colors.gold} />
+              <ActivityIcon size={20} color={Colors.gold} />
               <Text style={styles.cardTitle}>Dnešní metriky</Text>
             </View>
 
             <View style={styles.progressGrid}>
               <View style={styles.progressCard}>
                 <View style={[styles.progressIconContainer, { backgroundColor: '#FF6B6B20' }]}>
-                  <Flame size={24} color="#FF6B6B" />
+                  <Flame size={20} color="#FF6B6B" />
                 </View>
                 <Text style={styles.progressLabel}>{t.nutrition.calories}</Text>
                 <View style={styles.circularProgress}>
@@ -239,7 +239,7 @@ export default function TrackingScreen() {
 
               <View style={styles.progressCard}>
                 <View style={[styles.progressIconContainer, { backgroundColor: '#6366F120' }]}>
-                  <Drumstick size={24} color="#6366F1" />
+                  <Drumstick size={20} color="#6366F1" />
                 </View>
                 <Text style={styles.progressLabel}>{t.nutrition.protein}</Text>
                 <View style={styles.circularProgress}>
@@ -263,7 +263,7 @@ export default function TrackingScreen() {
 
               <View style={styles.progressCard}>
                 <View style={[styles.progressIconContainer, { backgroundColor: '#3B82F620' }]}>
-                  <Droplets size={24} color="#3B82F6" />
+                  <Droplets size={20} color="#3B82F6" />
                 </View>
                 <Text style={styles.progressLabel}>{t.tracking.hydration}</Text>
                 <View style={styles.circularProgress}>
@@ -287,7 +287,7 @@ export default function TrackingScreen() {
 
               <View style={styles.progressCard}>
                 <View style={[styles.progressIconContainer, { backgroundColor: '#F59E0B20' }]}>
-                  <Wheat size={24} color="#F59E0B" />
+                  <Wheat size={20} color="#F59E0B" />
                 </View>
                 <Text style={styles.progressLabel}>{t.nutrition.carbs}</Text>
                 <View style={styles.circularProgress}>
@@ -311,7 +311,7 @@ export default function TrackingScreen() {
 
               <View style={styles.progressCard}>
                 <View style={[styles.progressIconContainer, { backgroundColor: '#10B98120' }]}>
-                  <Droplets size={24} color="#10B981" style={{ transform: [{ rotate: '180deg' }] }} />
+                  <Droplets size={20} color="#10B981" style={{ transform: [{ rotate: '180deg' }] }} />
                 </View>
                 <Text style={styles.progressLabel}>{t.nutrition.fat}</Text>
                 <View style={styles.circularProgress}>
@@ -335,7 +335,7 @@ export default function TrackingScreen() {
 
               <View style={styles.progressCard}>
                 <View style={[styles.progressIconContainer, { backgroundColor: '#EF444420' }]}>
-                  <AlertCircle size={24} color="#EF4444" />
+                  <AlertCircle size={20} color="#EF4444" />
                 </View>
                 <Text style={styles.progressLabel}>{t.tracking.sodium}</Text>
                 <View style={styles.circularProgress}>
@@ -361,7 +361,7 @@ export default function TrackingScreen() {
 
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <Moon size={24} color={Colors.gold} />
+              <Moon size={20} color={Colors.gold} />
               <Text style={styles.cardTitle}>Spánek & Regenerace</Text>
             </View>
             <View style={styles.wellnessGrid}>
@@ -383,7 +383,7 @@ export default function TrackingScreen() {
 
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <Dumbbell size={24} color={Colors.gold} />
+              <Dumbbell size={20} color={Colors.gold} />
               <Text style={styles.cardTitle}>Dnešní trénink</Text>
             </View>
             <View style={styles.trainingEmptyState}>
@@ -396,7 +396,7 @@ export default function TrackingScreen() {
 
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <ActivityIcon size={24} color={Colors.gold} />
+              <ActivityIcon size={20} color={Colors.gold} />
               <Text style={styles.cardTitle}>Tělesné složení</Text>
             </View>
             <View style={styles.bodyCompositionGrid}>
@@ -415,7 +415,7 @@ export default function TrackingScreen() {
           {weightLogs.length > 0 && (
             <View style={styles.card}>
               <View style={styles.cardHeader}>
-                <Calendar size={24} color={Colors.gold} />
+                <Calendar size={20} color={Colors.gold} />
                 <Text style={styles.cardTitle}>{t.tracking.history}</Text>
               </View>
 
@@ -512,14 +512,14 @@ const styles = StyleSheet.create({
   },
   cardsRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 20,
+    gap: 10,
+    marginBottom: 16,
   },
   card: {
     backgroundColor: Colors.white,
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 20,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: Colors.border.light,
     shadowColor: Colors.black,
@@ -531,33 +531,33 @@ const styles = StyleSheet.create({
   halfCard: {
     flex: 1,
     marginBottom: 0,
-    padding: 16,
+    padding: 14,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginBottom: 14,
+    gap: 8,
+    marginBottom: 12,
   },
   cardTitle: {
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: '700' as const,
     color: Colors.textPrimary,
   },
   cardTitleSmall: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700' as const,
     color: Colors.textPrimary,
   },
   timeSelector: {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 12,
+    gap: 6,
+    marginBottom: 10,
   },
   timeButton: {
     flex: 1,
-    paddingVertical: 10,
-    borderRadius: 10,
+    paddingVertical: 8,
+    borderRadius: 8,
     backgroundColor: Colors.white,
     borderWidth: 2,
     borderColor: Colors.border.light,
@@ -568,7 +568,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.lightGray,
   },
   timeButtonText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600' as const,
     color: Colors.textPrimary,
   },
@@ -577,19 +577,19 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: 14,
-    fontSize: 15,
+    borderRadius: 10,
+    padding: 12,
+    fontSize: 14,
     color: Colors.textPrimary,
     borderWidth: 1,
     borderColor: Colors.border.light,
-    marginBottom: 12,
+    marginBottom: 10,
   },
 
   button: {
     backgroundColor: Colors.gold,
-    borderRadius: 12,
-    padding: 14,
+    borderRadius: 10,
+    padding: 12,
     alignItems: 'center',
   },
   buttonDisabled: {
@@ -597,7 +597,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: Colors.black,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700' as const,
   },
   hydrationStats: {
@@ -606,10 +606,10 @@ const styles = StyleSheet.create({
   },
   hydrationStatsSmall: {
     backgroundColor: Colors.lightGray,
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: 10,
+    padding: 10,
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   statBox: {
     flex: 1,
@@ -619,24 +619,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700' as const,
     color: Colors.gold,
-    marginBottom: 4,
+    marginBottom: 3,
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.textSecondary,
     textAlign: 'center',
   },
   quickButtons: {
     flexDirection: 'row',
     gap: 6,
-    marginBottom: 12,
+    marginBottom: 10,
   },
   quickButton: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: 7,
     borderRadius: 8,
     backgroundColor: Colors.lightGray,
     alignItems: 'center',
@@ -644,7 +644,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.border.light,
   },
   quickButtonText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600' as const,
     color: Colors.textPrimary,
   },
@@ -652,15 +652,15 @@ const styles = StyleSheet.create({
   progressGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
-    marginTop: 16,
+    gap: 10,
+    marginTop: 12,
   },
   progressCard: {
     flex: 1,
     minWidth: '47%',
     backgroundColor: Colors.white,
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 12,
+    padding: 12,
     borderWidth: 1,
     borderColor: Colors.border.light,
     shadowColor: Colors.black,
@@ -670,66 +670,66 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   progressIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   progressLabel: {
-    fontSize: 13,
+    fontSize: 12,
     color: Colors.textSecondary,
-    marginBottom: 12,
+    marginBottom: 8,
     fontWeight: '600' as const,
   },
   circularProgress: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: Colors.lightGray,
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   circularProgressInner: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: Colors.white,
     alignItems: 'center',
     justifyContent: 'center',
   },
   progressValue: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: '700' as const,
   },
   progressStats: {
     flexDirection: 'row',
     alignItems: 'baseline',
     justifyContent: 'center',
-    marginTop: 4,
+    marginTop: 3,
   },
   progressGoal: {
-    fontSize: 15,
+    fontSize: 13,
     color: Colors.textSecondary,
     fontWeight: '600' as const,
   },
   progressUnit: {
-    fontSize: 11,
+    fontSize: 10,
     color: Colors.textSecondary,
-    marginLeft: 3,
+    marginLeft: 2,
   },
   progressBar: {
-    height: 6,
+    height: 5,
     backgroundColor: '#E5E5EA',
-    borderRadius: 3,
+    borderRadius: 2.5,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: 2.5,
   },
   historyList: {
     gap: 8,
@@ -795,91 +795,91 @@ const styles = StyleSheet.create({
   },
   wellnessGrid: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
+    gap: 10,
+    marginBottom: 12,
   },
   wellnessCard: {
     flex: 1,
     backgroundColor: Colors.lightGray,
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 10,
+    padding: 12,
     alignItems: 'center',
   },
   wellnessLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.textSecondary,
-    marginBottom: 8,
+    marginBottom: 6,
     fontWeight: '600' as const,
   },
   wellnessValue: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '700' as const,
     color: Colors.gold,
-    marginBottom: 4,
+    marginBottom: 3,
   },
   wellnessSubtext: {
-    fontSize: 10,
+    fontSize: 9,
     color: Colors.textSecondary,
     textAlign: 'center',
   },
   addDataButton: {
     backgroundColor: Colors.gold,
-    borderRadius: 12,
-    padding: 14,
+    borderRadius: 10,
+    padding: 12,
     alignItems: 'center',
   },
   addDataButtonText: {
     color: Colors.black,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700' as const,
   },
   trainingEmptyState: {
     alignItems: 'center',
-    paddingVertical: 24,
+    paddingVertical: 16,
   },
   emptyStateText: {
-    fontSize: 14,
+    fontSize: 13,
     color: Colors.textSecondary,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   addTrainingButton: {
     backgroundColor: Colors.lightGray,
-    borderRadius: 10,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderWidth: 2,
     borderColor: Colors.gold,
   },
   addTrainingButtonText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700' as const,
     color: Colors.gold,
   },
   bodyCompositionGrid: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 12,
+    gap: 10,
+    marginBottom: 10,
   },
   bodyCompCard: {
     flex: 1,
     backgroundColor: Colors.lightGray,
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 10,
+    padding: 12,
     alignItems: 'center',
   },
   bodyCompValue: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '700' as const,
     color: Colors.gold,
-    marginBottom: 4,
+    marginBottom: 3,
   },
   bodyCompLabel: {
-    fontSize: 11,
+    fontSize: 10,
     color: Colors.textSecondary,
     textAlign: 'center',
   },
   estimateNote: {
-    fontSize: 11,
+    fontSize: 10,
     color: Colors.textLight,
     textAlign: 'center',
     fontStyle: 'italic' as const,
