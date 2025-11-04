@@ -69,7 +69,13 @@ export default function TrackingScreen() {
   const fatProgress = (todayNutrition.fat / nutritionGoals.fat) * 100;
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={styles.container}>
+      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
+        <Text style={styles.headerTitle}>{t.tracking.title}</Text>
+        <Pressable style={styles.statsButton} onPress={() => router.push('/tracking-detail')}>
+          <BarChart3 size={20} color={Colors.gold} strokeWidth={2.5} />
+        </Pressable>
+      </View>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -79,13 +85,6 @@ export default function TrackingScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.titleRow}>
-            <Text style={styles.title}>{t.tracking.title}</Text>
-            <Pressable style={styles.statsButton} onPress={() => router.push('/tracking-detail')}>
-              <BarChart3 size={22} color={Colors.gold} strokeWidth={2.5} />
-              <Text style={styles.statsButtonText}>{t.ai.detailedStats}</Text>
-            </Pressable>
-          </View>
 
           <View style={styles.card}>
             <View style={styles.cardHeader}>
@@ -417,7 +416,32 @@ export default function TrackingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.lightGray,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 16,
     backgroundColor: Colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border.light,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
+  },
+  statsButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.lightGray,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: Colors.gold,
   },
   keyboardView: {
     flex: 1,
@@ -427,41 +451,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 20,
     paddingBottom: 24,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700' as const,
-    color: Colors.textPrimary,
-  },
-  statsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: Colors.lightGray,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: Colors.gold,
-    shadowColor: Colors.gold,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  statsButtonText: {
-    fontSize: 13,
-    fontWeight: '700' as const,
-    color: Colors.gold,
   },
   card: {
     backgroundColor: Colors.white,
@@ -472,9 +463,9 @@ const styles = StyleSheet.create({
     borderColor: Colors.border.light,
     shadowColor: Colors.black,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowRadius: 8,
-    elevation: 3,
+    elevation: 2,
   },
   cardHeader: {
     flexDirection: 'row',

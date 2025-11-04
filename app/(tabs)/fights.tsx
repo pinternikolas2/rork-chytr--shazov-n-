@@ -65,18 +65,18 @@ export default function FightsScreen() {
   const pastFights = fights.filter((f) => f.date <= new Date()).sort((a, b) => b.date.getTime() - a.date.getTime());
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={styles.container}>
+      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
+        <Text style={styles.headerTitle}>{t.fights.title}</Text>
+        <Pressable style={styles.addButton} onPress={() => setIsModalVisible(true)}>
+          <Plus size={24} color={Colors.black} />
+        </Pressable>
+      </View>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
-          <Text style={styles.title}>{t.fights.title}</Text>
-          <Pressable style={styles.addButton} onPress={() => setIsModalVisible(true)}>
-            <Plus size={24} color={Colors.black} />
-          </Pressable>
-        </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t.fights.upcoming}</Text>
@@ -282,26 +282,30 @@ export default function FightsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.lightGray,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 16,
     backgroundColor: Colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border.light,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 20,
     paddingBottom: 24,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700' as const,
-    color: Colors.textPrimary,
   },
   addButton: {
     width: 48,
@@ -327,6 +331,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: Colors.border.light,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   emptyText: {
     fontSize: 16,
