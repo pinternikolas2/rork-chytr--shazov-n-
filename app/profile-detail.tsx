@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronRight, X, User, Camera, ArrowLeft } from 'lucide-react-native';
+import { ChevronRight, X, User, Camera, ArrowLeft, Settings } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 import { Discipline } from '@/constants/types';
@@ -212,22 +212,26 @@ export default function ProfileDetailScreen() {
                 <Text style={styles.personalInfoValue}>{profile.height} cm</Text>
               </View>
             </View>
+          </View>
 
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Nastavení měření</Text>
             <Pressable
-              style={styles.editProfileButton}
-              onPress={() => {
-                setFullName(profile.fullName);
-                setAge(profile.age.toString());
-                setHeight(profile.height.toString());
-                if (profile.role === 'fighter') {
-                  setCurrentWeight(profile.currentWeight.toString());
-                  setTargetWeight(profile.targetWeight.toString());
-                }
-                setDiscipline(profile.discipline);
-                setIsProfileModalVisible(true);
-              }}
+              style={styles.measurementButton}
+              onPress={() => router.push('/measurement-settings')}
             >
-              <Text style={styles.editProfileButtonText}>Upravit profil</Text>
+              <View style={styles.measurementButtonContent}>
+                <View style={styles.measurementIconWrapper}>
+                  <Settings size={20} color={Colors.gold} />
+                </View>
+                <View style={styles.measurementTextWrapper}>
+                  <Text style={styles.measurementButtonTitle}>Upravit údaje pro měření</Text>
+                  <Text style={styles.measurementButtonSubtitle}>
+                    Váha, cíle, disciplína a výpočty
+                  </Text>
+                </View>
+              </View>
+              <ChevronRight size={20} color={Colors.textSecondary} />
             </Pressable>
           </View>
 
@@ -508,21 +512,47 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     flex: 1,
   },
-  editProfileButton: {
-    backgroundColor: Colors.gold,
+  measurementButton: {
+    backgroundColor: Colors.white,
     borderRadius: 16,
-    paddingVertical: 16,
+    padding: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     shadowColor: Colors.black,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowRadius: 8,
-    elevation: 3,
+    elevation: 2,
+    borderWidth: 2,
+    borderColor: Colors.gold,
   },
-  editProfileButtonText: {
+  measurementButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: 12,
+  },
+  measurementIconWrapper: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.lightGray,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  measurementTextWrapper: {
+    flex: 1,
+  },
+  measurementButtonTitle: {
     fontSize: 16,
-    fontWeight: '700' as const,
-    color: Colors.black,
+    fontWeight: '600' as const,
+    color: Colors.textPrimary,
+    marginBottom: 4,
+  },
+  measurementButtonSubtitle: {
+    fontSize: 13,
+    color: Colors.textSecondary,
   },
   historyButton: {
     backgroundColor: Colors.white,

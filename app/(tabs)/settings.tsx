@@ -89,7 +89,7 @@ export default function SettingsScreen() {
                 if (!profile) {
                   router.push('/profile-setup');
                 } else {
-                  router.push('/profile-detail');
+                  router.push('/basic-profile');
                 }
               }}
             />
