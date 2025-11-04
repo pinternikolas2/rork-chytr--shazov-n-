@@ -12,7 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Scale, Droplets, Calendar, BarChart3, TrendingDown, Activity, AlertCircle } from 'lucide-react-native';
+import { Scale, Droplets, Calendar, BarChart3, TrendingDown, AlertCircle, Flame, Drumstick, Wheat } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
@@ -22,7 +22,6 @@ export default function TrackingScreen() {
     addWeightLog, 
     addHydrationLog, 
     weightLogs, 
-    hydrationLogs, 
     getTodayHydration,
     getTodayNutrition,
     getNutritionGoals,
@@ -63,7 +62,11 @@ export default function TrackingScreen() {
 
 
   const sodiumProgress = (todayNutrition.sodium / nutritionGoals.sodium) * 100;
-  const fiberProgress = (todayNutrition.fiber / nutritionGoals.fiber) * 100;
+  const waterProgress = (todayHydration / 3000) * 100;
+  const caloriesProgress = (todayNutrition.calories / nutritionGoals.calories) * 100;
+  const proteinProgress = (todayNutrition.protein / nutritionGoals.protein) * 100;
+  const carbsProgress = (todayNutrition.carbs / nutritionGoals.carbs) * 100;
+  const fatProgress = (todayNutrition.fat / nutritionGoals.fat) * 100;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -205,38 +208,150 @@ export default function TrackingScreen() {
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>{t.tracking.dailyMetrics}</Text>
+            <Text style={styles.cardTitle}>Dnešní pokrok</Text>
 
-            <View style={styles.metricsGrid}>
-              <View style={styles.metricItem}>
-                <View style={styles.metricHeader}>
-                  <AlertCircle size={20} color="#EF4444" />
-                  <Text style={styles.metricLabel}>{t.tracking.sodium}</Text>
+            <View style={styles.progressGrid}>
+              <View style={styles.progressCard}>
+                <View style={[styles.progressIconContainer, { backgroundColor: '#FF6B6B20' }]}>
+                  <Flame size={24} color="#FF6B6B" />
                 </View>
-                <Text style={styles.metricValue}>
-                  {todayNutrition.sodium} / {nutritionGoals.sodium} {t.common.mg}
-                </Text>
+                <Text style={styles.progressLabel}>{t.nutrition.calories}</Text>
+                <View style={styles.circularProgress}>
+                  <View style={styles.circularProgressInner}>
+                    <Text style={[styles.progressValue, { color: '#FF6B6B' }]}>
+                      {Math.round(todayNutrition.calories)}
+                    </Text>
+                  </View>
+                </View>
                 <View style={styles.progressBar}>
                   <View style={[styles.progressFill, { 
-                    width: `${Math.min(100, sodiumProgress)}%`,
-                    backgroundColor: sodiumProgress > 100 ? '#EF4444' : Colors.gold 
+                    width: `${Math.min(100, caloriesProgress)}%`,
+                    backgroundColor: '#FF6B6B'
                   }]} />
+                </View>
+                <View style={styles.progressStats}>
+                  <Text style={styles.progressGoal}>{nutritionGoals.calories}</Text>
+                  <Text style={styles.progressUnit}>{t.common.kcal}</Text>
                 </View>
               </View>
 
-              <View style={styles.metricItem}>
-                <View style={styles.metricHeader}>
-                  <Activity size={20} color="#10B981" />
-                  <Text style={styles.metricLabel}>{t.tracking.fiber}</Text>
+              <View style={styles.progressCard}>
+                <View style={[styles.progressIconContainer, { backgroundColor: '#6366F120' }]}>
+                  <Drumstick size={24} color="#6366F1" />
                 </View>
-                <Text style={styles.metricValue}>
-                  {todayNutrition.fiber.toFixed(1)} / {nutritionGoals.fiber} {t.common.g}
-                </Text>
+                <Text style={styles.progressLabel}>{t.nutrition.protein}</Text>
+                <View style={styles.circularProgress}>
+                  <View style={styles.circularProgressInner}>
+                    <Text style={[styles.progressValue, { color: '#6366F1' }]}>
+                      {Math.round(todayNutrition.protein)}
+                    </Text>
+                  </View>
+                </View>
                 <View style={styles.progressBar}>
                   <View style={[styles.progressFill, { 
-                    width: `${Math.min(100, fiberProgress)}%`,
+                    width: `${Math.min(100, proteinProgress)}%`,
+                    backgroundColor: '#6366F1'
+                  }]} />
+                </View>
+                <View style={styles.progressStats}>
+                  <Text style={styles.progressGoal}>{nutritionGoals.protein}</Text>
+                  <Text style={styles.progressUnit}>{t.common.g}</Text>
+                </View>
+              </View>
+
+              <View style={styles.progressCard}>
+                <View style={[styles.progressIconContainer, { backgroundColor: '#3B82F620' }]}>
+                  <Droplets size={24} color="#3B82F6" />
+                </View>
+                <Text style={styles.progressLabel}>{t.tracking.hydration}</Text>
+                <View style={styles.circularProgress}>
+                  <View style={styles.circularProgressInner}>
+                    <Text style={[styles.progressValue, { color: '#3B82F6' }]}>
+                      {todayHydration}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.progressBar}>
+                  <View style={[styles.progressFill, { 
+                    width: `${Math.min(100, waterProgress)}%`,
+                    backgroundColor: '#3B82F6'
+                  }]} />
+                </View>
+                <View style={styles.progressStats}>
+                  <Text style={styles.progressGoal}>3000</Text>
+                  <Text style={styles.progressUnit}>{t.common.ml}</Text>
+                </View>
+              </View>
+
+              <View style={styles.progressCard}>
+                <View style={[styles.progressIconContainer, { backgroundColor: '#F59E0B20' }]}>
+                  <Wheat size={24} color="#F59E0B" />
+                </View>
+                <Text style={styles.progressLabel}>{t.nutrition.carbs}</Text>
+                <View style={styles.circularProgress}>
+                  <View style={styles.circularProgressInner}>
+                    <Text style={[styles.progressValue, { color: '#F59E0B' }]}>
+                      {Math.round(todayNutrition.carbs)}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.progressBar}>
+                  <View style={[styles.progressFill, { 
+                    width: `${Math.min(100, carbsProgress)}%`,
+                    backgroundColor: '#F59E0B'
+                  }]} />
+                </View>
+                <View style={styles.progressStats}>
+                  <Text style={styles.progressGoal}>{nutritionGoals.carbs}</Text>
+                  <Text style={styles.progressUnit}>{t.common.g}</Text>
+                </View>
+              </View>
+
+              <View style={styles.progressCard}>
+                <View style={[styles.progressIconContainer, { backgroundColor: '#10B98120' }]}>
+                  <Droplets size={24} color="#10B981" style={{ transform: [{ rotate: '180deg' }] }} />
+                </View>
+                <Text style={styles.progressLabel}>{t.nutrition.fat}</Text>
+                <View style={styles.circularProgress}>
+                  <View style={styles.circularProgressInner}>
+                    <Text style={[styles.progressValue, { color: '#10B981' }]}>
+                      {Math.round(todayNutrition.fat)}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.progressBar}>
+                  <View style={[styles.progressFill, { 
+                    width: `${Math.min(100, fatProgress)}%`,
                     backgroundColor: '#10B981'
                   }]} />
+                </View>
+                <View style={styles.progressStats}>
+                  <Text style={styles.progressGoal}>{nutritionGoals.fat}</Text>
+                  <Text style={styles.progressUnit}>{t.common.g}</Text>
+                </View>
+              </View>
+
+              <View style={styles.progressCard}>
+                <View style={[styles.progressIconContainer, { backgroundColor: '#EF444420' }]}>
+                  <AlertCircle size={24} color="#EF4444" />
+                </View>
+                <Text style={styles.progressLabel}>{t.tracking.sodium}</Text>
+                <View style={styles.circularProgress}>
+                  <View style={styles.circularProgressInner}>
+                    <Text style={[styles.progressValue, { color: '#EF4444' }]}>
+                      {todayNutrition.sodium}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.progressBar}>
+                  <View style={[styles.progressFill, { 
+                    width: `${Math.min(100, sodiumProgress)}%`,
+                    backgroundColor: sodiumProgress > 100 ? '#EF4444' : '#EF4444'
+                  }]} />
+                </View>
+                <View style={styles.progressStats}>
+                  <Text style={styles.progressGoal}>{nutritionGoals.sodium}</Text>
+                  <Text style={styles.progressUnit}>{t.common.mg}</Text>
                 </View>
               </View>
             </View>
@@ -465,30 +580,77 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
 
-  metricsGrid: {
-    gap: 16,
+  progressGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
     marginTop: 16,
   },
-  metricItem: {
-    backgroundColor: Colors.lightGray,
-    borderRadius: 12,
+  progressCard: {
+    flex: 1,
+    minWidth: '47%',
+    backgroundColor: Colors.white,
+    borderRadius: 16,
     padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  metricHeader: {
-    flexDirection: 'row',
+  progressIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
+    justifyContent: 'center',
+    marginBottom: 12,
   },
-  metricLabel: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: Colors.textPrimary,
-  },
-  metricValue: {
-    fontSize: 14,
+  progressLabel: {
+    fontSize: 13,
     color: Colors.textSecondary,
-    marginBottom: 8,
+    marginBottom: 12,
+    fontWeight: '600' as const,
+  },
+  circularProgress: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: Colors.lightGray,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    marginBottom: 12,
+  },
+  circularProgressInner: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: Colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  progressValue: {
+    fontSize: 20,
+    fontWeight: '700' as const,
+  },
+  progressStats: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  progressGoal: {
+    fontSize: 15,
+    color: Colors.textSecondary,
+    fontWeight: '600' as const,
+  },
+  progressUnit: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    marginLeft: 3,
   },
   progressBar: {
     height: 6,
