@@ -109,6 +109,57 @@ export default function DashboardScreen() {
           </View>
         </Animated.View>
 
+        {upcomingFight ? (
+          <Animated.View 
+            style={[
+              styles.fightCard,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            <View style={styles.fightCardHeader}>
+              <Text style={styles.fightCardTitle}>{upcomingFight.name}</Text>
+              <View style={styles.daysContainer}>
+                <Text style={styles.daysNumber}>{daysUntilFight}</Text>
+                <Text style={styles.daysLabel}>{t.dashboard.daysUntilWeighIn}</Text>
+              </View>
+            </View>
+            <View style={styles.fightCardStats}>
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>{t.dashboard.currentWeight}</Text>
+                <Text style={styles.statValue}>
+                  {profile && profile.role === 'fighter' ? profile.currentWeight.toFixed(1) : '0.0'} {t.common.kg}
+                </Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>{t.dashboard.targetWeight}</Text>
+                <Text style={styles.statValue}>
+                  {profile && profile.role === 'fighter' ? profile.targetWeight.toFixed(1) : '0.0'} {t.common.kg}
+                </Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>{t.dashboard.remaining}</Text>
+                <Text style={[styles.statValue, styles.statValueGold]}>
+                  {profile && profile.role === 'fighter' ? (profile.currentWeight - profile.targetWeight).toFixed(1) : '0.0'}{' '}
+                  {t.common.kg}
+                </Text>
+              </View>
+            </View>
+          </Animated.View>
+        ) : (
+          <View style={styles.noFightCard}>
+            <Text style={styles.noFightText}>{t.dashboard.noFight}</Text>
+            <Pressable style={styles.addFightButton} onPress={() => router.push('/fights')}>
+              <Plus size={20} color={Colors.black} />
+              <Text style={styles.addFightButtonText}>{t.dashboard.addFight}</Text>
+            </Pressable>
+          </View>
+        )}
+
         <Animated.View
           style={{
             opacity: fadeAnim,
@@ -170,57 +221,6 @@ export default function DashboardScreen() {
             </View>
           </View>
         </Animated.View>
-
-        {upcomingFight ? (
-          <Animated.View 
-            style={[
-              styles.fightCard,
-              {
-                opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }],
-              },
-            ]}
-          >
-            <View style={styles.fightCardHeader}>
-              <Text style={styles.fightCardTitle}>{upcomingFight.name}</Text>
-              <View style={styles.daysContainer}>
-                <Text style={styles.daysNumber}>{daysUntilFight}</Text>
-                <Text style={styles.daysLabel}>{t.dashboard.daysUntilWeighIn}</Text>
-              </View>
-            </View>
-            <View style={styles.fightCardStats}>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>{t.dashboard.currentWeight}</Text>
-                <Text style={styles.statValue}>
-                  {profile && profile.role === 'fighter' ? profile.currentWeight.toFixed(1) : '0.0'} {t.common.kg}
-                </Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>{t.dashboard.targetWeight}</Text>
-                <Text style={styles.statValue}>
-                  {profile && profile.role === 'fighter' ? profile.targetWeight.toFixed(1) : '0.0'} {t.common.kg}
-                </Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>{t.dashboard.remaining}</Text>
-                <Text style={[styles.statValue, styles.statValueGold]}>
-                  {profile && profile.role === 'fighter' ? (profile.currentWeight - profile.targetWeight).toFixed(1) : '0.0'}{' '}
-                  {t.common.kg}
-                </Text>
-              </View>
-            </View>
-          </Animated.View>
-        ) : (
-          <View style={styles.noFightCard}>
-            <Text style={styles.noFightText}>{t.dashboard.noFight}</Text>
-            <Pressable style={styles.addFightButton} onPress={() => router.push('/fights')}>
-              <Plus size={20} color={Colors.black} />
-              <Text style={styles.addFightButtonText}>{t.dashboard.addFight}</Text>
-            </Pressable>
-          </View>
-        )}
 
         <Animated.View 
           style={[
