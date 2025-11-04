@@ -86,124 +86,124 @@ export default function TrackingScreen() {
           showsVerticalScrollIndicator={false}
         >
 
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <Scale size={24} color={Colors.gold} />
-              <Text style={styles.cardTitle}>{t.tracking.weight}</Text>
-            </View>
+          <View style={styles.cardsRow}>
+            <View style={[styles.card, styles.halfCard]}>
+              <View style={styles.cardHeader}>
+                <Scale size={20} color={Colors.gold} />
+                <Text style={styles.cardTitleSmall}>{t.tracking.weight}</Text>
+              </View>
 
-            <View style={styles.timeSelector}>
-              <Pressable
-                style={[
-                  styles.timeButton,
-                  selectedTime === 'morning' && styles.timeButtonActive,
-                ]}
-                onPress={() => setSelectedTime('morning')}
-              >
-                <Text
+              <View style={styles.timeSelector}>
+                <Pressable
                   style={[
-                    styles.timeButtonText,
-                    selectedTime === 'morning' && styles.timeButtonTextActive,
+                    styles.timeButton,
+                    selectedTime === 'morning' && styles.timeButtonActive,
                   ]}
+                  onPress={() => setSelectedTime('morning')}
                 >
-                  {t.tracking.morning}
-                </Text>
-              </Pressable>
-              <Pressable
-                style={[
-                  styles.timeButton,
-                  selectedTime === 'evening' && styles.timeButtonActive,
-                ]}
-                onPress={() => setSelectedTime('evening')}
-              >
-                <Text
+                  <Text
+                    style={[
+                      styles.timeButtonText,
+                      selectedTime === 'morning' && styles.timeButtonTextActive,
+                    ]}
+                  >
+                    {t.tracking.morning}
+                  </Text>
+                </Pressable>
+                <Pressable
                   style={[
-                    styles.timeButtonText,
-                    selectedTime === 'evening' && styles.timeButtonTextActive,
+                    styles.timeButton,
+                    selectedTime === 'evening' && styles.timeButtonActive,
                   ]}
+                  onPress={() => setSelectedTime('evening')}
                 >
-                  {t.tracking.evening}
-                </Text>
+                  <Text
+                    style={[
+                      styles.timeButtonText,
+                      selectedTime === 'evening' && styles.timeButtonTextActive,
+                    ]}
+                  >
+                    {t.tracking.evening}
+                  </Text>
+                </Pressable>
+              </View>
+
+              <TextInput
+                style={styles.input}
+                value={weightInput}
+                onChangeText={setWeightInput}
+                placeholder={t.tracking.enterWeight}
+                placeholderTextColor={Colors.textLight}
+                keyboardType="decimal-pad"
+              />
+
+              <Pressable
+                style={[styles.button, !weightInput && styles.buttonDisabled]}
+                onPress={handleLogWeight}
+                disabled={!weightInput}
+              >
+                <Text style={styles.buttonText}>{t.tracking.save}</Text>
               </Pressable>
             </View>
 
-            <TextInput
-              style={styles.input}
-              value={weightInput}
-              onChangeText={setWeightInput}
-              placeholder={t.tracking.enterWeight}
-              placeholderTextColor={Colors.textLight}
-              keyboardType="decimal-pad"
-            />
+            <View style={[styles.card, styles.halfCard]}>
+              <View style={styles.cardHeader}>
+                <Droplets size={20} color={Colors.gold} />
+                <Text style={styles.cardTitleSmall}>{t.tracking.hydration}</Text>
+              </View>
 
-            <Pressable
-              style={[styles.button, !weightInput && styles.buttonDisabled]}
-              onPress={handleLogWeight}
-              disabled={!weightInput}
-            >
-              <Text style={styles.buttonText}>{t.tracking.save}</Text>
-            </Pressable>
-          </View>
-
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <Droplets size={24} color={Colors.gold} />
-              <Text style={styles.cardTitle}>{t.tracking.hydration}</Text>
-            </View>
-
-            <View style={styles.hydrationStats}>
-              <View style={styles.statBox}>
+              <View style={styles.hydrationStatsSmall}>
                 <Text style={styles.statValue}>{todayHydration}</Text>
                 <Text style={styles.statLabel}>{t.tracking.today} ({t.common.ml})</Text>
               </View>
+
+              <TextInput
+                style={styles.input}
+                value={waterInput}
+                onChangeText={setWaterInput}
+                placeholder={t.tracking.enterWater}
+                placeholderTextColor={Colors.textLight}
+                keyboardType="number-pad"
+              />
+
+              <View style={styles.quickButtons}>
+                <Pressable
+                  style={styles.quickButton}
+                  onPress={() => {
+                    setWaterInput('250');
+                    setTimeout(() => handleLogWater(), 100);
+                  }}
+                >
+                  <Text style={styles.quickButtonText}>250</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.quickButton}
+                  onPress={() => {
+                    setWaterInput('500');
+                    setTimeout(() => handleLogWater(), 100);
+                  }}
+                >
+                  <Text style={styles.quickButtonText}>500</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.quickButton}
+                  onPress={() => {
+                    setWaterInput('1000');
+                    setTimeout(() => handleLogWater(), 100);
+                  }}
+                >
+                  <Text style={styles.quickButtonText}>1L</Text>
+                </Pressable>
+              </View>
+
+              <Pressable
+                style={[styles.button, !waterInput && styles.buttonDisabled]}
+                onPress={handleLogWater}
+                disabled={!waterInput}
+              >
+                <Text style={styles.buttonText}>{t.tracking.save}</Text>
+              </Pressable>
             </View>
-
-            <TextInput
-              style={styles.input}
-              value={waterInput}
-              onChangeText={setWaterInput}
-              placeholder={t.tracking.enterWater}
-              placeholderTextColor={Colors.textLight}
-              keyboardType="number-pad"
-            />
-
-            <View style={styles.quickButtons}>
-              <Pressable
-                style={styles.quickButton}
-                onPress={() => {
-                  setWaterInput('250');
-                  setTimeout(() => handleLogWater(), 100);
-                }}
-              >
-                <Text style={styles.quickButtonText}>250ml</Text>
-              </Pressable>
-              <Pressable
-                style={styles.quickButton}
-                onPress={() => {
-                  setWaterInput('500');
-                  setTimeout(() => handleLogWater(), 100);
-                }}
-              >
-                <Text style={styles.quickButtonText}>500ml</Text>
-              </Pressable>
-              <Pressable
-                style={styles.quickButton}
-                onPress={() => {
-                  setWaterInput('1000');
-                  setTimeout(() => handleLogWater(), 100);
-                }}
-              >
-                <Text style={styles.quickButtonText}>1L</Text>
-              </Pressable>
-            </View>
-
-            <Pressable
-              style={[styles.button, !waterInput && styles.buttonDisabled]}
-              onPress={handleLogWater}
-              disabled={!waterInput}
-            >
-              <Text style={styles.buttonText}>{t.tracking.save}</Text>
-            </Pressable>
           </View>
 
           <View style={styles.card}>
@@ -510,6 +510,11 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 24,
   },
+  cardsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 20,
+  },
   card: {
     backgroundColor: Colors.white,
     borderRadius: 20,
@@ -523,26 +528,36 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
+  halfCard: {
+    flex: 1,
+    marginBottom: 0,
+    padding: 16,
+  },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 16,
+    gap: 10,
+    marginBottom: 14,
   },
   cardTitle: {
     fontSize: 20,
     fontWeight: '700' as const,
     color: Colors.textPrimary,
   },
+  cardTitleSmall: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
+  },
   timeSelector: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
+    gap: 8,
+    marginBottom: 12,
   },
   timeButton: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
     backgroundColor: Colors.white,
     borderWidth: 2,
     borderColor: Colors.border.light,
@@ -553,7 +568,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.lightGray,
   },
   timeButtonText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600' as const,
     color: Colors.textPrimary,
   },
@@ -563,18 +578,18 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: Colors.white,
     borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
+    padding: 14,
+    fontSize: 15,
     color: Colors.textPrimary,
     borderWidth: 1,
     borderColor: Colors.border.light,
-    marginBottom: 16,
+    marginBottom: 12,
   },
 
   button: {
     backgroundColor: Colors.gold,
     borderRadius: 12,
-    padding: 16,
+    padding: 14,
     alignItems: 'center',
   },
   buttonDisabled: {
@@ -582,12 +597,19 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: Colors.black,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700' as const,
   },
   hydrationStats: {
     flexDirection: 'row',
     marginBottom: 16,
+  },
+  hydrationStatsSmall: {
+    backgroundColor: Colors.lightGray,
+    borderRadius: 12,
+    padding: 12,
+    alignItems: 'center',
+    marginBottom: 12,
   },
   statBox: {
     flex: 1,
@@ -597,7 +619,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '700' as const,
     color: Colors.gold,
     marginBottom: 4,
@@ -609,12 +631,12 @@ const styles = StyleSheet.create({
   },
   quickButtons: {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 16,
+    gap: 6,
+    marginBottom: 12,
   },
   quickButton: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 8,
     borderRadius: 8,
     backgroundColor: Colors.lightGray,
     alignItems: 'center',
@@ -622,7 +644,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.border.light,
   },
   quickButtonText: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '600' as const,
     color: Colors.textPrimary,
   },
