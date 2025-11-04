@@ -129,6 +129,7 @@ const enTranslations = {
   },
   dashboard: {
     title: 'Dashboard',
+    dailyOverview: 'Your daily overview',
     daysUntilWeighIn: 'Days Until Weigh-In',
     currentWeight: 'Current Weight',
     targetWeight: 'Target Weight',
@@ -608,6 +609,7 @@ export const translations = {
     },
     dashboard: {
       title: 'Přehled',
+      dailyOverview: 'Tvůj denní přehled',
       daysUntilWeighIn: 'Dny do vážení',
       currentWeight: 'Aktuální váha',
       targetWeight: 'Cílová váha',

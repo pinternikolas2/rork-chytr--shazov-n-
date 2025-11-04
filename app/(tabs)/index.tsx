@@ -105,7 +105,7 @@ export default function DashboardScreen() {
           </View>
           <View style={styles.headerTextContainer}>
             <Text style={styles.greeting}>Ahoj, {profile?.fullName?.split(' ')[0] || 'Zápasníku'}! 👋</Text>
-            <Text style={styles.subGreeting}>{t.dashboard.noFight.includes('nemáš') ? 'Tvůj přehled dne' : 'Your daily overview'}</Text>
+            <Text style={styles.subGreeting}>{t.dashboard.dailyOverview}</Text>
           </View>
         </Animated.View>
 
