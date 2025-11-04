@@ -108,7 +108,13 @@ export default function ProfileDetailScreen() {
           headerLeft: () => (
             <Pressable
               onPress={() => router.back()}
-              style={{ paddingLeft: 8, paddingRight: 8 }}
+              style={({ pressed }) => ({
+                paddingLeft: 8,
+                paddingRight: 8,
+                opacity: pressed ? 0.6 : 1,
+                marginLeft: 8,
+              })}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <ArrowLeft size={24} color={Colors.textPrimary} strokeWidth={2} />
             </Pressable>
