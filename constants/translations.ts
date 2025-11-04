@@ -217,6 +217,7 @@ const enTranslations = {
     generating: 'Generating response...',
     askMeAnything: 'Ask me anything!',
     helpText: 'I\'m here to help you with your weight cutting journey. Get personalized advice on hydration, nutrition, and recovery.',
+    detailedStats: 'Detailed Stats',
   },
   settings: {
     title: 'Settings',
@@ -671,6 +672,7 @@ export const translations = {
       generating: 'Generuji odpověď...',
       askMeAnything: 'Zeptejte se na cokoliv!',
       helpText: 'Jsem tu, abych vám pomohl s vaším hubnutím na zápas. Získejte personalizované rady ohledně hydratace, výživy a regenerace.',
+      detailedStats: 'Detailní statistiky',
     },
     settings: {
       title: 'Nastavení',

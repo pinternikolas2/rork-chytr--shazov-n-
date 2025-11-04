@@ -78,11 +78,10 @@ export default function TrackingScreen() {
         >
           <View style={styles.titleRow}>
             <Text style={styles.title}>{t.tracking.title}</Text>
-            {(weightLogs.length > 0 || hydrationLogs.length > 0) && (
-              <Pressable style={styles.statsButton} onPress={() => router.push('/tracking-detail')}>
-                <BarChart3 size={20} color={Colors.gold} />
-              </Pressable>
-            )}
+            <Pressable style={styles.statsButton} onPress={() => router.push('/tracking-detail')}>
+              <BarChart3 size={22} color={Colors.gold} strokeWidth={2.5} />
+              <Text style={styles.statsButtonText}>{t.ai.detailedStats}</Text>
+            </Pressable>
           </View>
 
           <View style={styles.card}>
@@ -328,14 +327,26 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
   statsButton: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 6,
     backgroundColor: Colors.lightGray,
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: Colors.border.light,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: Colors.gold,
+    shadowColor: Colors.gold,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  statsButtonText: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: Colors.gold,
   },
   card: {
     backgroundColor: Colors.white,
