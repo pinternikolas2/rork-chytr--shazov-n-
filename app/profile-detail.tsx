@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useRouter, Stack } from 'expo-router';
 import {
   Alert,
-  Image,
   Modal,
   Pressable,
   ScrollView,
@@ -12,13 +11,13 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronRight, X } from 'lucide-react-native';
+import { ChevronRight, X, User, Camera } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 import { Discipline } from '@/constants/types';
 
 export default function ProfileDetailScreen() {
-  const { t, profile, updateProfile } = useApp();
+  const { t, profile, updateProfile, weightLogs } = useApp();
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
@@ -98,6 +97,7 @@ export default function ProfileDetailScreen() {
       <Stack.Screen
         options={{
           title: 'Můj profil',
+          headerBackTitle: 'Zpět',
           headerStyle: {
             backgroundColor: Colors.white,
           },
@@ -117,14 +117,14 @@ export default function ProfileDetailScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.profileSection}>
-            <View style={styles.profileImageContainer}>
-              <Image
-                source={{
-                  uri: 'https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=400',
-                }}
-                style={styles.profileImage}
-              />
-            </View>
+            <Pressable style={styles.profileImageContainer}>
+              <View style={styles.profileIconWrapper}>
+                <User size={48} color={Colors.textSecondary} strokeWidth={1.5} />
+              </View>
+              <View style={styles.cameraIconWrapper}>
+                <Camera size={16} color={Colors.white} strokeWidth={2.5} />
+              </View>
+            </Pressable>
             <View style={styles.profileInfo}>
               <Text style={styles.profileName}>{profile.fullName}</Text>
               <Text style={styles.profileSubtitle}>
@@ -168,16 +168,16 @@ export default function ProfileDetailScreen() {
               </View>
             </View>
 
-            {profile.role === 'fighter' && (
+            {profile.role === 'fighter' && weightLogs.length > 0 && (
               <View style={styles.statsRow}>
                 <View style={styles.statCardFull}>
                   <View style={styles.statRow}>
                     <Text style={styles.statLabel}>Datum vážení</Text>
                     <Text style={styles.statSecondary}>
-                      {new Date().toLocaleDateString('cs-CZ')}
+                      {new Date(weightLogs[weightLogs.length - 1].date).toLocaleDateString('cs-CZ')}
                     </Text>
                   </View>
-                  <Text style={styles.statValue}>{profile.targetWeight} kg</Text>
+                  <Text style={styles.statValue}>{weightLogs[weightLogs.length - 1].weight} kg</Text>
                 </View>
               </View>
             )}
@@ -366,13 +366,32 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 20,
-    overflow: 'hidden',
     marginBottom: 16,
-    backgroundColor: Colors.border.light,
+    backgroundColor: Colors.lightGray,
+    position: 'relative' as const,
   },
-  profileImage: {
+  profileIconWrapper: {
     width: '100%',
     height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.lightGray,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: Colors.border.light,
+  },
+  cameraIconWrapper: {
+    position: 'absolute' as const,
+    right: 0,
+    bottom: 0,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.gold,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: Colors.white,
   },
   profileInfo: {
     alignItems: 'center',
