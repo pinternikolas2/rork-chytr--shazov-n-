@@ -76,8 +76,8 @@ export default function RegisterScreen() {
         console.log('[Register] Successfully signed up, user ID:', data.user.id);
         
         if (data.session) {
-          console.log('[Register] User is automatically signed in');
-          router.replace('/(tabs)');
+          console.log('[Register] User is automatically signed in, redirecting to profile setup');
+          router.replace('/profile-setup');
         } else {
           console.log('[Register] Email confirmation required');
           Alert.alert(

@@ -52,7 +52,26 @@ export default function LoginScreen() {
 
       if (data.user) {
         console.log('[Login] Successfully signed in, user ID:', data.user.id);
-        router.replace('/(tabs)');
+        
+        try {
+          const { data: { session: currentSession } } = await supabase.auth.getSession();
+          if (currentSession?.user) {
+            console.log('[Login] Checking if user has profile in backend');
+            const { trpcClient } = await import('@/lib/trpc');
+            const backendProfile = await trpcClient.profile.get.query({ userId: currentSession.user.id });
+            
+            if (backendProfile) {
+              console.log('[Login] User has profile, going to app');
+              router.replace('/(tabs)');
+            } else {
+              console.log('[Login] User has no profile, going to profile setup');
+              router.replace('/profile-setup');
+            }
+          }
+        } catch (err) {
+          console.error('[Login] Error checking profile:', err);
+          router.replace('/(tabs)');
+        }
       }
     } catch (err) {
       console.error('[Login] Unexpected error:', err);

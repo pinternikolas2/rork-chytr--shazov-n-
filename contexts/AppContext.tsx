@@ -33,11 +33,65 @@ export const [AppProvider, useApp] = createContextHook(() => {
 
   useEffect(() => {
     loadStoredData();
+    const cleanup = setupAuthListener();
+    return cleanup;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const setupAuthListener = () => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('[AppContext] Auth state changed:', event, session?.user?.id);
+      
+      if (event === 'SIGNED_IN' && session?.user) {
+        console.log('[AppContext] User signed in, loading profile from backend');
+        await loadProfileFromBackend(session.user.id);
+      } else if (event === 'SIGNED_OUT') {
+        console.log('[AppContext] User signed out');
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  };
+
+  const loadProfileFromBackend = async (userId: string) => {
+    try {
+      console.log('[AppContext] Loading profile from backend for user:', userId);
+      const backendProfile = await trpcClient.profile.get.query({ userId });
+      
+      if (backendProfile) {
+        console.log('[AppContext] Profile loaded from backend:', backendProfile.id);
+        setProfile(backendProfile);
+        await AsyncStorage.setItem('profile', JSON.stringify(backendProfile));
+        const currentSettings = await AsyncStorage.getItem('settings');
+        const parsedSettings = currentSettings ? JSON.parse(currentSettings) : DEFAULT_SETTINGS;
+        const updatedSettings = { ...parsedSettings, hasCompletedOnboarding: true };
+        setSettings(updatedSettings);
+        await AsyncStorage.setItem('settings', JSON.stringify(updatedSettings));
+      } else {
+        console.log('[AppContext] No profile found in backend for user:', userId);
+      }
+
+      console.log('[AppContext] Loading weight logs from backend');
+      const backendWeightLogs = await trpcClient.weightLogs.list.query({ userId });
+      if (backendWeightLogs && backendWeightLogs.length > 0) {
+        console.log('[AppContext] Loaded', backendWeightLogs.length, 'weight logs from backend');
+        setWeightLogs(backendWeightLogs);
+        await AsyncStorage.setItem('weightLogs', JSON.stringify(backendWeightLogs));
+      }
+    } catch (error) {
+      console.error('[AppContext] Error loading data from backend:', error);
+    }
+  };
 
   const loadStoredData = async () => {
     try {
       console.log('[AppContext] Starting to load stored data...');
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('[AppContext] Current session:', session?.user?.id);
+      
       const [storedSettings, storedProfile, storedFights, storedWeightLogs, storedHydrationLogs, storedMealLogs, storedCustomFoods, storedSupplementLogs, storedRegenerationLogs, storedSleepLogs, storedDailyNotes] =
         await Promise.all([
           AsyncStorage.getItem('settings'),
@@ -124,6 +178,11 @@ export const [AppProvider, useApp] = createContextHook(() => {
         setDailyNotes(parsedNotes.map((n: DailyNote) => ({ ...n, date: new Date(n.date) })));
       }
       console.log('[AppContext] Finished loading stored data');
+      
+      if (session?.user) {
+        console.log('[AppContext] User is signed in, loading data from backend');
+        await loadProfileFromBackend(session.user.id);
+      }
     } catch (error) {
       console.error('[AppContext] Error loading stored data:', error);
     } finally {
