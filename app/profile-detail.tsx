@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronRight, X, User, Camera } from 'lucide-react-native';
+import { ChevronRight, X, User, Camera, ArrowLeft } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 import { Discipline } from '@/constants/types';
@@ -105,6 +105,14 @@ export default function ProfileDetailScreen() {
           headerTitleStyle: {
             fontWeight: '700',
           },
+          headerLeft: () => (
+            <Pressable
+              onPress={() => router.back()}
+              style={{ paddingLeft: 8, paddingRight: 8 }}
+            >
+              <ArrowLeft size={24} color={Colors.textPrimary} strokeWidth={2} />
+            </Pressable>
+          ),
         }}
       />
       <View style={styles.container}>
