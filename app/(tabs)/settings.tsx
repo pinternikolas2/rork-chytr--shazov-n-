@@ -56,25 +56,49 @@ export default function SettingsScreen() {
   const handleProfileUpdate = async () => {
     if (!profile) return;
     
-    if (profile.role === 'fighter') {
-      await updateProfile({
-        fullName,
-        age: parseInt(age, 10),
-        height: parseInt(height, 10),
-        currentWeight: parseFloat(currentWeight),
-        targetWeight: parseFloat(targetWeight),
-        discipline,
-      });
-    } else {
-      await updateProfile({
-        fullName,
-        age: parseInt(age, 10),
-        height: parseInt(height, 10),
-        discipline,
-      });
-    }
+    try {
+      if (profile.role === 'fighter') {
+        const parsedAge = parseInt(age, 10);
+        const parsedHeight = parseInt(height, 10);
+        const parsedCurrentWeight = parseFloat(currentWeight);
+        const parsedTargetWeight = parseFloat(targetWeight);
 
-    setIsProfileModalVisible(false);
+        if (isNaN(parsedAge) || isNaN(parsedHeight) || isNaN(parsedCurrentWeight) || isNaN(parsedTargetWeight)) {
+          Alert.alert('Chyba', 'Prosím vyplňte všechny hodnoty správně');
+          return;
+        }
+
+        await updateProfile({
+          fullName,
+          age: parsedAge,
+          height: parsedHeight,
+          currentWeight: parsedCurrentWeight,
+          targetWeight: parsedTargetWeight,
+          discipline,
+        });
+      } else {
+        const parsedAge = parseInt(age, 10);
+        const parsedHeight = parseInt(height, 10);
+
+        if (isNaN(parsedAge) || isNaN(parsedHeight)) {
+          Alert.alert('Chyba', 'Prosím vyplňte všechny hodnoty správně');
+          return;
+        }
+
+        await updateProfile({
+          fullName,
+          age: parsedAge,
+          height: parsedHeight,
+          discipline,
+        });
+      }
+
+      Alert.alert(t.common.success, 'Profil byl úspěšně aktualizován');
+      setIsProfileModalVisible(false);
+    } catch (error) {
+      console.error('[Settings] Error updating profile:', error);
+      Alert.alert('Chyba', 'Nepodařilo se aktualizovat profil. Zkuste to prosím znovu.');
+    }
   };
 
   const SettingItem = ({

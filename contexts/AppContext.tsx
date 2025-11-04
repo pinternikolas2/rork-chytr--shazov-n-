@@ -160,6 +160,13 @@ export const [AppProvider, useApp] = createContextHook(() => {
     const updated = { ...profile, ...updates } as FighterProfile | CoachProfile;
     setProfile(updated);
     await AsyncStorage.setItem('profile', JSON.stringify(updated));
+    
+    try {
+      await trpcClient.profile.sync.mutate(updated);
+      console.log('[AppContext] Profile updated and synced to backend');
+    } catch (error) {
+      console.error('[AppContext] Failed to sync updated profile to backend:', error);
+    }
   }, [profile]);
 
   const addFight = useCallback(async (fight: Omit<Fight, 'id'>) => {
@@ -199,6 +206,11 @@ export const [AppProvider, useApp] = createContextHook(() => {
   }, [fights]);
 
   const addWeightLog = useCallback(async (weight: number, time: 'morning' | 'evening') => {
+    if (!profile) {
+      console.error('[AppContext] Cannot add weight log without profile');
+      return;
+    }
+
     const newLog: WeightLog = {
       id: Date.now().toString(),
       date: new Date(),
@@ -209,11 +221,30 @@ export const [AppProvider, useApp] = createContextHook(() => {
     setWeightLogs(updated);
     await AsyncStorage.setItem('weightLogs', JSON.stringify(updated));
 
-    if (profile && profile.role === 'fighter' && time === 'morning') {
+    try {
+      await trpcClient.weightLogs.add.mutate({
+        userId: profile.id,
+        date: newLog.date,
+        weight: newLog.weight,
+        time: newLog.time,
+      });
+      console.log('[AppContext] Weight log synced to backend');
+    } catch (error) {
+      console.error('[AppContext] Failed to sync weight log to backend:', error);
+    }
+
+    if (profile.role === 'fighter' && time === 'morning') {
       const updatedProfile = { ...profile, currentWeight: weight } as FighterProfile;
       console.log('[AppContext] Weight logged - currentWeight:', weight, 'startingWeight:', updatedProfile.startingWeight, 'targetWeight:', updatedProfile.targetWeight);
       setProfile(updatedProfile);
       await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
+      
+      try {
+        await trpcClient.profile.sync.mutate(updatedProfile);
+        console.log('[AppContext] Updated profile synced to backend');
+      } catch (error) {
+        console.error('[AppContext] Failed to sync updated profile to backend:', error);
+      }
     }
   }, [weightLogs, profile]);
 
