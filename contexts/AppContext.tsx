@@ -240,17 +240,22 @@ export const [AppProvider, useApp] = createContextHook(() => {
     setFights(updated);
     await AsyncStorage.setItem('fights', JSON.stringify(updated));
 
-    if (profile && profile.role === 'fighter' && fight.weightClass) {
-      const targetWeightFromClass = parseFloat(fight.weightClass.replace(/[^0-9.]/g, ''));
-      if (!isNaN(targetWeightFromClass)) {
-        const updatedProfile = { 
-          ...profile, 
-          targetWeight: targetWeightFromClass,
-          startingWeight: profile.currentWeight
-        } as FighterProfile;
-        console.log('[AppContext] New fight created - setting startingWeight:', profile.currentWeight, 'targetWeight:', targetWeightFromClass);
-        setProfile(updatedProfile);
-        await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
+    if (profile && profile.role === 'fighter') {
+      const updatedProfile = { 
+        ...profile, 
+        targetWeight: fight.targetWeightForFight,
+        startingWeight: profile.startingWeight || profile.currentWeight,
+        targetFightDate: fight.date
+      } as FighterProfile;
+      console.log('[AppContext] New fight created - startingWeight:', updatedProfile.startingWeight, 'currentWeight:', profile.currentWeight, 'targetWeight:', fight.targetWeightForFight);
+      setProfile(updatedProfile);
+      await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
+      
+      try {
+        await trpcClient.profile.sync.mutate(updatedProfile);
+        console.log('[AppContext] Updated profile synced to backend after adding fight');
+      } catch (error) {
+        console.error('[AppContext] Failed to sync updated profile to backend:', error);
       }
     }
   }, [fights, profile]);

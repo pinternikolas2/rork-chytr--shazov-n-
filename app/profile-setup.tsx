@@ -75,6 +75,7 @@ export default function ProfileSetupScreen() {
         gender,
         currentWeight: parseFloat(currentWeight),
         targetWeight: parseFloat(targetWeight),
+        startingWeight: parseFloat(currentWeight),
         weightClass,
         targetFightDate: targetFightDate,
         discipline,

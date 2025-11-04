@@ -54,6 +54,7 @@ export interface Fight {
   name: string;
   opponent: string;
   weightClass: string;
+  targetWeightForFight: number;
   date: Date;
   weighInTime?: Date;
   weighInTiming: WeighInTiming;

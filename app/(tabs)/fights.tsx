@@ -24,12 +24,14 @@ export default function FightsScreen() {
   const [fightName, setFightName] = useState('');
   const [opponent, setOpponent] = useState('');
   const [weightClass, setWeightClass] = useState('');
+  const [targetWeightForFight, setTargetWeightForFight] = useState('');
   const [fightDate, setFightDate] = useState('');
   const [weighInTiming, setWeighInTiming] = useState<WeighInTiming>('dayBefore');
   const [location, setLocation] = useState('');
+  const [notes, setNotes] = useState('');
 
   const handleAddFight = async () => {
-    if (!fightName || !fightDate) return;
+    if (!fightName || !fightDate || !targetWeightForFight) return;
 
     const dateParts = fightDate.split('/');
     let date: Date;
@@ -47,17 +49,21 @@ export default function FightsScreen() {
       name: fightName,
       opponent: opponent || 'TBD',
       weightClass: weightClass || 'N/A',
+      targetWeightForFight: parseFloat(targetWeightForFight),
       date,
       weighInTiming,
       location,
+      notes,
     });
 
     setFightName('');
     setOpponent('');
     setWeightClass('');
+    setTargetWeightForFight('');
     setFightDate('');
     setWeighInTiming('dayBefore');
     setLocation('');
+    setNotes('');
     setIsModalVisible(false);
   };
 
@@ -220,6 +226,18 @@ export default function FightsScreen() {
                 </View>
 
                 <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Cílová váha pro zápas (kg)</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={targetWeightForFight}
+                    onChangeText={setTargetWeightForFight}
+                    placeholder="77.0"
+                    placeholderTextColor={Colors.textLight}
+                    keyboardType="decimal-pad"
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
                   <Text style={styles.label}>{t.fights.date}</Text>
                   <TextInput
                     style={styles.input}
@@ -262,12 +280,25 @@ export default function FightsScreen() {
                     placeholderTextColor={Colors.textLight}
                   />
                 </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Poznámky</Text>
+                  <TextInput
+                    style={[styles.input, styles.textArea]}
+                    value={notes}
+                    onChangeText={setNotes}
+                    placeholder="Další informace o zápasu..."
+                    placeholderTextColor={Colors.textLight}
+                    multiline
+                    numberOfLines={3}
+                  />
+                </View>
               </View>
 
               <Pressable
-                style={[styles.saveButton, (!fightName || !fightDate) && styles.saveButtonDisabled]}
+                style={[styles.saveButton, (!fightName || !fightDate || !targetWeightForFight) && styles.saveButtonDisabled]}
                 onPress={handleAddFight}
-                disabled={!fightName || !fightDate}
+                disabled={!fightName || !fightDate || !targetWeightForFight}
               >
                 <Text style={styles.saveButtonText}>{t.common.save}</Text>
               </Pressable>
@@ -505,5 +536,10 @@ const styles = StyleSheet.create({
   },
   timingButtonTextActive: {
     color: Colors.gold,
+  },
+  textArea: {
+    minHeight: 80,
+    textAlignVertical: 'top' as const,
+    paddingTop: 12,
   },
 });

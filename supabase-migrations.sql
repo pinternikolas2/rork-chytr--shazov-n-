@@ -18,7 +18,9 @@ CREATE TABLE IF NOT EXISTS profiles (
   -- Fighter specific fields
   current_weight NUMERIC(5,2),
   target_weight NUMERIC(5,2),
+  starting_weight NUMERIC(5,2),
   weight_class VARCHAR(50),
+  target_fight_date TIMESTAMPTZ,
   cutting_start_date TIMESTAMPTZ,
   diet_type VARCHAR(20) CHECK (diet_type IN ('standard', 'keto', 'paleo', 'vegetarian', 'vegan', 'other')),
   training_intensity VARCHAR(20) CHECK (training_intensity IN ('low', 'moderate', 'high', 'professional')),
@@ -48,6 +50,7 @@ CREATE TABLE IF NOT EXISTS fights (
   name VARCHAR(255) NOT NULL,
   opponent VARCHAR(255) NOT NULL,
   weight_class VARCHAR(50) NOT NULL,
+  target_weight_for_fight NUMERIC(5,2) NOT NULL,
   date TIMESTAMPTZ NOT NULL,
   weigh_in_time TIMESTAMPTZ,
   location VARCHAR(255),

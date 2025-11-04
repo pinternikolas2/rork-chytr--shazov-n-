@@ -7,6 +7,7 @@ const fightSchema = z.object({
   name: z.string(),
   opponent: z.string(),
   weightClass: z.string(),
+  targetWeightForFight: z.number(),
   date: z.date(),
   weighInTime: z.date().optional(),
   location: z.string().optional(),
@@ -25,6 +26,7 @@ export const addFightProcedure = publicProcedure
         name: input.name,
         opponent: input.opponent,
         weight_class: input.weightClass,
+        target_weight_for_fight: input.targetWeightForFight,
         date: input.date,
         weigh_in_time: input.weighInTime,
         location: input.location,
@@ -43,6 +45,7 @@ export const addFightProcedure = publicProcedure
       name: data.name,
       opponent: data.opponent,
       weightClass: data.weight_class,
+      targetWeightForFight: data.target_weight_for_fight,
       date: new Date(data.date),
       weighInTime: data.weigh_in_time ? new Date(data.weigh_in_time) : undefined,
       location: data.location,
@@ -63,6 +66,7 @@ export const updateFightProcedure = publicProcedure
     if (input.updates.name) updateData.name = input.updates.name;
     if (input.updates.opponent) updateData.opponent = input.updates.opponent;
     if (input.updates.weightClass) updateData.weight_class = input.updates.weightClass;
+    if (input.updates.targetWeightForFight !== undefined) updateData.target_weight_for_fight = input.updates.targetWeightForFight;
     if (input.updates.date) updateData.date = input.updates.date;
     if (input.updates.weighInTime !== undefined) updateData.weigh_in_time = input.updates.weighInTime;
     if (input.updates.location !== undefined) updateData.location = input.updates.location;
@@ -86,6 +90,7 @@ export const updateFightProcedure = publicProcedure
       name: data.name,
       opponent: data.opponent,
       weightClass: data.weight_class,
+      targetWeightForFight: data.target_weight_for_fight,
       date: new Date(data.date),
       weighInTime: data.weigh_in_time ? new Date(data.weigh_in_time) : undefined,
       location: data.location,
@@ -133,6 +138,7 @@ export const getFightsProcedure = publicProcedure
       name: fight.name,
       opponent: fight.opponent,
       weightClass: fight.weight_class,
+      targetWeightForFight: fight.target_weight_for_fight,
       date: new Date(fight.date),
       weighInTime: fight.weigh_in_time ? new Date(fight.weigh_in_time) : undefined,
       location: fight.location,
