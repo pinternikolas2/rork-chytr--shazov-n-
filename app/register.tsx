@@ -56,6 +56,9 @@ export default function RegisterScreen() {
 
     try {
       console.log('[Register] Attempting to sign up with email:', email);
+      console.log('[Register] Supabase URL:', process.env.EXPO_PUBLIC_SUPABASE_URL);
+      console.log('[Register] Has API key:', !!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY);
+      
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password: password,
@@ -68,7 +71,13 @@ export default function RegisterScreen() {
 
       if (signUpError) {
         console.error('[Register] Sign up error:', signUpError);
-        setError(signUpError.message);
+        console.error('[Register] Error details:', JSON.stringify(signUpError, null, 2));
+        
+        if (signUpError.message.includes('Invalid API key') || signUpError.message.includes('API key')) {
+          setError('Chyba konfigurace aplikace. Kontaktujte podporu.');
+        } else {
+          setError(signUpError.message);
+        }
         return;
       }
 
