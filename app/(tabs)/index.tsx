@@ -1,12 +1,14 @@
-import { useMemo } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useEffect, useRef } from 'react';
+import { Animated, Image, Pressable, ScrollView, StyleSheet, Text, View, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Plus, Droplets, TrendingDown, AlertTriangle, Activity, Brain as BrainIcon } from 'lucide-react-native';
+import { Plus, Droplets, TrendingDown, AlertTriangle, Activity, Brain as BrainIcon, Flame, Target, Zap } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
 
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function DashboardScreen() {
   const { 
@@ -20,10 +22,15 @@ export default function DashboardScreen() {
     getMetabolicData,
     getWeightCutPlan,
     getWeightProgress,
-    weightLogs 
+    weightLogs,
+    getTodayNutrition,
+    getNutritionGoals 
   } = useApp();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
 
   const upcomingFight = getUpcomingFight();
   const todayHydration = getTodayHydration();
@@ -48,14 +55,47 @@ export default function DashboardScreen() {
 
   const hydrationProgress = (todayHydration / dailyHydrationGoal) * 100;
 
+  const todayNutrition = getTodayNutrition();
+  const nutritionGoals = getNutritionGoals();
+
+  const calorieProgress = (todayNutrition.calories / nutritionGoals.calories) * 100;
+  const proteinProgress = (todayNutrition.protein / nutritionGoals.protein) * 100;
+  const carbsProgress = (todayNutrition.carbs / nutritionGoals.carbs) * 100;
+  const fatsProgress = (todayNutrition.fat / nutritionGoals.fat) * 100;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        tension: 40,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
   return (
     <View style={styles.container}>
+      <View style={styles.gradientBackground} />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 16 }]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
+        <Animated.View 
+          style={[
+            styles.header,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
+        >
           <View style={styles.logoContainer}>
             <Image
               source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/eu9l4dsrphmttowu6m4wo' }}
@@ -63,14 +103,84 @@ export default function DashboardScreen() {
               resizeMode="contain"
             />
           </View>
-          <View>
-            <Text style={styles.greeting}>{t.appName}</Text>
-            {profile && <Text style={styles.userName}>{profile.fullName}</Text>}
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.greeting}>Ahoj, {profile?.fullName?.split(' ')[0] || 'Zápasníku'}! 👋</Text>
+            <Text style={styles.subGreeting}>{t.dashboard.noFight.includes('nemáš') ? 'Tvůj přehled dne' : 'Your daily overview'}</Text>
           </View>
-        </View>
+        </Animated.View>
+
+        <Animated.View
+          style={{
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          }}
+        >
+          <View style={styles.metricsGrid}>
+            <View style={[styles.metricCard, styles.calorieCard]}>
+              <View style={styles.metricIconContainer}>
+                <Flame size={24} color="#FF6B35" />
+              </View>
+              <View style={styles.metricContent}>
+                <Text style={styles.metricLabel}>Kalorie</Text>
+                <Text style={styles.metricValue}>
+                  {todayNutrition.calories} <Text style={styles.metricGoal}>/ {nutritionGoals.calories}</Text>
+                </Text>
+                <View style={styles.miniProgressBar}>
+                  <View style={[styles.miniProgressFill, { width: `${Math.min(100, calorieProgress)}%`, backgroundColor: '#FF6B35' }]} />
+                </View>
+              </View>
+            </View>
+
+            <View style={[styles.metricCard, styles.proteinCard]}>
+              <View style={styles.metricIconContainer}>
+                <Target size={24} color="#4ECDC4" />
+              </View>
+              <View style={styles.metricContent}>
+                <Text style={styles.metricLabel}>Bílkoviny</Text>
+                <Text style={styles.metricValue}>
+                  {todayNutrition.protein}g <Text style={styles.metricGoal}>/ {nutritionGoals.protein}g</Text>
+                </Text>
+                <View style={styles.miniProgressBar}>
+                  <View style={[styles.miniProgressFill, { width: `${Math.min(100, proteinProgress)}%`, backgroundColor: '#4ECDC4' }]} />
+                </View>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.metricsRow}>
+            <View style={[styles.smallMetricCard, styles.hydrationCard]}>
+              <Droplets size={20} color="#3B9AE1" />
+              <Text style={styles.smallMetricLabel}>Voda</Text>
+              <Text style={styles.smallMetricValue}>{(todayHydration / 1000).toFixed(1)}L</Text>
+              <Text style={styles.smallMetricGoal}>/ {(dailyHydrationGoal / 1000).toFixed(1)}L</Text>
+            </View>
+
+            <View style={[styles.smallMetricCard, styles.carbsCard]}>
+              <Zap size={20} color="#F4C430" />
+              <Text style={styles.smallMetricLabel}>Sacharidy</Text>
+              <Text style={styles.smallMetricValue}>{todayNutrition.carbs}g</Text>
+              <Text style={styles.smallMetricGoal}>/ {nutritionGoals.carbs}g</Text>
+            </View>
+
+            <View style={[styles.smallMetricCard, styles.fatsCard]}>
+              <Activity size={20} color="#FF8C42" />
+              <Text style={styles.smallMetricLabel}>Tuky</Text>
+              <Text style={styles.smallMetricValue}>{todayNutrition.fat}g</Text>
+              <Text style={styles.smallMetricGoal}>/ {nutritionGoals.fat}g</Text>
+            </View>
+          </View>
+        </Animated.View>
 
         {upcomingFight ? (
-          <View style={styles.fightCard}>
+          <Animated.View 
+            style={[
+              styles.fightCard,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
             <View style={styles.fightCardHeader}>
               <Text style={styles.fightCardTitle}>{upcomingFight.name}</Text>
               <View style={styles.daysContainer}>
@@ -101,7 +211,7 @@ export default function DashboardScreen() {
                 </Text>
               </View>
             </View>
-          </View>
+          </Animated.View>
         ) : (
           <View style={styles.noFightCard}>
             <Text style={styles.noFightText}>{t.dashboard.noFight}</Text>
@@ -112,7 +222,15 @@ export default function DashboardScreen() {
           </View>
         )}
 
-        <View style={styles.progressSection}>
+        <Animated.View 
+          style={[
+            styles.progressSection,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
+        >
           <View style={styles.progressHeader}>
             <TrendingDown size={20} color={Colors.gold} />
             <Text style={styles.progressTitle}>{t.tracking.progress}</Text>
@@ -121,7 +239,7 @@ export default function DashboardScreen() {
             <View style={[styles.progressBar, { width: `${weightProgress}%` }]} />
           </View>
           <Text style={styles.progressText}>{weightProgress.toFixed(0)}% {t.dashboard.toTarget}</Text>
-        </View>
+        </Animated.View>
 
         <View style={styles.hydrationSection}>
           <View style={styles.hydrationHeader}>
@@ -289,6 +407,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.white,
   },
+  gradientBackground: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 300,
+    backgroundColor: '#FAFAFA',
+  },
   scrollView: {
     flex: 1,
   },
@@ -299,8 +425,11 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
-    gap: 16,
+    marginBottom: 28,
+    gap: 12,
+  },
+  headerTextContainer: {
+    flex: 1,
   },
   logoContainer: {
     width: 56,
@@ -316,14 +445,132 @@ const styles = StyleSheet.create({
     height: 56,
   },
   greeting: {
+    fontSize: 24,
+    color: Colors.textPrimary,
+    fontWeight: '700' as const,
+    marginBottom: 4,
+  },
+  subGreeting: {
     fontSize: 14,
     color: Colors.textSecondary,
-    fontWeight: '600' as const,
+    fontWeight: '500' as const,
   },
   userName: {
     fontSize: 20,
     color: Colors.textPrimary,
     fontWeight: '700' as const,
+  },
+  metricsGrid: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
+  metricCard: {
+    flex: 1,
+    backgroundColor: Colors.white,
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  calorieCard: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#FF6B35',
+  },
+  proteinCard: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#4ECDC4',
+  },
+  metricIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(0,0,0,0.04)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  metricContent: {
+    flex: 1,
+  },
+  metricLabel: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    fontWeight: '600' as const,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  metricValue: {
+    fontSize: 22,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
+    marginBottom: 12,
+  },
+  metricGoal: {
+    fontSize: 16,
+    fontWeight: '500' as const,
+    color: Colors.textSecondary,
+  },
+  miniProgressBar: {
+    height: 6,
+    backgroundColor: 'rgba(0,0,0,0.06)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  miniProgressFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  metricsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 20,
+  },
+  smallMetricCard: {
+    flex: 1,
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  hydrationCard: {
+    borderBottomWidth: 3,
+    borderBottomColor: '#3B9AE1',
+  },
+  carbsCard: {
+    borderBottomWidth: 3,
+    borderBottomColor: '#F4C430',
+  },
+  fatsCard: {
+    borderBottomWidth: 3,
+    borderBottomColor: '#FF8C42',
+  },
+  smallMetricLabel: {
+    fontSize: 10,
+    color: Colors.textSecondary,
+    fontWeight: '600' as const,
+    textTransform: 'uppercase' as const,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  smallMetricValue: {
+    fontSize: 20,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
+  },
+  smallMetricGoal: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    fontWeight: '500' as const,
   },
   fightCard: {
     backgroundColor: Colors.white,
