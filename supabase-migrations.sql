@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   cutting_start_date TIMESTAMPTZ,
   diet_type VARCHAR(20) CHECK (diet_type IN ('standard', 'keto', 'paleo', 'vegetarian', 'vegan', 'other')),
   training_intensity VARCHAR(20) CHECK (training_intensity IN ('low', 'moderate', 'high', 'professional')),
+  trainings_per_week INTEGER,
   has_previous_experience BOOLEAN DEFAULT false,
   trainer_name VARCHAR(255),
   profile_photo_uri TEXT,

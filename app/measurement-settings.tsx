@@ -43,6 +43,11 @@ export default function MeasurementSettingsScreen() {
   const [trainingIntensity, setTrainingIntensity] = useState<TrainingIntensity>(
     profile && profile.role === 'fighter' ? profile.trainingIntensity : 'moderate'
   );
+  const [trainingsPerWeek, setTrainingsPerWeek] = useState(
+    profile && profile.role === 'fighter' && profile.trainingsPerWeek
+      ? profile.trainingsPerWeek.toString()
+      : ''
+  );
 
   const disciplines: Discipline[] = ['mma', 'boxing', 'wrestling', 'bjj', 'muayThai', 'kickboxing'];
   const dietTypes: DietType[] = ['standard', 'keto', 'paleo', 'vegetarian', 'vegan', 'other'];
@@ -65,6 +70,13 @@ export default function MeasurementSettingsScreen() {
           return;
         }
 
+        const parsedTrainingsPerWeek = parseInt(trainingsPerWeek);
+        
+        if (isNaN(parsedTrainingsPerWeek) || parsedTrainingsPerWeek < 1 || parsedTrainingsPerWeek > 14) {
+          Alert.alert('Chyba', 'Počet tréninků musí být mezi 1 a 14');
+          return;
+        }
+
         await updateProfile({
           currentWeight: parsedCurrentWeight,
           targetWeight: parsedTargetWeight,
@@ -73,6 +85,7 @@ export default function MeasurementSettingsScreen() {
           discipline,
           dietType,
           trainingIntensity,
+          trainingsPerWeek: parsedTrainingsPerWeek,
         });
       }
 
@@ -313,6 +326,18 @@ export default function MeasurementSettingsScreen() {
                     </Text>
                   </Pressable>
                 ))}
+              </View>
+              
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{t.profile.trainingsPerWeek}</Text>
+                <TextInput
+                  style={styles.input}
+                  value={trainingsPerWeek}
+                  onChangeText={setTrainingsPerWeek}
+                  keyboardType="number-pad"
+                  placeholderTextColor={Colors.textLight}
+                  placeholder="6"
+                />
               </View>
             </View>
           </View>
