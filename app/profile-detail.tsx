@@ -110,13 +110,16 @@ export default function ProfileDetailScreen() {
               onPress={() => router.back()}
               style={({ pressed }) => ({
                 paddingLeft: 8,
-                paddingRight: 8,
+                paddingRight: 16,
                 opacity: pressed ? 0.6 : 1,
                 marginLeft: 8,
+                backgroundColor: pressed ? Colors.lightGray : 'transparent',
+                borderRadius: 8,
+                paddingVertical: 8,
               })}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <ArrowLeft size={24} color={Colors.textPrimary} strokeWidth={2} />
+              <ArrowLeft size={26} color={Colors.textPrimary} strokeWidth={2.5} />
             </Pressable>
           ),
         }}
