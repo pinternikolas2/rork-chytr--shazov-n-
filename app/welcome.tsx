@@ -31,9 +31,8 @@ export default function WelcomeScreen() {
     router.replace('/(tabs)');
   };
 
-  const handleLogin = async () => {
-    await markWelcomeSeen();
-    router.replace('/(tabs)');
+  const handleLogin = () => {
+    router.push('/login');
   };
 
   const handlePrivacy = () => {
