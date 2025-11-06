@@ -87,8 +87,8 @@ export default function TrackingDetailScreen() {
     }
 
     const chartWidth = screenWidth - 80;
-    const chartHeight = 180;
-    const padding = 20;
+    const chartHeight = 200;
+    const padding = 30;
     const plotWidth = chartWidth - padding * 2;
     const plotHeight = chartHeight - padding * 2;
 
@@ -111,10 +111,14 @@ export default function TrackingDetailScreen() {
 
     return (
       <View style={[styles.chart, { width: chartWidth, height: chartHeight }]}>
+        <View style={styles.chartGradientBg} />
+        
         {targetY && (
           <View style={[styles.targetLine, { top: targetY }]}>
             <View style={styles.targetLineDash} />
-            <Text style={styles.targetLabel}>Cíl: {targetWeight?.toFixed(1)} kg</Text>
+            <View style={styles.targetLabelContainer}>
+              <Text style={styles.targetLabel}>Cíl: {targetWeight?.toFixed(1)} kg</Text>
+            </View>
           </View>
         )}
         
@@ -141,16 +145,16 @@ export default function TrackingDetailScreen() {
         })}
 
         {points.map((point, i) => (
-          <View key={i} style={[styles.chartDot, { left: point.x - 4, top: point.y - 4 }]}>
+          <View key={i} style={[styles.chartDot, { left: point.x - 5, top: point.y - 5 }]}>
             <View style={styles.chartDotInner} />
           </View>
         ))}
 
-        <View style={[styles.yAxisLabel, { top: padding - 10 }]}>
-          <Text style={styles.axisText}>{maxWeight.toFixed(1)}</Text>
+        <View style={[styles.yAxisLabel, { top: padding - 12, left: -5 }]}>
+          <Text style={styles.axisText}>{maxWeight.toFixed(1)} kg</Text>
         </View>
-        <View style={[styles.yAxisLabel, { top: chartHeight - padding - 10 }]}>
-          <Text style={styles.axisText}>{minWeight.toFixed(1)}</Text>
+        <View style={[styles.yAxisLabel, { top: chartHeight - padding + 2, left: -5 }]}>
+          <Text style={styles.axisText}>{minWeight.toFixed(1)} kg</Text>
         </View>
       </View>
     );
@@ -167,12 +171,12 @@ export default function TrackingDetailScreen() {
     }
 
     const chartWidth = screenWidth - 80;
-    const chartHeight = 200;
+    const chartHeight = 220;
     const days = Array.from(hydrationStats.dailyTotals.entries()).slice(-7);
-    const barWidth = Math.max(30, (chartWidth - 60) / Math.max(days.length, 1));
+    const barWidth = Math.max(35, (chartWidth - 60) / Math.max(days.length, 1));
     const maxAmount = Math.max(hydrationStats.max, 1000);
-    const minHeight = 10;
-    const maxBarHeight = chartHeight - 80;
+    const minHeight = 15;
+    const maxBarHeight = chartHeight - 90;
 
     return (
       <View style={[styles.barChart, { width: chartWidth, height: chartHeight }]}>
@@ -181,13 +185,18 @@ export default function TrackingDetailScreen() {
             const barHeight = Math.max(minHeight, (amount / maxAmount) * maxBarHeight);
             const dateObj = new Date(date);
             const dayLabel = dateObj.toLocaleDateString('cs-CZ', { weekday: 'short' });
+            const percentage = (amount / maxAmount) * 100;
             
             return (
               <View key={i} style={[styles.barContainer, { width: barWidth }]}>
                 <Text style={styles.barValue}>
                   {amount >= 1000 ? `${(amount / 1000).toFixed(1)}L` : `${amount}ml`}
                 </Text>
-                <View style={[styles.bar, { height: barHeight }]} />
+                <View style={styles.barWrapper}>
+                  <View style={[styles.bar, { height: barHeight }]}>
+                    <View style={[styles.barGradient, { opacity: Math.min(1, percentage / 100) }]} />
+                  </View>
+                </View>
                 <Text style={styles.barLabel}>{dayLabel}</Text>
               </View>
             );
@@ -530,37 +539,58 @@ const styles = StyleSheet.create({
   },
   chart: {
     position: 'relative' as const,
+    overflow: 'hidden',
+    borderRadius: 12,
+  },
+  chartGradientBg: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: Colors.lightGray,
+    opacity: 0.3,
   },
   chartLine: {
     position: 'absolute' as const,
     height: 3,
     backgroundColor: Colors.gold,
     transformOrigin: 'left center',
+    shadowColor: Colors.gold,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    elevation: 3,
   },
   chartDot: {
     position: 'absolute' as const,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     backgroundColor: Colors.white,
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: Colors.gold,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
   },
   chartDotInner: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
     backgroundColor: Colors.gold,
   },
   targetLine: {
     position: 'absolute' as const,
-    left: 20,
-    right: 20,
+    left: 30,
+    right: 30,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    zIndex: 1,
   },
   targetLineDash: {
     flex: 1,
@@ -568,19 +598,31 @@ const styles = StyleSheet.create({
     borderTopWidth: 2,
     borderColor: '#ef4444',
     borderStyle: 'dashed' as const,
+    opacity: 0.7,
+  },
+  targetLabelContainer: {
+    backgroundColor: '#ef4444',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    marginLeft: 8,
   },
   targetLabel: {
-    fontSize: 11,
-    color: '#ef4444',
-    fontWeight: '600' as const,
+    fontSize: 10,
+    color: Colors.white,
+    fontWeight: '700' as const,
   },
   yAxisLabel: {
     position: 'absolute' as const,
-    left: -40,
   },
   axisText: {
     fontSize: 10,
     color: Colors.textSecondary,
+    fontWeight: '600' as const,
+    backgroundColor: Colors.white,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 4,
   },
   emptyChart: {
     height: 180,
@@ -606,25 +648,44 @@ const styles = StyleSheet.create({
   barContainer: {
     alignItems: 'center',
     justifyContent: 'flex-end',
-    gap: 4,
+    gap: 6,
+  },
+  barWrapper: {
+    alignItems: 'center',
+    justifyContent: 'flex-end',
   },
   bar: {
-    width: 28,
+    width: 32,
     backgroundColor: Colors.gold,
-    borderRadius: 4,
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
+    borderRadius: 6,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+    overflow: 'hidden',
+    shadowColor: Colors.gold,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  barGradient: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '50%',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
   barValue: {
-    fontSize: 9,
-    fontWeight: '600' as const,
-    color: Colors.textSecondary,
-    marginBottom: 2,
+    fontSize: 10,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
+    marginBottom: 4,
   },
   barLabel: {
-    fontSize: 10,
+    fontSize: 11,
     color: Colors.textSecondary,
-    marginTop: 4,
+    marginTop: 6,
+    fontWeight: '600' as const,
   },
   progressCard: {
     backgroundColor: Colors.lightGray,

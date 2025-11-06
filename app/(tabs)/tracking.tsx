@@ -377,23 +377,68 @@ export default function TrackingScreen() {
 
             {selectedMetric === 'weight' && filteredData.length > 0 ? (
               <>
-                <View style={styles.historyChart}>
-                  {filteredData.slice(0, 10).map((log, i, arr) => {
-                    if (i === 0) return null;
-                    const maxWeight = Math.max(...arr.map(l => l.weight));
-                    const minWeight = Math.min(...arr.map(l => l.weight));
-                    const range = maxWeight - minWeight || 1;
-                    const currentHeight = ((arr[i].weight - minWeight) / range) * 80;
-                    
-                    return (
-                      <View key={log.id} style={styles.historyChartBar}>
-                        <View style={[styles.historyChartLine, { 
-                          height: Math.max(6, currentHeight),
-                          backgroundColor: arr[i].weight < arr[i - 1].weight ? '#10B981' : '#ef4444'
-                        }]} />
-                      </View>
-                    );
-                  })}
+                <View style={styles.historyChartContainer}>
+                  <View style={styles.historyChart}>
+                    {filteredData.slice(0, 10).map((log, i, arr) => {
+                      const maxWeight = Math.max(...arr.map(l => l.weight));
+                      const minWeight = Math.min(...arr.map(l => l.weight));
+                      const range = maxWeight - minWeight || 1;
+                      
+                      const points = arr.map((l, idx) => {
+                        const x = (idx / (arr.length - 1)) * 100;
+                        const y = 100 - ((l.weight - minWeight) / range) * 100;
+                        return { x, y, weight: l.weight };
+                      });
+                      
+                      if (i === 0) return null;
+                      const prevPoint = points[i - 1];
+                      const currentPoint = points[i];
+                      
+                      const xDiff = currentPoint.x - prevPoint.x;
+                      const yDiff = currentPoint.y - prevPoint.y;
+                      const length = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+                      const angle = Math.atan2(yDiff, xDiff) * (180 / Math.PI);
+                      
+                      return (
+                        <View key={log.id}>
+                          <View
+                            style={[
+                              styles.historyChartLine,
+                              {
+                                position: 'absolute' as const,
+                                left: `${prevPoint.x}%`,
+                                top: `${prevPoint.y}%`,
+                                width: `${length}%`,
+                                transform: [{ rotate: `${angle}deg` }],
+                              },
+                            ]}
+                          />
+                        </View>
+                      );
+                    })}
+                    {filteredData.slice(0, 10).map((log, i, arr) => {
+                      const maxWeight = Math.max(...arr.map(l => l.weight));
+                      const minWeight = Math.min(...arr.map(l => l.weight));
+                      const range = maxWeight - minWeight || 1;
+                      const x = (i / (arr.length - 1)) * 100;
+                      const y = 100 - ((log.weight - minWeight) / range) * 100;
+                      
+                      return (
+                        <View
+                          key={`dot-${log.id}`}
+                          style={[
+                            styles.historyChartDot,
+                            {
+                              left: `${x}%`,
+                              top: `${y}%`,
+                            },
+                          ]}
+                        >
+                          <View style={styles.historyChartDotInner} />
+                        </View>
+                      );
+                    })}
+                  </View>
                 </View>
 
                 <View style={styles.historyList}>
@@ -726,27 +771,50 @@ const styles = StyleSheet.create({
   timeRangeButtonTextActive: {
     color: Colors.black,
   },
-  historyChart: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-around',
-    height: 100,
-    paddingHorizontal: 8,
+  historyChartContainer: {
     marginBottom: 16,
     backgroundColor: Colors.lightGray,
     borderRadius: 10,
     padding: 12,
   },
-  historyChartBar: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    paddingHorizontal: 2,
+  historyChart: {
+    position: 'relative' as const,
+    width: '100%',
+    height: 140,
   },
   historyChartLine: {
-    width: '100%',
-    borderRadius: 3,
-    minHeight: 6,
+    height: 3,
+    backgroundColor: Colors.gold,
+    transformOrigin: 'left center',
+    shadowColor: Colors.gold,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  historyChartDot: {
+    position: 'absolute' as const,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: Colors.white,
+    borderWidth: 3,
+    borderColor: Colors.gold,
+    marginLeft: -5,
+    marginTop: -5,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  historyChartDotInner: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.gold,
   },
   historyList: {
     gap: 8,

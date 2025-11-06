@@ -223,28 +223,84 @@ export default function DashboardScreen() {
             </View>
             {recentWeightLogs.length >= 2 ? (
               <>
-                <View style={styles.miniChart}>
-                  {recentWeightLogs.slice().reverse().map((log, i, arr) => {
-                    if (i === 0) return null;
-                    const maxWeight = Math.max(...arr.map(l => l.weight));
-                    const minWeight = Math.min(...arr.map(l => l.weight));
-                    const range = maxWeight - minWeight || 1;
-                    const prevHeight = ((arr[i - 1].weight - minWeight) / range) * 60;
-                    const currentHeight = ((arr[i].weight - minWeight) / range) * 60;
-                    
-                    return (
-                      <View key={log.id} style={styles.miniChartBar}>
-                        <View style={[styles.miniChartLine, { 
-                          height: Math.max(4, currentHeight),
-                          backgroundColor: arr[i].weight < arr[i - 1].weight ? '#10B981' : '#ef4444'
-                        }]} />
-                      </View>
-                    );
-                  })}
+                <View style={styles.miniChartContainer}>
+                  <View style={styles.miniChart}>
+                    {recentWeightLogs.slice().reverse().map((log, i, arr) => {
+                      const maxWeight = Math.max(...arr.map(l => l.weight));
+                      const minWeight = Math.min(...arr.map(l => l.weight));
+                      const range = maxWeight - minWeight || 1;
+                      
+                      const points = arr.map((l, idx) => {
+                        const x = (idx / (arr.length - 1)) * 100;
+                        const y = 100 - ((l.weight - minWeight) / range) * 100;
+                        return { x, y, weight: l.weight };
+                      });
+                      
+                      if (i === 0) return null;
+                      const prevPoint = points[i - 1];
+                      const currentPoint = points[i];
+                      
+                      const xDiff = currentPoint.x - prevPoint.x;
+                      const yDiff = currentPoint.y - prevPoint.y;
+                      const length = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+                      const angle = Math.atan2(yDiff, xDiff) * (180 / Math.PI);
+                      
+                      return (
+                        <View key={log.id}>
+                          <View
+                            style={[
+                              styles.miniChartLine,
+                              {
+                                position: 'absolute' as const,
+                                left: `${prevPoint.x}%`,
+                                top: `${prevPoint.y}%`,
+                                width: `${length}%`,
+                                transform: [{ rotate: `${angle}deg` }],
+                              },
+                            ]}
+                          />
+                        </View>
+                      );
+                    })}
+                    {recentWeightLogs.slice().reverse().map((log, i, arr) => {
+                      const maxWeight = Math.max(...arr.map(l => l.weight));
+                      const minWeight = Math.min(...arr.map(l => l.weight));
+                      const range = maxWeight - minWeight || 1;
+                      const x = (i / (arr.length - 1)) * 100;
+                      const y = 100 - ((log.weight - minWeight) / range) * 100;
+                      
+                      return (
+                        <View
+                          key={`dot-${log.id}`}
+                          style={[
+                            styles.miniChartDot,
+                            {
+                              left: `${x}%`,
+                              top: `${y}%`,
+                            },
+                          ]}
+                        >
+                          <View style={styles.miniChartDotInner} />
+                        </View>
+                      );
+                    })}
+                  </View>
+                  <View style={styles.miniChartLabels}>
+                    {recentWeightLogs.slice().reverse().slice(0, 7).map((log, i) => (
+                      <Text key={`label-${log.id}`} style={styles.miniChartLabel}>
+                        {log.date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short' })}
+                      </Text>
+                    ))}
+                  </View>
                 </View>
-                <Text style={styles.weeklyChangeText}>
-                  Průměrný pokles za týden: {weeklyWeightChange >= 0 ? weeklyWeightChange.toFixed(2) : '0.00'} kg
-                </Text>
+                <View style={styles.weeklyChangeContainer}>
+                  <View style={styles.weeklyChangeRow}>
+                    <Text style={styles.weeklyChangeLabel}>Průměrný pokles za týden:</Text>
+                    <Text style={[styles.weeklyChangeValue, weeklyWeightChange >= 0 && styles.weeklyChangeValuePositive]}>
+                      {weeklyWeightChange >= 0 ? weeklyWeightChange.toFixed(2) : '0.00'} kg
+                    </Text>
+                  </View>
+                </View>
               </>
             ) : (
               <Text style={styles.noDataText}>Nedostatek dat pro zobrazení trendu</Text>
@@ -657,29 +713,81 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     color: Colors.textPrimary,
   },
+  miniChartContainer: {
+    marginBottom: 12,
+  },
   miniChart: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-around',
-    height: 70,
-    paddingHorizontal: 8,
+    position: 'relative' as const,
+    width: '100%',
+    height: 120,
     marginBottom: 8,
   },
-  miniChartBar: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    paddingHorizontal: 2,
-  },
   miniChartLine: {
-    width: '100%',
-    borderRadius: 3,
-    minHeight: 4,
+    height: 3,
+    backgroundColor: Colors.gold,
+    transformOrigin: 'left center',
+    shadowColor: Colors.gold,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  weeklyChangeText: {
+  miniChartDot: {
+    position: 'absolute' as const,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: Colors.white,
+    borderWidth: 3,
+    borderColor: Colors.gold,
+    marginLeft: -5,
+    marginTop: -5,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  miniChartDotInner: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.gold,
+  },
+  miniChartLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 4,
+  },
+  miniChartLabel: {
+    fontSize: 9,
+    color: Colors.textSecondary,
+    fontWeight: '500' as const,
+  },
+  weeklyChangeContainer: {
+    backgroundColor: Colors.lightGray,
+    borderRadius: 8,
+    padding: 10,
+  },
+  weeklyChangeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  weeklyChangeLabel: {
     fontSize: 12,
     color: Colors.textSecondary,
-    textAlign: 'center',
+    fontWeight: '500' as const,
+  },
+  weeklyChangeValue: {
+    fontSize: 14,
+    color: Colors.gold,
+    fontWeight: '700' as const,
+  },
+  weeklyChangeValuePositive: {
+    color: Colors.gold,
   },
   noDataText: {
     fontSize: 12,
