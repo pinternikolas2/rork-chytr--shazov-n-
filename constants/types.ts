@@ -151,6 +151,27 @@ export interface SleepLog {
   notes?: string;
 }
 
+export type TrainingType = 'strength' | 'cardio' | 'technique' | 'sparring' | 'other';
+export type TrainingIntensityLevel = 'low' | 'medium' | 'high' | 'extreme';
+
+export interface TrainingLog {
+  id: string;
+  date: Date;
+  type: TrainingType;
+  duration: number;
+  intensity: TrainingIntensityLevel;
+  caloriesBurned?: number;
+  notes?: string;
+}
+
+export interface BodyCompositionLog {
+  id: string;
+  date: Date;
+  bodyFatPercentage?: number;
+  muscleMass?: number;
+  notes?: string;
+}
+
 export type WaterRetentionLevel = 1 | 2 | 3 | 4 | 5;
 
 export interface DailyNote {

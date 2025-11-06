@@ -2,7 +2,7 @@ import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Language, translations } from '@/constants/translations';
-import { AppSettings, Fight, FighterProfile, CoachProfile, HydrationLog, WeightLog, MealLog, CustomFood, SupplementLog, RegenerationLog, SleepLog, DailyNote } from '@/constants/types';
+import { AppSettings, Fight, FighterProfile, CoachProfile, HydrationLog, WeightLog, MealLog, CustomFood, SupplementLog, RegenerationLog, SleepLog, DailyNote, TrainingLog, BodyCompositionLog } from '@/constants/types';
 import { WeightCuttingScience } from '@/utils/scientificCalculations';
 import type { SafetyStatus, DailyWeightCutPlan, BodyCompositionEstimate, MetabolicData } from '@/utils/scientificCalculations';
 import { trpcClient } from '@/lib/trpc';
@@ -29,6 +29,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
   const [regenerationLogs, setRegenerationLogs] = useState<RegenerationLog[]>([]);
   const [sleepLogs, setSleepLogs] = useState<SleepLog[]>([]);
   const [dailyNotes, setDailyNotes] = useState<DailyNote[]>([]);
+  const [trainingLogs, setTrainingLogs] = useState<TrainingLog[]>([]);
+  const [bodyCompositionLogs, setBodyCompositionLogs] = useState<BodyCompositionLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dangerBannerDismissed, setDangerBannerDismissed] = useState(false);
 
@@ -93,7 +95,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
       const { data: { session } } = await supabase.auth.getSession();
       console.log('[AppContext] Current session:', session?.user?.id);
       
-      const [storedSettings, storedProfile, storedFights, storedWeightLogs, storedHydrationLogs, storedMealLogs, storedCustomFoods, storedSupplementLogs, storedRegenerationLogs, storedSleepLogs, storedDailyNotes, storedDangerBannerDismissed] =
+      const [storedSettings, storedProfile, storedFights, storedWeightLogs, storedHydrationLogs, storedMealLogs, storedCustomFoods, storedSupplementLogs, storedRegenerationLogs, storedSleepLogs, storedDailyNotes, storedTrainingLogs, storedBodyCompositionLogs, storedDangerBannerDismissed] =
         await Promise.all([
           AsyncStorage.getItem('settings'),
           AsyncStorage.getItem('profile'),
@@ -106,6 +108,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
           AsyncStorage.getItem('regenerationLogs'),
           AsyncStorage.getItem('sleepLogs'),
           AsyncStorage.getItem('dailyNotes'),
+          AsyncStorage.getItem('trainingLogs'),
+          AsyncStorage.getItem('bodyCompositionLogs'),
           AsyncStorage.getItem('dangerBannerDismissed'),
         ]);
 
@@ -178,6 +182,16 @@ export const [AppProvider, useApp] = createContextHook(() => {
         const parsedNotes = JSON.parse(storedDailyNotes);
         console.log('[AppContext] Loaded', parsedNotes.length, 'daily notes');
         setDailyNotes(parsedNotes.map((n: DailyNote) => ({ ...n, date: new Date(n.date) })));
+      }
+      if (storedTrainingLogs) {
+        const parsedLogs = JSON.parse(storedTrainingLogs);
+        console.log('[AppContext] Loaded', parsedLogs.length, 'training logs');
+        setTrainingLogs(parsedLogs.map((l: TrainingLog) => ({ ...l, date: new Date(l.date) })));
+      }
+      if (storedBodyCompositionLogs) {
+        const parsedLogs = JSON.parse(storedBodyCompositionLogs);
+        console.log('[AppContext] Loaded', parsedLogs.length, 'body composition logs');
+        setBodyCompositionLogs(parsedLogs.map((l: BodyCompositionLog) => ({ ...l, date: new Date(l.date) })));
       }
       if (storedDangerBannerDismissed) {
         const dismissed = storedDangerBannerDismissed === 'true';
@@ -438,6 +452,41 @@ export const [AppProvider, useApp] = createContextHook(() => {
     return todayNote || null;
   }, [dailyNotes]);
 
+  const addTrainingLog = useCallback(async (log: Omit<TrainingLog, 'id'>) => {
+    const newLog: TrainingLog = {
+      ...log,
+      id: Date.now().toString(),
+    };
+    const updated = [...trainingLogs, newLog];
+    setTrainingLogs(updated);
+    await AsyncStorage.setItem('trainingLogs', JSON.stringify(updated));
+  }, [trainingLogs]);
+
+  const getTodayTrainings = useCallback((): TrainingLog[] => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return trainingLogs.filter((log) => {
+      const logDate = new Date(log.date);
+      logDate.setHours(0, 0, 0, 0);
+      return logDate.getTime() === today.getTime();
+    });
+  }, [trainingLogs]);
+
+  const addBodyCompositionLog = useCallback(async (log: Omit<BodyCompositionLog, 'id'>) => {
+    const newLog: BodyCompositionLog = {
+      ...log,
+      id: Date.now().toString(),
+    };
+    const updated = [...bodyCompositionLogs, newLog];
+    setBodyCompositionLogs(updated);
+    await AsyncStorage.setItem('bodyCompositionLogs', JSON.stringify(updated));
+  }, [bodyCompositionLogs]);
+
+  const getLatestBodyComposition = useCallback((): BodyCompositionLog | null => {
+    if (bodyCompositionLogs.length === 0) return null;
+    return bodyCompositionLogs[bodyCompositionLogs.length - 1];
+  }, [bodyCompositionLogs]);
+
   const getUpcomingFight = useCallback((): Fight | null => {
     const now = new Date();
     const upcoming = fights
@@ -683,8 +732,10 @@ export const [AppProvider, useApp] = createContextHook(() => {
     setRegenerationLogs([]);
     setSleepLogs([]);
     setDailyNotes([]);
+    setTrainingLogs([]);
+    setBodyCompositionLogs([]);
     setDangerBannerDismissed(false);
-    await AsyncStorage.multiRemove(['profile', 'fights', 'weightLogs', 'hydrationLogs', 'mealLogs', 'customFoods', 'supplementLogs', 'regenerationLogs', 'sleepLogs', 'dailyNotes', 'subscriptionState', 'dangerBannerDismissed']);
+    await AsyncStorage.multiRemove(['profile', 'fights', 'weightLogs', 'hydrationLogs', 'mealLogs', 'customFoods', 'supplementLogs', 'regenerationLogs', 'sleepLogs', 'dailyNotes', 'trainingLogs', 'bodyCompositionLogs', 'subscriptionState', 'dangerBannerDismissed']);
     await updateSettings({ hasCompletedOnboarding: false });
     console.log('[AppContext] Local data cleared, onboarding reset, subscription state cleared');
   }, [updateSettings]);
@@ -703,6 +754,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
     regenerationLogs,
     sleepLogs,
     dailyNotes,
+    trainingLogs,
+    bodyCompositionLogs,
     isLoading,
     dangerBannerDismissed,
     t,
@@ -724,6 +777,10 @@ export const [AppProvider, useApp] = createContextHook(() => {
     getTodaySleep,
     addDailyNote,
     getTodayNote,
+    addTrainingLog,
+    getTodayTrainings,
+    addBodyCompositionLog,
+    getLatestBodyComposition,
     addMealLog,
     updateMealLog,
     deleteMealLog,
@@ -755,6 +812,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
     regenerationLogs,
     sleepLogs,
     dailyNotes,
+    trainingLogs,
+    bodyCompositionLogs,
     isLoading,
     dangerBannerDismissed,
     t,
@@ -776,6 +835,10 @@ export const [AppProvider, useApp] = createContextHook(() => {
     getTodaySleep,
     addDailyNote,
     getTodayNote,
+    addTrainingLog,
+    getTodayTrainings,
+    addBodyCompositionLog,
+    getLatestBodyComposition,
     addMealLog,
     updateMealLog,
     deleteMealLog,
