@@ -740,7 +740,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
       
       if (now < fightTime) {
         return {
-          phase: 'REGEN',
+          phase: 'RECOVERY',
           startDate: activeWeighIn.weighInTime,
           endDate: fightTime,
           daysRemaining: 0,
@@ -751,18 +751,18 @@ export const [AppProvider, useApp] = createContextHook(() => {
 
     if (daysUntilFight <= 7 && daysUntilFight >= 1) {
       return {
-        phase: 'RWL',
+        phase: 'WATER_CUT',
         startDate: new Date(upcomingFight.date.getTime() - 7 * 24 * 60 * 60 * 1000),
         endDate: upcomingFight.date,
         daysRemaining: daysUntilFight,
-        description: `Akutní shazování váhy - D-${daysUntilFight}`,
+        description: `Shazování váhy vodou - D-${daysUntilFight}`,
       };
     }
 
     if (daysUntilFight > 7) {
       const cuttingStart = profile.cuttingStartDate || new Date();
       return {
-        phase: 'GWL',
+        phase: 'WEIGHT_LOSS',
         startDate: cuttingStart,
         endDate: new Date(upcomingFight.date.getTime() - 7 * 24 * 60 * 60 * 1000),
         daysRemaining: daysUntilFight,

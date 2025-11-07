@@ -40,41 +40,41 @@ export class PhaseManager {
         
         if (hoursUntilFight > 0) {
           return {
-            phase: 'REGEN',
+            phase: 'RECOVERY',
             startDate: new Date(weighInRecord.regenProtocolStarted),
             endDate: new Date(weighInRecord.fightTime),
             daysRemaining: 0,
-            description: `Fáze obnovy - ${hoursUntilFight} hodin do zápasu. Rehydratace a doplnění glykogenu.`,
+            description: `Obnova výkonu - ${hoursUntilFight} hodin do zápasu. Rehydratace a doplnění glykogenu.`,
           };
         }
       }
       
       if (hoursSinceWeighIn <= 36) {
         return {
-          phase: 'REGEN',
+          phase: 'RECOVERY',
           startDate: new Date(weighInRecord.regenProtocolStarted),
           daysRemaining: 0,
-          description: `Fáze obnovy - ${hoursSinceWeighIn} hodin od vážení. Fokus na rehydrataci a energii.`,
+          description: `Obnova výkonu - ${hoursSinceWeighIn} hodin od vážení. Fokus na rehydrataci a energii.`,
         };
       }
     }
 
     if (daysUntilFight <= 7) {
       return {
-        phase: 'RWL',
+        phase: 'WATER_CUT',
         startDate: new Date(now.getTime() - (7 - daysUntilFight) * 24 * 60 * 60 * 1000),
         endDate: fightDate,
         daysRemaining: daysUntilFight,
-        description: `RWL (Rapid Weight Loss) - Akutní shazování. ${daysUntilFight} dní do váhy. Manipulace s vodou/sodíkem.`,
+        description: `Shazování váhy vodou - ${daysUntilFight} dní do váhy. Manipulace s vodou/sodíkem.`,
       };
     }
 
     return {
-      phase: 'GWL',
+      phase: 'WEIGHT_LOSS',
       startDate: profile.cuttingStartDate || now,
       endDate: new Date(fightDate.getTime() - 7 * 24 * 60 * 60 * 1000),
       daysRemaining: daysUntilFight - 7,
-      description: `GWL (Gradual Weight Loss) - Dlouhodobé hubnutí. ${daysUntilFight - 7} dní do RWL fáze. Kalorický deficit a tělesné složení.`,
+      description: `Dlouhodobé hubnutí - ${daysUntilFight - 7} dní do shazování vodou. Kalorický deficit a tělesné složení.`,
     };
   }
 
@@ -335,11 +335,11 @@ export class PhaseManager {
     const schedule: SupplementSchedule[] = [];
 
     switch (phase) {
-      case 'GWL':
+      case 'WEIGHT_LOSS':
         schedule.push({
           supplementName: 'Kreatin monohydrát',
           type: 'creatine',
-          phase: 'GWL',
+          phase: 'WEIGHT_LOSS',
           dosage: '5g denně',
           timing: 'Ráno s jídlem',
           action: 'maintain',
@@ -348,7 +348,7 @@ export class PhaseManager {
         schedule.push({
           supplementName: 'Multivitamin',
           type: 'vitamins',
-          phase: 'GWL',
+          phase: 'WEIGHT_LOSS',
           dosage: '1x denně',
           timing: 'S hlavním jídlem',
           action: 'maintain',
@@ -357,7 +357,7 @@ export class PhaseManager {
         schedule.push({
           supplementName: 'Omega-3',
           type: 'other',
-          phase: 'GWL',
+          phase: 'WEIGHT_LOSS',
           dosage: '2-3g EPA+DHA',
           timing: 'S jídlem',
           action: 'maintain',
@@ -365,12 +365,12 @@ export class PhaseManager {
         });
         break;
 
-      case 'RWL':
+      case 'WATER_CUT':
         if (daysUntilFight && daysUntilFight <= 7) {
           schedule.push({
             supplementName: 'Kreatin monohydrát',
             type: 'creatine',
-            phase: 'RWL',
+            phase: 'WATER_CUT',
             dosage: '0g',
             timing: 'STOP',
             action: 'stop',
@@ -380,7 +380,7 @@ export class PhaseManager {
         schedule.push({
           supplementName: 'Elektrolyty (K+, Mg2+)',
           type: 'electrolytes',
-          phase: 'RWL',
+          phase: 'WATER_CUT',
           dosage: 'Hořčík 400mg, Draslík 3000-4000mg',
           timing: 'Rozdělit na celý den',
           action: 'increase',
@@ -389,7 +389,7 @@ export class PhaseManager {
         schedule.push({
           supplementName: 'Multivitamin',
           type: 'vitamins',
-          phase: 'RWL',
+          phase: 'WATER_CUT',
           dosage: '1x denně',
           timing: 'Ráno',
           action: 'maintain',
@@ -397,11 +397,11 @@ export class PhaseManager {
         });
         break;
 
-      case 'REGEN':
+      case 'RECOVERY':
         schedule.push({
           supplementName: 'Kreatin monohydrát - LOADING',
           type: 'creatine',
-          phase: 'REGEN',
+          phase: 'RECOVERY',
           dosage: '20g rozdělených na 4 dávky',
           timing: 'Každé 4-6 hodin',
           action: 'start',
@@ -410,7 +410,7 @@ export class PhaseManager {
         schedule.push({
           supplementName: 'L-Citrulin',
           type: 'other',
-          phase: 'REGEN',
+          phase: 'RECOVERY',
           dosage: '6-8g',
           timing: 'Během prvních 6 hodin',
           action: 'start',
@@ -419,7 +419,7 @@ export class PhaseManager {
         schedule.push({
           supplementName: 'Elektrolyty ORS',
           type: 'electrolytes',
-          phase: 'REGEN',
+          phase: 'RECOVERY',
           dosage: 'Podle protokolu (Na+, K+, Mg2+)',
           timing: 'S každou dávkou vody',
           action: 'increase',
@@ -428,7 +428,7 @@ export class PhaseManager {
         schedule.push({
           supplementName: 'Rychlé sacharidy (Maltodextrin/Glukóza)',
           type: 'other',
-          phase: 'REGEN',
+          phase: 'RECOVERY',
           dosage: '1,0-1,2 g/kg/hodinu prvních 4-6 hodin',
           timing: 'Kontinuálně prvních 6 hodin',
           action: 'start',
@@ -465,17 +465,17 @@ export class PhaseManager {
     const advice: string[] = [];
 
     switch (phase) {
-      case 'GWL':
+      case 'WEIGHT_LOSS':
         advice.push('Zaměřte se na pomalý, stabilní úbytek váhy (max 1% týdně).');
         advice.push('Udržujte vysoký příjem bílkovin (2,0-2,4 g/kg) pro ochranu svalů.');
         advice.push('Využívejte carb cycling - více sacharidů v dny s vysokou intenzitou tréninku.');
         advice.push('Monitorujte tělesné složení, ne pouze váhu.');
         if (daysRemaining <= 14) {
-          advice.push('⚠️ Blížíte se RWL fázi - začněte redukovat intenzitu tréninku.');
+          advice.push('⚠️ Blížíte se fázi shazování vodou - začněte redukovat intenzitu tréninku.');
         }
         break;
 
-      case 'RWL':
+      case 'WATER_CUT':
         advice.push('Přesně dodržujte protokol voda/sodík pro váš den.');
         advice.push('Výrazně snižte objem a intenzitu tréninku.');
         advice.push('Vyhněte se objemným potravinám, zvláště poslední 2-3 dny.');
@@ -489,7 +489,7 @@ export class PhaseManager {
         }
         break;
 
-      case 'REGEN':
+      case 'RECOVERY':
         advice.push('PRIORITA 1: Rehydratace pomocí ORS s elektrolyty.');
         advice.push('PRIORITA 2: Vysokoglykemické sacharidy prvních 4-6 hodin.');
         advice.push('Vyvarujte se tučných jídel - zpomalují absorpci.');
@@ -510,19 +510,19 @@ export class PhaseManager {
   static getSafetyWarnings(phase: PrepPhase, daysRemaining: number, weeklyWeightLoss?: number): string[] {
     const warnings: string[] = [];
 
-    if (phase === 'GWL' && weeklyWeightLoss && weeklyWeightLoss > 1.0) {
+    if (phase === 'WEIGHT_LOSS' && weeklyWeightLoss && weeklyWeightLoss > 1.0) {
       warnings.push('⚠️ NEBEZPEČNÉ TEMPO: Váš týdenní úbytek překračuje 1% tělesné hmotnosti.');
       warnings.push('🔴 RIZIKO: Ztráta svalové hmoty a výkonu.');
       warnings.push('✅ AKCE: Zvyšte kalorický příjem o 200-300 kcal denně.');
     }
 
-    if (phase === 'RWL' && daysRemaining <= 2) {
+    if (phase === 'WATER_CUT' && daysRemaining <= 2) {
       warnings.push('⚠️ KRITICKÁ FÁZE: Maximální pozornost na signály těla.');
       warnings.push('STOP při: Závratích, křečích, extrémní slabosti.');
       warnings.push('Mějte k dispozici asistenci při saunování.');
     }
 
-    if (phase === 'RWL' && daysRemaining === 1) {
+    if (phase === 'WATER_CUT' && daysRemaining === 1) {
       warnings.push('🔴 FINÁLNÍ CUT: Toto je nejrizikovější den.');
       warnings.push('Nepřehřívejte se - sauna max 15-20 min s přestávkami.');
       warnings.push('Okamžitě ukončete při zdravotních problémech.');

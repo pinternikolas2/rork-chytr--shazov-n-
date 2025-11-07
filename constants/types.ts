@@ -196,7 +196,7 @@ export interface SubscriptionInfo {
   autoRenew: boolean;
 }
 
-export type PrepPhase = 'GWL' | 'RWL' | 'REGEN' | 'MAINTENANCE';
+export type PrepPhase = 'WEIGHT_LOSS' | 'WATER_CUT' | 'RECOVERY' | 'MAINTENANCE';
 
 export interface PhaseInfo {
   phase: PrepPhase;

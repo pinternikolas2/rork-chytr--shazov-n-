@@ -150,7 +150,7 @@ export default function DashboardScreen() {
           </Pressable>
         </Animated.View>
 
-        {currentPhase && currentPhase.phase === 'RWL' && daysUntilFight && (
+        {currentPhase && currentPhase.phase === 'WATER_CUT' && daysUntilFight && (
           <Animated.View 
             style={[
               styles.phaseCard,
@@ -161,11 +161,11 @@ export default function DashboardScreen() {
             ]}
           >
             <View style={[styles.phaseBadge, styles.phaseBadgeRWL]}>
-              <Text style={styles.phaseBadgeText}>RWL</Text>
+              <Text style={styles.phaseBadgeText}>SHAZOVÁNÍ VODOU</Text>
             </View>
             <Text style={styles.phaseDescription}>{currentPhase.description}</Text>
             
-            {currentPhase.phase === 'RWL' && daysUntilFight && (
+            {currentPhase.phase === 'WATER_CUT' && daysUntilFight && (
               <View style={styles.rwlProtocolCard}>
                 <Text style={styles.rwlTitle}>DENNÍ PROTOKOL (D-{daysUntilFight})</Text>
                 {(() => {
@@ -253,7 +253,7 @@ export default function DashboardScreen() {
           </Animated.View>
         )}
 
-        {currentPhase && currentPhase.phase === 'REGEN' && activeREGEN && (
+        {currentPhase && currentPhase.phase === 'RECOVERY' && activeREGEN && (
           <Animated.View 
             style={[
               styles.phaseCard,
@@ -267,7 +267,7 @@ export default function DashboardScreen() {
               styles.phaseBadge,
               styles.phaseBadgeREGEN,
             ]}>
-              <Text style={styles.phaseBadgeText}>REGEN</Text>
+              <Text style={styles.phaseBadgeText}>OBNOVA VÝKONU</Text>
             </View>
             <Text style={styles.phaseDescription}>{currentPhase.description}</Text>
             
@@ -382,11 +382,16 @@ export default function DashboardScreen() {
                 {currentPhase && (
                   <View style={[
                     styles.fightPhaseBadge,
-                    currentPhase.phase === 'GWL' && styles.fightPhaseBadgeGWL,
-                    currentPhase.phase === 'RWL' && styles.fightPhaseBadgeRWL,
-                    currentPhase.phase === 'REGEN' && styles.fightPhaseBadgeREGEN,
+                    currentPhase.phase === 'WEIGHT_LOSS' && styles.fightPhaseBadgeGWL,
+                    currentPhase.phase === 'WATER_CUT' && styles.fightPhaseBadgeRWL,
+                    currentPhase.phase === 'RECOVERY' && styles.fightPhaseBadgeREGEN,
                   ]}>
-                    <Text style={styles.fightPhaseBadgeText}>{currentPhase.phase}</Text>
+                    <Text style={styles.fightPhaseBadgeText}>
+                      {currentPhase.phase === 'WEIGHT_LOSS' && 'HUBNUTÍ'}
+                      {currentPhase.phase === 'WATER_CUT' && 'SHAZOVÁNÍ'}
+                      {currentPhase.phase === 'RECOVERY' && 'OBNOVA'}
+                      {currentPhase.phase === 'MAINTENANCE' && 'ÚDRŽBA'}
+                    </Text>
                   </View>
                 )}
                 <View style={styles.daysRow}>
