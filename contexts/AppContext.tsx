@@ -5,6 +5,7 @@ import { Language, translations } from '@/constants/translations';
 import { AppSettings, Fight, UserProfile, HydrationLog, WeightLog, MealLog, CustomFood, SupplementLog, RegenerationLog, SleepLog, DailyNote, TrainingLog, BodyCompositionLog } from '@/constants/types';
 import { WeightCuttingScience } from '@/utils/scientificCalculations';
 import type { SafetyStatus, DailyWeightCutPlan, BodyCompositionEstimate, MetabolicData } from '@/utils/scientificCalculations';
+import type { PrepPhase, PhaseInfo, RWLProtocol, REGENProtocol, WeighInRecord, MacroCyclingPlan, SupplementSchedule } from '@/constants/types';
 import { trpcClient } from '@/lib/trpc';
 import { supabase } from '@/lib/supabase';
 
@@ -33,6 +34,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
   const [bodyCompositionLogs, setBodyCompositionLogs] = useState<BodyCompositionLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dangerBannerDismissed, setDangerBannerDismissed] = useState(false);
+  const [weighInRecords, setWeighInRecords] = useState<WeighInRecord[]>([]);
 
   useEffect(() => {
     loadStoredData();
@@ -95,7 +97,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
       const { data: { session } } = await supabase.auth.getSession();
       console.log('[AppContext] Current session:', session?.user?.id);
       
-      const [storedSettings, storedProfile, storedFights, storedWeightLogs, storedHydrationLogs, storedMealLogs, storedCustomFoods, storedSupplementLogs, storedRegenerationLogs, storedSleepLogs, storedDailyNotes, storedTrainingLogs, storedBodyCompositionLogs, storedDangerBannerDismissed] =
+      const [storedSettings, storedProfile, storedFights, storedWeightLogs, storedHydrationLogs, storedMealLogs, storedCustomFoods, storedSupplementLogs, storedRegenerationLogs, storedSleepLogs, storedDailyNotes, storedTrainingLogs, storedBodyCompositionLogs, storedDangerBannerDismissed, storedWeighInRecords] =
         await Promise.all([
           AsyncStorage.getItem('settings'),
           AsyncStorage.getItem('profile'),
@@ -111,6 +113,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
           AsyncStorage.getItem('trainingLogs'),
           AsyncStorage.getItem('bodyCompositionLogs'),
           AsyncStorage.getItem('dangerBannerDismissed'),
+          AsyncStorage.getItem('weighInRecords'),
         ]);
 
       if (storedSettings) {
@@ -196,6 +199,16 @@ export const [AppProvider, useApp] = createContextHook(() => {
       if (storedDangerBannerDismissed) {
         const dismissed = storedDangerBannerDismissed === 'true';
         setDangerBannerDismissed(dismissed);
+      }
+      if (storedWeighInRecords) {
+        const parsedRecords = JSON.parse(storedWeighInRecords);
+        console.log('[AppContext] Loaded', parsedRecords.length, 'weigh-in records');
+        setWeighInRecords(parsedRecords.map((r: WeighInRecord) => ({
+          ...r,
+          weighInTime: new Date(r.weighInTime),
+          regenProtocolStarted: r.regenProtocolStarted ? new Date(r.regenProtocolStarted) : undefined,
+          fightTime: r.fightTime ? new Date(r.fightTime) : undefined,
+        })));
       }
       console.log('[AppContext] Finished loading stored data');
       
@@ -713,6 +726,344 @@ export const [AppProvider, useApp] = createContextHook(() => {
     await AsyncStorage.setItem('dangerBannerDismissed', 'true');
   }, []);
 
+  const getCurrentPhase = useCallback((): PhaseInfo | null => {
+    const upcomingFight = getUpcomingFight();
+    if (!upcomingFight || !profile) return null;
+
+    const now = new Date();
+    const daysUntilFight = Math.ceil((upcomingFight.date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+    const activeWeighIn = weighInRecords.find(r => r.fightId === upcomingFight.id);
+    if (activeWeighIn?.regenProtocolStarted) {
+      const fightTime = activeWeighIn.fightTime || upcomingFight.date;
+      const hoursUntilFight = Math.max(0, Math.ceil((fightTime.getTime() - now.getTime()) / (1000 * 60 * 60)));
+      
+      if (now < fightTime) {
+        return {
+          phase: 'REGEN',
+          startDate: activeWeighIn.weighInTime,
+          endDate: fightTime,
+          daysRemaining: 0,
+          description: `Obnova výkonu - zbývá ${hoursUntilFight}h do zápasu`,
+        };
+      }
+    }
+
+    if (daysUntilFight <= 7 && daysUntilFight >= 1) {
+      return {
+        phase: 'RWL',
+        startDate: new Date(upcomingFight.date.getTime() - 7 * 24 * 60 * 60 * 1000),
+        endDate: upcomingFight.date,
+        daysRemaining: daysUntilFight,
+        description: `Akutní shazování váhy - D-${daysUntilFight}`,
+      };
+    }
+
+    if (daysUntilFight > 7) {
+      const cuttingStart = profile.cuttingStartDate || new Date();
+      return {
+        phase: 'GWL',
+        startDate: cuttingStart,
+        endDate: new Date(upcomingFight.date.getTime() - 7 * 24 * 60 * 60 * 1000),
+        daysRemaining: daysUntilFight,
+        description: `Dlouhodobé hubnutí - ${daysUntilFight} dní do zápasu`,
+      };
+    }
+
+    return {
+      phase: 'MAINTENANCE',
+      startDate: now,
+      endDate: undefined,
+      daysRemaining: 0,
+      description: 'Udržovací režim',
+    };
+  }, [profile, getUpcomingFight, weighInRecords]);
+
+  const getRWLProtocol = useCallback((daysOut: number): RWLProtocol | null => {
+    if (daysOut < 1 || daysOut > 7) return null;
+
+    const protocols: Record<number, RWLProtocol> = {
+      7: {
+        day: 7,
+        daysOut: 7,
+        waterTargetMl: 8000,
+        sodiumTargetMg: 5000,
+        potassiumTargetMg: 4000,
+        magnesiumTargetMg: 500,
+        phase: 'loading',
+        instructions: [
+          'Pij minimálně 8L vody rozdělených do celého dne',
+          'Přidej 5000mg sodíku (slané roztoky, ORS)',
+          'Udržuj vysoký příjem draslíku a hořčíku',
+          'Trénuj normálně, ale kontroluj intenzitu',
+        ],
+        warnings: ['Klíčová fáze načtení - nesmíš ji vynechat!'],
+      },
+      6: {
+        day: 6,
+        daysOut: 6,
+        waterTargetMl: 8000,
+        sodiumTargetMg: 4500,
+        potassiumTargetMg: 3500,
+        magnesiumTargetMg: 450,
+        phase: 'loading',
+        instructions: [
+          'Pokračuj v high-load protokolu',
+          'Udržuj 8L vody',
+          '4500mg sodíku během dne',
+          'Mírné snížení tréninkové intenzity',
+        ],
+      },
+      5: {
+        day: 5,
+        daysOut: 5,
+        waterTargetMl: 5000,
+        sodiumTargetMg: 2500,
+        potassiumTargetMg: 3000,
+        magnesiumTargetMg: 400,
+        phase: 'medium',
+        instructions: [
+          'Sníž vodu na 5L',
+          'Sníž sodík na 2500mg',
+          'Udržuj vyváženou elektrickou rovnováhu',
+          'Další snížení tréninkové intenzity',
+        ],
+      },
+      4: {
+        day: 4,
+        daysOut: 4,
+        waterTargetMl: 5000,
+        sodiumTargetMg: 1500,
+        potassiumTargetMg: 2500,
+        magnesiumTargetMg: 350,
+        phase: 'medium',
+        instructions: [
+          'Udržuj 5L vody',
+          'Další pokles sodíku na 1500mg',
+          'Zaměř se na kvalitní odpočinek',
+        ],
+      },
+      3: {
+        day: 3,
+        daysOut: 3,
+        waterTargetMl: 2000,
+        sodiumTargetMg: 500,
+        potassiumTargetMg: 2000,
+        magnesiumTargetMg: 300,
+        phase: 'cutting',
+        instructions: [
+          'KLÍČOVÝ DEN - sníž vodu na 2L max',
+          'Drasticky sníž sodík pod 500mg',
+          'Žádné zpracované potraviny',
+          'Minimalizuj objem stravy - jez jen lehce stravitelné',
+          'Jen lehký pohyb, žádný tvrdý trénink',
+        ],
+        warnings: [
+          'Začne diuréza - budeš často na toaletě',
+          'Jsou očekávány symptomy jako únava',
+        ],
+      },
+      2: {
+        day: 2,
+        daysOut: 2,
+        waterTargetMl: 1000,
+        sodiumTargetMg: 300,
+        potassiumTargetMg: 1500,
+        magnesiumTargetMg: 250,
+        phase: 'cutting',
+        instructions: [
+          'Maximálně 1L vody',
+          'Téměř nulový sodík (pod 300mg)',
+          'Odstraň veškerou objemnou stravu (zelenina, celozrnné)',
+          'Žádný trénink, jen lehké protažení',
+        ],
+        warnings: [
+          'Pokračující diuréza',
+          'Vyhni se přehřátí',
+        ],
+      },
+      1: {
+        day: 1,
+        daysOut: 1,
+        waterTargetMl: 500,
+        sodiumTargetMg: 0,
+        phase: 'final',
+        instructions: [
+          'FINÁLNÍ DEN - méně než 0.5L vody',
+          'NULOVÝ sodík',
+          'Jen minimální strava (pokud vůbec)',
+          'Odpočívej, šetři energii',
+          'Pokud potřebuješ doladit poslední kg: krátké saunové intervaly (max 15-20min)',
+        ],
+        warnings: [
+          'KRITICKÉ: Nepoužívej saunu déle než 20min bez přestávky',
+          'Sleduj své tělo - při závratích OKAMŽITĚ přestaň',
+          'Měj trenéra/partnera poblíž',
+        ],
+      },
+    };
+
+    return protocols[daysOut] || null;
+  }, []);
+
+  const getREGENProtocol = useCallback((weighInWeight: number, targetWeight: number, weighInTime: Date, fightTime: Date): REGENProtocol[] => {
+    const weightLost = weighInWeight - targetWeight;
+    const totalFluidTarget = Math.round(weightLost * 1.5 * 1000);
+    const bodyWeightKg = targetWeight;
+
+    const now = new Date();
+    const minutesSinceWeighIn = Math.floor((now.getTime() - weighInTime.getTime()) / (1000 * 60));
+
+    const protocols: REGENProtocol[] = [
+      {
+        timeElapsedMinutes: 0,
+        taskNumber: 1,
+        taskTitle: 'Okamžitá Rehydratace (0-90min)',
+        fluidTargetMl: Math.round(totalFluidTarget * 0.3),
+        carbsTargetG: Math.round(bodyWeightKg * 0.4),
+        proteinTargetG: Math.round(bodyWeightKg * 0.15),
+        instructions: [
+          `Vypij ${Math.round(totalFluidTarget * 0.3)}ml ORS/elektrolytů OKAMŽITĚ po vážení`,
+          `Sněz ${Math.round(bodyWeightKg * 0.4)}g rychlých sacharidů (rýžové koláčky, banány)`,
+          `Přidej ${Math.round(bodyWeightKg * 0.15)}g rychlého proteinu (whey)`,
+          'Jez pomalu, v malých dávkách každých 15-20 minut',
+        ],
+        completed: minutesSinceWeighIn > 90,
+      },
+      {
+        timeElapsedMinutes: 90,
+        taskNumber: 2,
+        taskTitle: 'Pokračující Hydratace (90-180min)',
+        fluidTargetMl: Math.round(totalFluidTarget * 0.25),
+        carbsTargetG: Math.round(bodyWeightKg * 0.5),
+        proteinTargetG: Math.round(bodyWeightKg * 0.2),
+        instructions: [
+          `Vypij dalších ${Math.round(totalFluidTarget * 0.25)}ml tekutin`,
+          `Sněz ${Math.round(bodyWeightKg * 0.5)}g sacharidů (bílé těstoviny, rýže)`,
+          `Přidej ${Math.round(bodyWeightKg * 0.2)}g proteinu (kuřecí prsa, ryby)`,
+          'Udržuj stabilní příjem každých 30 minut',
+          'Vyhni se tučným jídlům a vláknině',
+        ],
+        completed: minutesSinceWeighIn > 180,
+      },
+      {
+        timeElapsedMinutes: 180,
+        taskNumber: 3,
+        taskTitle: 'Optimalizace Glykogenu (3-6h)',
+        fluidTargetMl: Math.round(totalFluidTarget * 0.25),
+        carbsTargetG: Math.round(bodyWeightKg * 0.6),
+        proteinTargetG: Math.round(bodyWeightKg * 0.25),
+        instructions: [
+          `Dodej dalších ${Math.round(totalFluidTarget * 0.25)}ml tekutin`,
+          `Cíl: ${Math.round(bodyWeightKg * 0.6)}g sacharidů (rýžové kaše, těstoviny)`,
+          `Udržuj příjem proteinu: ${Math.round(bodyWeightKg * 0.25)}g`,
+          'Začni přidávat mírně tučnější zdroje pro nasycení',
+          'Suplementace: 6-8g L-Citrulinu pro vazodilataci',
+          'Kreatin: Zahaj loading 10-15g',
+        ],
+        completed: minutesSinceWeighIn > 360,
+      },
+      {
+        timeElapsedMinutes: 360,
+        taskNumber: 4,
+        taskTitle: 'Udržovací Fáze (6-12h)',
+        fluidTargetMl: Math.round(totalFluidTarget * 0.15),
+        carbsTargetG: Math.round(bodyWeightKg * 0.3),
+        proteinTargetG: Math.round(bodyWeightKg * 0.15),
+        instructions: [
+          `Dopij zbývajících ${Math.round(totalFluidTarget * 0.15)}ml`,
+          'Lehčí jídla s vysokým obsahem sacharidů',
+          'Začni snižovat objem stravy',
+          'Zaměř se na kvalitní odpočinek a spánek',
+          'Vyhni se nadměrnému příjmu těsně před spánkem',
+        ],
+        completed: minutesSinceWeighIn > 720,
+      },
+      {
+        timeElapsedMinutes: 720,
+        taskNumber: 5,
+        taskTitle: 'Pre-Fight Finalizace (12h až zápas)',
+        fluidTargetMl: Math.round(totalFluidTarget * 0.05),
+        carbsTargetG: Math.round(bodyWeightKg * 0.2),
+        instructions: [
+          'Minimální příjem tekutin - jen podle pocitu žízně',
+          'Lehké snídaně/svačiny s rychlými cukry',
+          '2-3h před zápasem: Poslední lehké jídlo',
+          '60-90min před: Energy gel nebo banán',
+          'Během warm-upu: Malé doušky vody s elektrolyty',
+        ],
+        completed: now >= fightTime,
+      },
+    ];
+
+    return protocols;
+  }, []);
+
+  const recordWeighIn = useCallback(async (fightId: string, weighInWeight: number, targetWeight: number, fightTime?: Date): Promise<WeighInRecord> => {
+    const upcomingFight = fights.find(f => f.id === fightId);
+    if (!upcomingFight) {
+      throw new Error('Fight not found');
+    }
+
+    const newRecord: WeighInRecord = {
+      id: Date.now().toString(),
+      fightId,
+      weighInWeight,
+      weighInTime: new Date(),
+      targetWeight,
+      successful: weighInWeight <= targetWeight,
+      fightTime: fightTime || upcomingFight.date,
+    };
+
+    const updated = [...weighInRecords, newRecord];
+    setWeighInRecords(updated);
+    await AsyncStorage.setItem('weighInRecords', JSON.stringify(updated));
+
+    console.log('[AppContext] Weigh-in recorded:', newRecord);
+    return newRecord;
+  }, [fights, weighInRecords]);
+
+  const startREGENProtocol = useCallback(async (weighInRecordId: string) => {
+    const record = weighInRecords.find(r => r.id === weighInRecordId);
+    if (!record) {
+      throw new Error('Weigh-in record not found');
+    }
+
+    const updatedRecord = {
+      ...record,
+      regenProtocolStarted: new Date(),
+    };
+
+    const updated = weighInRecords.map(r => r.id === weighInRecordId ? updatedRecord : r);
+    setWeighInRecords(updated);
+    await AsyncStorage.setItem('weighInRecords', JSON.stringify(updated));
+
+    console.log('[AppContext] REGEN protocol started for weigh-in:', weighInRecordId);
+    return updatedRecord;
+  }, [weighInRecords]);
+
+  const getActiveREGENProtocol = useCallback((): { record: WeighInRecord; protocols: REGENProtocol[] } | null => {
+    const upcomingFight = getUpcomingFight();
+    if (!upcomingFight) return null;
+
+    const activeRecord = weighInRecords.find(
+      r => r.fightId === upcomingFight.id && r.regenProtocolStarted
+    );
+
+    if (!activeRecord || !activeRecord.regenProtocolStarted || !activeRecord.fightTime) {
+      return null;
+    }
+
+    const protocols = getREGENProtocol(
+      activeRecord.weighInWeight,
+      activeRecord.targetWeight,
+      activeRecord.weighInTime,
+      activeRecord.fightTime
+    );
+
+    return { record: activeRecord, protocols };
+  }, [weighInRecords, getUpcomingFight, getREGENProtocol]);
+
   const signOut = useCallback(async () => {
     console.log('[AppContext] Signing out...');
     try {
@@ -735,7 +1086,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
     setTrainingLogs([]);
     setBodyCompositionLogs([]);
     setDangerBannerDismissed(false);
-    await AsyncStorage.multiRemove(['profile', 'fights', 'weightLogs', 'hydrationLogs', 'mealLogs', 'customFoods', 'supplementLogs', 'regenerationLogs', 'sleepLogs', 'dailyNotes', 'trainingLogs', 'bodyCompositionLogs', 'subscriptionState', 'dangerBannerDismissed']);
+    setWeighInRecords([]);
+    await AsyncStorage.multiRemove(['profile', 'fights', 'weightLogs', 'hydrationLogs', 'mealLogs', 'customFoods', 'supplementLogs', 'regenerationLogs', 'sleepLogs', 'dailyNotes', 'trainingLogs', 'bodyCompositionLogs', 'subscriptionState', 'dangerBannerDismissed', 'weighInRecords']);
     await updateSettings({ hasCompletedOnboarding: false });
     console.log('[AppContext] Local data cleared, onboarding reset, subscription state cleared');
   }, [updateSettings]);
@@ -758,6 +1110,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
     bodyCompositionLogs,
     isLoading,
     dangerBannerDismissed,
+    weighInRecords,
     t,
     setLanguage,
     updateSettings,
@@ -799,6 +1152,12 @@ export const [AppProvider, useApp] = createContextHook(() => {
     getMetabolicData,
     getWeightProgress,
     dismissDangerBanner,
+    getCurrentPhase,
+    getRWLProtocol,
+    getREGENProtocol,
+    recordWeighIn,
+    startREGENProtocol,
+    getActiveREGENProtocol,
     signOut,
   }), [
     settings,
@@ -857,6 +1216,13 @@ export const [AppProvider, useApp] = createContextHook(() => {
     getMetabolicData,
     getWeightProgress,
     dismissDangerBanner,
+    weighInRecords,
+    getCurrentPhase,
+    getRWLProtocol,
+    getREGENProtocol,
+    recordWeighIn,
+    startREGENProtocol,
+    getActiveREGENProtocol,
     signOut,
   ]);
 });
