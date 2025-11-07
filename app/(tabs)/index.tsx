@@ -467,77 +467,34 @@ export default function DashboardScreen() {
                 <View style={styles.miniChartContainer}>
                   <View style={styles.miniChart}>
                     {(() => {
-                      const arr = recentWeightLogs.slice().reverse();
-                      const maxWeight = Math.max(...arr.map(l => l.weight));
-                      const minWeight = Math.min(...arr.map(l => l.weight));
+                      const arr = recentWeightLogs.slice().reverse().slice(0, 7);
+                      if (arr.length < 2) return null;
+                      
+                      const weights = arr.map(l => l.weight);
+                      const maxWeight = Math.max(...weights);
+                      const minWeight = Math.min(...weights);
                       const range = maxWeight - minWeight || 1;
                       
-                      const points = arr.map((l, idx) => {
-                        const x = (idx / Math.max(1, arr.length - 1)) * 100;
-                        const y = 100 - ((l.weight - minWeight) / range) * 100;
-                        return { x: `${x}%`, y: `${y}%`, weight: l.weight };
-                      });
-                      
                       return (
-                        <>
-                          {points.map((currentPoint, i) => {
-                            if (i === 0) return null;
-                            const prevPoint = points[i - 1];
-                            
-                            const x1 = parseFloat(prevPoint.x);
-                            const y1 = parseFloat(prevPoint.y);
-                            const x2 = parseFloat(currentPoint.x);
-                            const y2 = parseFloat(currentPoint.y);
-                            
-                            const xDiff = x2 - x1;
-                            const yDiff = y2 - y1;
-                            const length = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
-                            const angle = Math.atan2(yDiff, xDiff) * 180 / Math.PI;
+                        <View style={styles.chartBarsContainer}>
+                          {arr.map((log, i) => {
+                            const heightPercent = ((log.weight - minWeight) / range) * 100;
                             
                             return (
-                              <View
-                                key={`line-${i}`}
-                                style={[
-                                  styles.miniChartLine,
-                                  {
-                                    position: 'absolute' as const,
-                                    left: prevPoint.x,
-                                    top: prevPoint.y,
-                                    width: `${length}%`,
-                                    transform: [{ rotate: `${angle}deg` }],
-                                    transformOrigin: 'left center',
-                                  },
-                                ]}
-                              />
+                              <View key={`bar-${i}`} style={styles.chartBarColumn}>
+                                <View style={styles.chartBarWrapper}>
+                                  <View style={[styles.chartBar, { height: `${heightPercent}%` }]} />
+                                </View>
+                                <Text style={styles.chartBarValue}>{log.weight.toFixed(1)}</Text>
+                                <Text style={styles.chartBarLabel}>
+                                  {log.date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short' })}
+                                </Text>
+                              </View>
                             );
                           })}
-                          {points.map((point, i) => (
-                            <View
-                              key={`dot-${i}`}
-                              style={[
-                                styles.miniChartDot,
-                                {
-                                  position: 'absolute' as const,
-                                  left: point.x,
-                                  top: point.y,
-                                  marginLeft: -4,
-                                  marginTop: -4,
-                                },
-                              ]}
-                            >
-                              <View style={styles.miniChartDotInner} />
-                            </View>
-                          ))}
-                        </>
+                        </View>
                       );
                     })()}
-                  </View>
-                  <View style={styles.miniChartLabels}>
-                    {recentWeightLogs.slice().reverse().slice(0, 7).map((log, i) => (
-                      <Text key={`label-${log.id}`} style={styles.miniChartLabel}>
-                        {log.date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short' })}
-                      </Text>
-                    ))}
                   </View>
                 </View>
                 <View style={styles.weeklyChangeContainer}>
@@ -1359,42 +1316,48 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   miniChart: {
-    position: 'relative' as const,
+    width: '100%',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 12,
+  },
+  chartBarsContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    height: 120,
+    gap: 4,
+  },
+  chartBarColumn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 4,
+  },
+  chartBarWrapper: {
     width: '100%',
     height: 80,
-    marginBottom: 8,
-    overflow: 'hidden',
-  },
-  miniChartLine: {
-    height: 2,
-    backgroundColor: Colors.gold,
-  },
-  miniChartDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.white,
-    borderWidth: 2,
-    borderColor: Colors.gold,
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  miniChartDotInner: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
+  chartBar: {
+    width: '80%',
     backgroundColor: Colors.gold,
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 4,
+    minHeight: 4,
   },
-  miniChartLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 4,
+  chartBarValue: {
+    fontSize: 10,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
   },
-  miniChartLabel: {
-    fontSize: 9,
+  chartBarLabel: {
+    fontSize: 8,
     color: Colors.textSecondary,
     fontWeight: '500' as const,
   },
+
   weeklyChangeContainer: {
     backgroundColor: Colors.lightGray,
     borderRadius: 8,

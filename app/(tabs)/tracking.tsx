@@ -501,66 +501,33 @@ export default function TrackingScreen() {
               <>
                 <View style={styles.historyChartContainer}>
                   <View style={styles.historyChart}>
-                    {filteredData.slice(0, 10).map((log, i, arr) => {
-                      const maxWeight = Math.max(...arr.map(l => l.weight));
-                      const minWeight = Math.min(...arr.map(l => l.weight));
+                    {(() => {
+                      const arr = filteredData.slice(0, 10);
+                      const weights = arr.map(l => l.weight);
+                      const maxWeight = Math.max(...weights);
+                      const minWeight = Math.min(...weights);
                       const range = maxWeight - minWeight || 1;
                       
-                      const points = arr.map((l, idx) => {
-                        const x = (idx / Math.max(1, arr.length - 1)) * 100;
-                        const y = 100 - ((l.weight - minWeight) / range) * 100;
-                        return { x, y, weight: l.weight };
-                      });
-                      
-                      if (i === 0) return null;
-                      const prevPoint = points[i - 1];
-                      const currentPoint = points[i];
-                      
-                      const xDiff = currentPoint.x - prevPoint.x;
-                      const yDiff = currentPoint.y - prevPoint.y;
-                      const length = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
-                      const angle = Math.atan2(yDiff, xDiff) * (180 / Math.PI);
-                      
                       return (
-                        <View key={log.id}>
-                          <View
-                            style={[
-                              styles.historyChartLine,
-                              {
-                                position: 'absolute' as const,
-                                left: `${prevPoint.x}%`,
-                                top: `${prevPoint.y}%`,
-                                width: `${length}%`,
-                                transform: [{ rotate: `${angle}deg` }],
-                                transformOrigin: 'left center',
-                              },
-                            ]}
-                          />
+                        <View style={styles.chartBarsContainer}>
+                          {arr.map((log, i) => {
+                            const heightPercent = ((log.weight - minWeight) / range) * 100;
+                            
+                            return (
+                              <View key={`bar-${log.id}`} style={styles.chartBarColumn}>
+                                <View style={styles.chartBarWrapper}>
+                                  <View style={[styles.chartBar, { height: `${heightPercent}%` }]} />
+                                </View>
+                                <Text style={styles.chartBarValue}>{log.weight.toFixed(1)}</Text>
+                                <Text style={styles.chartBarLabel}>
+                                  {log.date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short' })}
+                                </Text>
+                              </View>
+                            );
+                          })}
                         </View>
                       );
-                    })}
-                    {filteredData.slice(0, 10).map((log, i, arr) => {
-                      const maxWeight = Math.max(...arr.map(l => l.weight));
-                      const minWeight = Math.min(...arr.map(l => l.weight));
-                      const range = maxWeight - minWeight || 1;
-                      const x = (i / Math.max(1, arr.length - 1)) * 100;
-                      const y = 100 - ((log.weight - minWeight) / range) * 100;
-                      
-                      return (
-                        <View
-                          key={`dot-${log.id}`}
-                          style={[
-                            styles.historyChartDot,
-                            {
-                              left: `${x}%`,
-                              top: `${y}%`,
-                            },
-                          ]}
-                        >
-                          <View style={styles.historyChartDotInner} />
-                        </View>
-                      );
-                    })}
+                    })()}
                   </View>
                 </View>
 
@@ -901,32 +868,44 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   historyChart: {
-    position: 'relative' as const,
     width: '100%',
+    padding: 8,
+  },
+  chartBarsContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
     height: 140,
-    overflow: 'hidden',
+    gap: 2,
   },
-  historyChartLine: {
-    height: 3,
-    backgroundColor: Colors.gold,
-  },
-  historyChartDot: {
-    position: 'absolute' as const,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: Colors.white,
-    borderWidth: 3,
-    borderColor: Colors.gold,
-    transform: [{ translateX: -5 }, { translateY: -5 }],
+  chartBarColumn: {
+    flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
+    gap: 4,
   },
-  historyChartDotInner: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
+  chartBarWrapper: {
+    width: '100%',
+    height: 100,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
+  chartBar: {
+    width: '80%',
     backgroundColor: Colors.gold,
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 4,
+    minHeight: 4,
+  },
+  chartBarValue: {
+    fontSize: 9,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
+  },
+  chartBarLabel: {
+    fontSize: 7,
+    color: Colors.textSecondary,
+    fontWeight: '500' as const,
   },
   historyList: {
     gap: 8,
