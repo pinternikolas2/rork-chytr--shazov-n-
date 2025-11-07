@@ -30,7 +30,7 @@ export interface FighterProfile extends UserProfile {
   cuttingStartDate?: Date;
   dietType: DietType;
   trainingIntensity: TrainingIntensity;
-  trainingsPerWeek?: number;
+  trainingsPerWeek: number;
   hasPreviousExperience: boolean;
   trainerName?: string;
   profilePhotoUri?: string;

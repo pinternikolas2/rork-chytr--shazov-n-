@@ -24,6 +24,9 @@ export default function TrackingScreen() {
     t, 
     addWeightLog, 
     addHydrationLog, 
+    addTrainingLog,
+    addBodyCompositionLog,
+    getTodayTrainings,
     weightLogs, 
     getTodayHydration,
     getTodayNutrition,
@@ -40,6 +43,11 @@ export default function TrackingScreen() {
   const [muscleMassInput, setMuscleMassInput] = useState('');
   const [selectedMetric, setSelectedMetric] = useState<MetricType>('weight');
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('7days');
+  const [showTrainingForm, setShowTrainingForm] = useState(false);
+  const [trainingType, setTrainingType] = useState<'strength' | 'cardio' | 'technique' | 'sparring' | 'other'>('cardio');
+  const [trainingDuration, setTrainingDuration] = useState('');
+  const [trainingIntensity, setTrainingIntensity] = useState<'low' | 'medium' | 'high' | 'extreme'>('medium');
+  const [caloriesBurned, setCaloriesBurned] = useState('');
 
   const todayHydration = getTodayHydration();
   const todayNutrition = getTodayNutrition();
@@ -67,6 +75,39 @@ export default function TrackingScreen() {
   const quickAddWater = async (amount: number) => {
     await addHydrationLog(amount);
   };
+
+  const handleLogTraining = async () => {
+    if (!trainingDuration) return;
+    const duration = parseInt(trainingDuration, 10);
+    if (isNaN(duration)) return;
+    
+    await addTrainingLog({
+      date: new Date(),
+      type: trainingType,
+      duration,
+      intensity: trainingIntensity,
+      caloriesBurned: caloriesBurned ? parseFloat(caloriesBurned) : undefined,
+    });
+    setTrainingDuration('');
+    setCaloriesBurned('');
+    setShowTrainingForm(false);
+    Alert.alert(t.common.success, 'Trénink byl zaznamenán');
+  };
+
+  const handleLogBodyComposition = async () => {
+    if (!bodyFatInput && !muscleMassInput) return;
+    
+    await addBodyCompositionLog({
+      date: new Date(),
+      bodyFatPercentage: bodyFatInput ? parseFloat(bodyFatInput) : undefined,
+      muscleMass: muscleMassInput ? parseFloat(muscleMassInput) : undefined,
+    });
+    setBodyFatInput('');
+    setMuscleMassInput('');
+    Alert.alert(t.common.success, 'Tělesné složení bylo zaznamenáno');
+  };
+
+  const todayTrainings = getTodayTrainings();
 
   const caloriesProgress = (todayNutrition.calories / nutritionGoals.calories) * 100;
   const proteinProgress = (todayNutrition.protein / nutritionGoals.protein) * 100;
@@ -259,12 +300,92 @@ export default function TrackingScreen() {
               <Dumbbell size={24} color={Colors.gold} />
               <Text style={styles.cardTitle}>Trénink</Text>
             </View>
-            <View style={styles.trainingEmptyState}>
-              <Text style={styles.emptyStateText}>Zatím žádný trénink zaznamenán</Text>
-              <Pressable style={styles.addTrainingButton}>
-                <Text style={styles.addTrainingButtonText}>+ Přidat trénink</Text>
-              </Pressable>
-            </View>
+            {!showTrainingForm && todayTrainings.length === 0 && (
+              <View style={styles.trainingEmptyState}>
+                <Text style={styles.emptyStateText}>Zatím žádný trénink zaznamenán</Text>
+                <Pressable style={styles.addTrainingButton} onPress={() => setShowTrainingForm(true)}>
+                  <Text style={styles.addTrainingButtonText}>+ Přidat trénink</Text>
+                </Pressable>
+              </View>
+            )}
+            {!showTrainingForm && todayTrainings.length > 0 && (
+              <View>
+                {todayTrainings.map((training) => (
+                  <View key={training.id} style={styles.trainingItem}>
+                    <Text style={styles.trainingTypeText}>{training.type} - {training.duration} min</Text>
+                    <Text style={styles.trainingIntensityText}>Intenzita: {training.intensity}</Text>
+                    {training.caloriesBurned && (
+                      <Text style={styles.trainingCaloriesText}>{training.caloriesBurned} kcal</Text>
+                    )}
+                  </View>
+                ))}
+                <Pressable style={styles.addTrainingButton} onPress={() => setShowTrainingForm(true)}>
+                  <Text style={styles.addTrainingButtonText}>+ Přidat další trénink</Text>
+                </Pressable>
+              </View>
+            )}
+            {showTrainingForm && (
+              <View style={styles.trainingForm}>
+                <Text style={styles.formLabel}>Typ tréninku</Text>
+                <View style={styles.typeSelector}>
+                  {(['strength', 'cardio', 'technique', 'sparring', 'other'] as const).map((type) => (
+                    <Pressable
+                      key={type}
+                      style={[styles.typeButton, trainingType === type && styles.typeButtonActive]}
+                      onPress={() => setTrainingType(type)}
+                    >
+                      <Text style={[styles.typeButtonText, trainingType === type && styles.typeButtonTextActive]}>
+                        {type === 'strength' ? 'Síla' : type === 'cardio' ? 'Kardio' : type === 'technique' ? 'Technika' : type === 'sparring' ? 'Sparing' : 'Ostatní'}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+                <Text style={styles.formLabel}>Doba trvání (minuty)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={trainingDuration}
+                  onChangeText={setTrainingDuration}
+                  placeholder="60"
+                  placeholderTextColor={Colors.textLight}
+                  keyboardType="number-pad"
+                />
+                <Text style={styles.formLabel}>Intenzita</Text>
+                <View style={styles.intensitySelector}>
+                  {(['low', 'medium', 'high', 'extreme'] as const).map((intensity) => (
+                    <Pressable
+                      key={intensity}
+                      style={[styles.intensityButton, trainingIntensity === intensity && styles.intensityButtonActive]}
+                      onPress={() => setTrainingIntensity(intensity)}
+                    >
+                      <Text style={[styles.intensityButtonText, trainingIntensity === intensity && styles.intensityButtonTextActive]}>
+                        {intensity === 'low' ? 'Nízká' : intensity === 'medium' ? 'Střední' : intensity === 'high' ? 'Vysoká' : 'Extrémní'}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+                <Text style={styles.formLabel}>Spálené kalorie (volitelné)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={caloriesBurned}
+                  onChangeText={setCaloriesBurned}
+                  placeholder="300"
+                  placeholderTextColor={Colors.textLight}
+                  keyboardType="number-pad"
+                />
+                <View style={styles.formButtons}>
+                  <Pressable style={styles.cancelButton} onPress={() => setShowTrainingForm(false)}>
+                    <Text style={styles.cancelButtonText}>Zrušit</Text>
+                  </Pressable>
+                  <Pressable
+                    style={[styles.button, !trainingDuration && styles.buttonDisabled]}
+                    onPress={handleLogTraining}
+                    disabled={!trainingDuration}
+                  >
+                    <Text style={styles.buttonText}>{t.tracking.save}</Text>
+                  </Pressable>
+                </View>
+              </View>
+            )}
           </View>
 
           <View style={styles.card}>
@@ -313,6 +434,7 @@ export default function TrackingScreen() {
               />
               <Pressable
                 style={[styles.button, (!bodyFatInput && !muscleMassInput) && styles.buttonDisabled]}
+                onPress={handleLogBodyComposition}
                 disabled={!bodyFatInput && !muscleMassInput}
               >
                 <Text style={styles.buttonText}>{t.tracking.save}</Text>
@@ -841,5 +963,103 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     textAlign: 'center',
     paddingVertical: 24,
+  },
+  trainingItem: {
+    backgroundColor: Colors.lightGray,
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 8,
+  },
+  trainingTypeText: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
+    marginBottom: 4,
+  },
+  trainingIntensityText: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginBottom: 2,
+  },
+  trainingCaloriesText: {
+    fontSize: 12,
+    color: Colors.gold,
+    fontWeight: '600' as const,
+  },
+  trainingForm: {
+    gap: 12,
+  },
+  formLabel: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: Colors.textPrimary,
+    marginBottom: 8,
+  },
+  typeSelector: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  typeButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: Colors.lightGray,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+  },
+  typeButtonActive: {
+    backgroundColor: Colors.gold + '20',
+    borderColor: Colors.gold,
+  },
+  typeButtonText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+  },
+  typeButtonTextActive: {
+    color: Colors.gold,
+  },
+  intensitySelector: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  intensityButton: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: Colors.lightGray,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+  },
+  intensityButtonActive: {
+    backgroundColor: Colors.gold + '20',
+    borderColor: Colors.gold,
+  },
+  intensityButtonText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+  },
+  intensityButtonTextActive: {
+    color: Colors.gold,
+  },
+  formButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 8,
+  },
+  cancelButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: Colors.lightGray,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
   },
 });
