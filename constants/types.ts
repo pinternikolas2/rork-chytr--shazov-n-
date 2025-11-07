@@ -45,7 +45,6 @@ export interface Fight {
   weighInTiming: WeighInTiming;
   location?: string;
   notes?: string;
-  selectedPhase?: PrepPhase;
 }
 
 export interface WeightLog {

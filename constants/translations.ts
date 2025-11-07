@@ -230,6 +230,8 @@ const enTranslations = {
       dayBefore: 'Day Before Fight',
     },
     delete: 'Delete Fight',
+    phaseInfo: 'The app automatically determines the preparation phase',
+    phaseInfoDescription: 'Weight cutting has 3 phases: Weight Loss (long-term), Water Cut (7 days before fight), and Performance Recovery (after weigh-in). The app automatically switches you to the correct phase based on your fight date and progress.',
   },
   ai: {
     title: 'AI Advisor',
@@ -648,6 +650,7 @@ export const translations = {
       immediatelyIncreaseCalories: 'Okamžitě zvyšte příjem kalorií',
       consultNutritionist: 'Poraďte se s nutričním specialistou nebo trenérem',
       considerAdjustingTarget: 'Zvažte úpravu cílové váhy nebo časového harmonogramu',
+      changePhase: 'Přejít na další fázi',
     },
     tracking: {
       title: 'Sledování',
@@ -710,6 +713,8 @@ export const translations = {
         dayBefore: 'Den před zápasem',
       },
       delete: 'Smazat zápas',
+      phaseInfo: 'Aplikace automaticky určuje fázi přípravy',
+      phaseInfoDescription: 'Shazování má 3 fáze: Hubnutí (dlouhodobé), Shazování vodou (7 dní před zápasem) a Obnova výkonu (po vážení). Aplikace vás automaticky přepne do správné fáze podle data zápasu a vašeho postupu.',
     },
     ai: {
       title: 'AI Poradce',

@@ -33,7 +33,6 @@ export default function FightsScreen() {
   const [weighInTiming, setWeighInTiming] = useState<WeighInTiming>('dayBefore');
   const [location, setLocation] = useState('');
   const [notes, setNotes] = useState('');
-  const [selectedPhase, setSelectedPhase] = useState<'GWL' | 'RWL' | 'REGEN'>('GWL');
 
   const [currentWeight, setCurrentWeight] = useState(
     profile && profile.role === 'fighter' ? profile.currentWeight.toString() : ''
@@ -66,7 +65,6 @@ export default function FightsScreen() {
     setWeighInTiming('dayBefore');
     setLocation('');
     setNotes('');
-    setSelectedPhase('GWL');
     setCurrentWeight(profile && profile.role === 'fighter' ? profile.currentWeight.toString() : '');
     setDiscipline(profile?.discipline || 'mma');
     setDietType(profile && profile.role === 'fighter' ? profile.dietType : 'standard');
@@ -94,8 +92,6 @@ export default function FightsScreen() {
     setWeighInTiming(fight.weighInTiming);
     setLocation(fight.location || '');
     setNotes(fight.notes || '');
-    setSelectedPhase(fight.selectedPhase || 'GWL');
-    
     setCurrentWeight(profile && profile.role === 'fighter' ? profile.currentWeight.toString() : '');
     setDiscipline(profile?.discipline || 'mma');
     setDietType(profile && profile.role === 'fighter' ? profile.dietType : 'standard');
@@ -149,7 +145,6 @@ export default function FightsScreen() {
         weighInTiming,
         location,
         notes,
-        selectedPhase,
       });
     } else {
       await addFight({
@@ -161,7 +156,6 @@ export default function FightsScreen() {
         weighInTiming,
         location,
         notes,
-        selectedPhase,
       });
     }
 
@@ -212,20 +206,29 @@ export default function FightsScreen() {
           ) : (
             upcomingFights.map((fight) => {
               const daysUntil = Math.ceil((fight.date.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+              
+              let phaseName = '';
+              let phaseBadgeStyle = {};
+              if (daysUntil <= 7 && daysUntil >= 1) {
+                phaseName = 'SHAZOVÁNÍ';
+                phaseBadgeStyle = styles.phaseBadgeRWL;
+              } else if (daysUntil > 7) {
+                phaseName = 'HUBNUTÍ';
+                phaseBadgeStyle = styles.phaseBadgeGWL;
+              }
+              
               return (
                 <View key={fight.id} style={styles.fightCard}>
                   <View style={styles.fightCardHeader}>
                     <View style={styles.fightInfo}>
                       <Text style={styles.fightName}>{fight.name}</Text>
                       <Text style={styles.fightOpponent}>vs {fight.opponent}</Text>
-                      {fight.selectedPhase && (
+                      {phaseName && (
                         <View style={[
                           styles.phaseBadge,
-                          fight.selectedPhase === 'GWL' && styles.phaseBadgeGWL,
-                          fight.selectedPhase === 'RWL' && styles.phaseBadgeRWL,
-                          fight.selectedPhase === 'REGEN' && styles.phaseBadgeREGEN,
+                          phaseBadgeStyle,
                         ]}>
-                          <Text style={styles.phaseBadgeText}>{fight.selectedPhase}</Text>
+                          <Text style={styles.phaseBadgeText}>{phaseName}</Text>
                         </View>
                       )}
                     </View>
@@ -437,43 +440,9 @@ export default function FightsScreen() {
                   />
                 </View>
 
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Fáze přípravy</Text>
-                  <View style={styles.phaseButtons}>
-                    <Pressable
-                      style={[styles.phaseButton, selectedPhase === 'GWL' && styles.phaseButtonGWL]}
-                      onPress={() => setSelectedPhase('GWL')}
-                    >
-                      <Text style={[styles.phaseButtonText, selectedPhase === 'GWL' && styles.phaseButtonTextActive]}>
-                        GWL
-                      </Text>
-                      <Text style={[styles.phaseButtonSubtext, selectedPhase === 'GWL' && styles.phaseButtonSubtextActive]}>
-                        Dlouhodobé
-                      </Text>
-                    </Pressable>
-                    <Pressable
-                      style={[styles.phaseButton, selectedPhase === 'RWL' && styles.phaseButtonRWL]}
-                      onPress={() => setSelectedPhase('RWL')}
-                    >
-                      <Text style={[styles.phaseButtonText, selectedPhase === 'RWL' && styles.phaseButtonTextActive]}>
-                        RWL
-                      </Text>
-                      <Text style={[styles.phaseButtonSubtext, selectedPhase === 'RWL' && styles.phaseButtonSubtextActive]}>
-                        Akutní
-                      </Text>
-                    </Pressable>
-                    <Pressable
-                      style={[styles.phaseButton, selectedPhase === 'REGEN' && styles.phaseButtonREGEN]}
-                      onPress={() => setSelectedPhase('REGEN')}
-                    >
-                      <Text style={[styles.phaseButtonText, selectedPhase === 'REGEN' && styles.phaseButtonTextActive]}>
-                        REGEN
-                      </Text>
-                      <Text style={[styles.phaseButtonSubtext, selectedPhase === 'REGEN' && styles.phaseButtonSubtextActive]}>
-                        Obnova
-                      </Text>
-                    </Pressable>
-                  </View>
+                <View style={styles.phaseInfoContainer}>
+                  <Text style={styles.phaseInfoTitle}>{t.fights.phaseInfo}</Text>
+                  <Text style={styles.phaseInfoDescription}>{t.fights.phaseInfoDescription}</Text>
                 </View>
 
                 <View style={styles.dividerLine} />
@@ -879,55 +848,30 @@ const styles = StyleSheet.create({
   optionTextActive: {
     color: Colors.gold,
   },
-  phaseButtons: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  phaseButton: {
-    flex: 1,
-    paddingVertical: 16,
-    paddingHorizontal: 12,
+  phaseInfoContainer: {
+    backgroundColor: '#F0F9FF',
     borderRadius: 12,
-    backgroundColor: Colors.white,
-    borderWidth: 2,
-    borderColor: Colors.border.light,
-    alignItems: 'center',
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
   },
-  phaseButtonGWL: {
-    borderColor: '#10B981',
-    backgroundColor: '#F0FDF4',
-  },
-  phaseButtonRWL: {
-    borderColor: '#F59E0B',
-    backgroundColor: '#FEF3C7',
-  },
-  phaseButtonREGEN: {
-    borderColor: '#3B82F6',
-    backgroundColor: '#EFF6FF',
-  },
-  phaseButtonText: {
-    fontSize: 16,
+  phaseInfoTitle: {
+    fontSize: 14,
     fontWeight: '700' as const,
-    color: Colors.textSecondary,
-    marginBottom: 4,
+    color: '#0369A1',
+    marginBottom: 8,
   },
-  phaseButtonTextActive: {
-    color: Colors.textPrimary,
-  },
-  phaseButtonSubtext: {
-    fontSize: 11,
-    color: Colors.textLight,
-    fontWeight: '500' as const,
-  },
-  phaseButtonSubtextActive: {
-    color: Colors.textSecondary,
+  phaseInfoDescription: {
+    fontSize: 13,
+    color: '#075985',
+    lineHeight: 19,
   },
   phaseBadge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
     marginTop: 6,
-    alignSelf: 'flex-start',
+    alignSelf: 'flex-start' as const,
   },
   phaseBadgeGWL: {
     backgroundColor: '#10B981',
