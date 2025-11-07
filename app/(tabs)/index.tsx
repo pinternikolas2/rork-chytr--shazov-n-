@@ -435,7 +435,7 @@ export default function DashboardScreen() {
               style={styles.endFightButton} 
               onPress={() => setShowEndFightDialog(true)}
             >
-              <LogOut size={16} color={Colors.error} />
+              <LogOut size={14} color={Colors.error} />
               <Text style={styles.endFightButtonText}>Ukončit zápas</Text>
             </Pressable>
           </Animated.View>
@@ -464,65 +464,68 @@ export default function DashboardScreen() {
               <>
                 <View style={styles.miniChartContainer}>
                   <View style={styles.miniChart}>
-                    {recentWeightLogs.slice().reverse().map((log, i, arr) => {
+                    {(() => {
+                      const arr = recentWeightLogs.slice().reverse();
                       const maxWeight = Math.max(...arr.map(l => l.weight));
                       const minWeight = Math.min(...arr.map(l => l.weight));
                       const range = maxWeight - minWeight || 1;
                       
                       const points = arr.map((l, idx) => {
-                        const x = (idx / (arr.length - 1)) * 100;
-                        const y = 100 - ((l.weight - minWeight) / range) * 100;
+                        const x = (idx / Math.max(1, arr.length - 1)) * 100;
+                        const y = ((l.weight - minWeight) / range) * 80;
                         return { x, y, weight: l.weight };
                       });
                       
-                      if (i === 0) return null;
-                      const prevPoint = points[i - 1];
-                      const currentPoint = points[i];
-                      
-                      const xDiff = currentPoint.x - prevPoint.x;
-                      const yDiff = currentPoint.y - prevPoint.y;
-                      const length = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
-                      const angle = Math.atan2(yDiff, xDiff) * (180 / Math.PI);
-                      
                       return (
-                        <View key={log.id}>
-                          <View
-                            style={[
-                              styles.miniChartLine,
-                              {
-                                position: 'absolute' as const,
-                                left: `${prevPoint.x}%`,
-                                top: `${prevPoint.y}%`,
-                                width: `${length}%`,
-                                transform: [{ rotate: `${angle}deg` }],
-                              },
-                            ]}
-                          />
-                        </View>
+                        <>
+                          {points.map((currentPoint, i) => {
+                            if (i === 0) return null;
+                            const prevPoint = points[i - 1];
+                            
+                            return (
+                              <View
+                                key={`line-${i}`}
+                                style={[
+                                  styles.miniChartLine,
+                                  {
+                                    position: 'absolute' as const,
+                                    left: prevPoint.x + '%',
+                                    bottom: prevPoint.y,
+                                    width: Math.sqrt(
+                                      Math.pow(currentPoint.x - prevPoint.x, 2) + 
+                                      Math.pow(currentPoint.y - prevPoint.y, 2)
+                                    ) + '%',
+                                    transform: [
+                                      { 
+                                        rotate: Math.atan2(
+                                          currentPoint.y - prevPoint.y, 
+                                          currentPoint.x - prevPoint.x
+                                        ) + 'rad' 
+                                      }
+                                    ],
+                                  },
+                                ]}
+                              />
+                            );
+                          })}
+                          {points.map((point, i) => (
+                            <View
+                              key={`dot-${i}`}
+                              style={[
+                                styles.miniChartDot,
+                                {
+                                  position: 'absolute' as const,
+                                  left: point.x + '%',
+                                  bottom: point.y,
+                                },
+                              ]}
+                            >
+                              <View style={styles.miniChartDotInner} />
+                            </View>
+                          ))}
+                        </>
                       );
-                    })}
-                    {recentWeightLogs.slice().reverse().map((log, i, arr) => {
-                      const maxWeight = Math.max(...arr.map(l => l.weight));
-                      const minWeight = Math.min(...arr.map(l => l.weight));
-                      const range = maxWeight - minWeight || 1;
-                      const x = (i / (arr.length - 1)) * 100;
-                      const y = 100 - ((log.weight - minWeight) / range) * 100;
-                      
-                      return (
-                        <View
-                          key={`dot-${log.id}`}
-                          style={[
-                            styles.miniChartDot,
-                            {
-                              left: `${x}%`,
-                              top: `${y}%`,
-                            },
-                          ]}
-                        >
-                          <View style={styles.miniChartDotInner} />
-                        </View>
-                      );
-                    })}
+                    })()}
                   </View>
                   <View style={styles.miniChartLabels}>
                     {recentWeightLogs.slice().reverse().slice(0, 7).map((log, i) => (
@@ -991,41 +994,29 @@ const styles = StyleSheet.create({
   miniChart: {
     position: 'relative' as const,
     width: '100%',
-    height: 120,
+    height: 80,
     marginBottom: 8,
   },
   miniChartLine: {
-    height: 3,
+    height: 2,
     backgroundColor: Colors.gold,
-    transformOrigin: 'left center',
-    shadowColor: Colors.gold,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 3,
-    elevation: 2,
   },
   miniChartDot: {
-    position: 'absolute' as const,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: Colors.white,
-    borderWidth: 3,
+    borderWidth: 2,
     borderColor: Colors.gold,
-    marginLeft: -5,
-    marginTop: -5,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
+    marginLeft: -4,
+    marginBottom: -4,
     alignItems: 'center',
     justifyContent: 'center',
   },
   miniChartDotInner: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
     backgroundColor: Colors.gold,
   },
   miniChartLabels: {
@@ -1581,17 +1572,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    marginTop: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 10,
+    gap: 6,
+    marginTop: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
     backgroundColor: '#FEE2E2',
     borderWidth: 1,
     borderColor: '#FECACA',
   },
   endFightButtonText: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '600' as const,
     color: Colors.error,
   },
