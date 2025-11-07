@@ -1,170 +1,27 @@
-import { useState } from 'react';
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Plus, Droplet, X, Droplets, AlertTriangle } from 'lucide-react-native';
+import { Droplet, Droplets, AlertTriangle } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
-import { WeighInTiming, Discipline, DietType, TrainingIntensity } from '@/constants/types';
 
 
 export default function HydrationScreen() {
-  const { t, addFight, updateFight, profile, updateProfile, getUpcomingFight, getCurrentPhase } = useApp();
+  const { t, profile, getUpcomingFight, getCurrentPhase } = useApp();
   const insets = useSafeAreaInsets();
   const upcomingFight = getUpcomingFight();
   const currentPhase = getCurrentPhase();
 
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [editingFight, setEditingFight] = useState<string | null>(null);
-  
-  const [fightName, setFightName] = useState('');
-  const [opponent, setOpponent] = useState('');
-  const [weightClass, setWeightClass] = useState('');
-  const [targetWeightForFight, setTargetWeightForFight] = useState('');
-  const [fightDate, setFightDate] = useState('');
-  const [weighInTiming, setWeighInTiming] = useState<WeighInTiming>('dayBefore');
-  const [location, setLocation] = useState('');
-  const [notes, setNotes] = useState('');
-
-  const [currentWeight, setCurrentWeight] = useState(
-    profile && profile.role === 'fighter' ? profile.currentWeight.toString() : ''
-  );
-
-  const [discipline, setDiscipline] = useState<Discipline>(profile?.discipline || 'mma');
-  const [dietType, setDietType] = useState<DietType>(
-    profile && profile.role === 'fighter' ? profile.dietType : 'standard'
-  );
-  const [trainingIntensity, setTrainingIntensity] = useState<TrainingIntensity>(
-    profile && profile.role === 'fighter' ? profile.trainingIntensity : 'moderate'
-  );
-  const [trainingsPerWeek, setTrainingsPerWeek] = useState(
-    profile && profile.role === 'fighter' && profile.trainingsPerWeek
-      ? profile.trainingsPerWeek.toString()
-      : ''
-  );
-
-  const disciplines: Discipline[] = ['mma', 'boxing', 'wrestling', 'bjj', 'muayThai', 'kickboxing'];
-  const dietTypes: DietType[] = ['standard', 'keto', 'paleo', 'vegetarian', 'vegan', 'other'];
-  const trainingIntensities: TrainingIntensity[] = ['low', 'moderate', 'high', 'professional'];
-
-  const resetForm = () => {
-    setEditingFight(null);
-    setFightName('');
-    setOpponent('');
-    setWeightClass('');
-    setTargetWeightForFight('');
-    setFightDate('');
-    setWeighInTiming('dayBefore');
-    setLocation('');
-    setNotes('');
-    setCurrentWeight(profile && profile.role === 'fighter' ? profile.currentWeight.toString() : '');
-    setDiscipline(profile?.discipline || 'mma');
-    setDietType(profile && profile.role === 'fighter' ? profile.dietType : 'standard');
-    setTrainingIntensity(profile && profile.role === 'fighter' ? profile.trainingIntensity : 'moderate');
-    setTrainingsPerWeek(
-      profile && profile.role === 'fighter' && profile.trainingsPerWeek
-        ? profile.trainingsPerWeek.toString()
-        : ''
-    );
-  };
-
-  const openAddModal = () => {
-    resetForm();
-    setIsModalVisible(true);
-  };
-
-
-
-  const handleSaveFight = async () => {
-    if (!fightName || !fightDate || !targetWeightForFight) return;
-
-    const dateParts = fightDate.split('/');
-    let date: Date;
-    
-    if (dateParts.length === 3) {
-      const day = parseInt(dateParts[0], 10);
-      const month = parseInt(dateParts[1], 10) - 1;
-      const year = parseInt(dateParts[2], 10);
-      date = new Date(year, month, day);
-    } else {
-      date = new Date(fightDate);
-    }
-
-    const parsedCurrentWeight = parseFloat(currentWeight);
-    const parsedTargetWeight = parseFloat(targetWeightForFight);
-    const parsedTrainingsPerWeek = parseInt(trainingsPerWeek);
-
-    if (
-      isNaN(parsedCurrentWeight) ||
-      isNaN(parsedTargetWeight) ||
-      isNaN(parsedTrainingsPerWeek) ||
-      parsedTrainingsPerWeek < 1 ||
-      parsedTrainingsPerWeek > 14
-    ) {
-      Alert.alert('Chyba', 'Prosím vyplňte všechny hodnoty správně');
-      return;
-    }
-
-    if (editingFight) {
-      await updateFight(editingFight, {
-        name: fightName,
-        opponent: opponent || 'TBD',
-        weightClass: weightClass || 'N/A',
-        targetWeightForFight: parsedTargetWeight,
-        date,
-        weighInTiming,
-        location,
-        notes,
-      });
-    } else {
-      await addFight({
-        name: fightName,
-        opponent: opponent || 'TBD',
-        weightClass: weightClass || 'N/A',
-        targetWeightForFight: parsedTargetWeight,
-        date,
-        weighInTiming,
-        location,
-        notes,
-      });
-    }
-
-    if (profile) {
-      await updateProfile({
-        currentWeight: parsedCurrentWeight,
-        targetWeight: parsedTargetWeight,
-        weightClass: `${parsedTargetWeight} kg`,
-        targetFightDate: date,
-        discipline,
-        dietType,
-        trainingIntensity,
-        trainingsPerWeek: parsedTrainingsPerWeek,
-      });
-    }
-
-    resetForm();
-    setIsModalVisible(false);
-  };
 
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
-        <Text style={styles.headerTitle}>RWL Protokol</Text>
-        {!upcomingFight && (
-          <Pressable style={styles.addButton} onPress={openAddModal}>
-            <Plus size={24} color={Colors.black} />
-          </Pressable>
-        )}
+        <Text style={styles.headerTitle}>Zavodnění a Odvodnění</Text>
       </View>
       <ScrollView
         style={styles.scrollView}
@@ -177,11 +34,11 @@ export default function HydrationScreen() {
             <Droplet size={48} color={Colors.textSecondary} strokeWidth={1.5} />
             <Text style={styles.emptyText}>Nemáte aktivní cíl zápasu</Text>
             <Text style={styles.emptySubtext}>
-              Přidejte cíl zápasu pro zobrazení RWL protokolu
+              Přidejte cíl zápasu pro zobrazení protokolu zavodnění/odvodnění
             </Text>
-            <Pressable style={styles.emptyButton} onPress={openAddModal}>
-              <Text style={styles.emptyButtonText}>Přidat zápas</Text>
-            </Pressable>
+            <Text style={styles.emptyNote}>
+              Přidejte cíl zápasu na hlavní stránce
+            </Text>
           </View>
         ) : (
           <>
@@ -191,14 +48,14 @@ export default function HydrationScreen() {
                 <Text style={styles.infoTitle}>Protokol zavodnění/odvodnění</Text>
               </View>
               <Text style={styles.infoDescription}>
-                RWL (Rapid Weight Loss) je vědecky podložená metoda shazování váhy pomocí manipulace s vodou a elektrolyty.
+                Vědecky podložená metoda shazování váhy pomocí manipulace s vodou a elektrolyty.
                 {'\n\n'}
                 Tento protokol vám pomůže bezpečně shodit 3-7% tělesné hmotnosti v posledních 7 dnech před vážením.
               </Text>
             </View>
 
             <View style={styles.phaseOverviewCard}>
-              <Text style={styles.phaseOverviewTitle}>Fáze RWL protokolu</Text>
+              <Text style={styles.phaseOverviewTitle}>Fáze protokolu</Text>
               
               <View style={styles.phaseItem}>
                 <View style={[styles.phaseIcon, styles.phaseIconLoading]}>
@@ -241,7 +98,7 @@ export default function HydrationScreen() {
               <View style={styles.activePhaseCard}>
                 <View style={styles.activePhaseHeader}>
                   <AlertTriangle size={20} color="#F59E0B" />
-                  <Text style={styles.activePhaseTitle}>Jste v aktivní fázi RWL</Text>
+                  <Text style={styles.activePhaseTitle}>Jste v aktivní fázi shazování</Text>
                 </View>
                 <Text style={styles.activePhaseDescription}>
                   {currentPhase.description}
@@ -258,7 +115,7 @@ export default function HydrationScreen() {
                 <Text style={styles.warningTitle}>Důležitá upozornění</Text>
               </View>
               <View style={styles.warningList}>
-                <Text style={styles.warningItem}>• Nikdy neprovádějte RWL bez konzultace s odborníkem</Text>
+                <Text style={styles.warningItem}>• Nikdy neprovádějte protokol bez konzultace s odborníkem</Text>
                 <Text style={styles.warningItem}>• Sledujte své tělo - při závratích OKAMŽITĚ přestaňte</Text>
                 <Text style={styles.warningItem}>• Nepoužívejte saunu déle než 20min bez přestávky</Text>
                 <Text style={styles.warningItem}>• Mějte trenéra/partnera poblíž během finální fáze</Text>
@@ -269,274 +126,7 @@ export default function HydrationScreen() {
         )}
       </ScrollView>
 
-      <Modal
-        visible={isModalVisible}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => {
-          resetForm();
-          setIsModalVisible(false);
-        }}
-      >
-        <View style={styles.modalContainer}>
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={styles.keyboardView}
-          >
-            <ScrollView
-              style={styles.modalScroll}
-              contentContainerStyle={[
-                styles.modalContent,
-                { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 24 },
-              ]}
-              keyboardShouldPersistTaps="handled"
-            >
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>
-                  {editingFight ? 'Upravit zápas' : 'Přidat zápas'}
-                </Text>
-                <Pressable onPress={() => {
-                  resetForm();
-                  setIsModalVisible(false);
-                }}>
-                  <X size={28} color={Colors.textPrimary} />
-                </Pressable>
-              </View>
 
-              <View style={styles.form}>
-                <Text style={styles.sectionHeaderText}>Informace o zápasu</Text>
-                
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Název zápasu</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={fightName}
-                    onChangeText={setFightName}
-                    placeholder="UFC 300"
-                    placeholderTextColor={Colors.textLight}
-                  />
-                </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Protivník</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={opponent}
-                    onChangeText={setOpponent}
-                    placeholder="John Doe"
-                    placeholderTextColor={Colors.textLight}
-                  />
-                </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Váhová kategorie</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={weightClass}
-                    onChangeText={setWeightClass}
-                    placeholder="77kg"
-                    placeholderTextColor={Colors.textLight}
-                  />
-                </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Cílová váha pro zápas (kg)</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={targetWeightForFight}
-                    onChangeText={setTargetWeightForFight}
-                    placeholder="77.0"
-                    placeholderTextColor={Colors.textLight}
-                    keyboardType="decimal-pad"
-                  />
-                </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Datum zápasu</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={fightDate}
-                    onChangeText={setFightDate}
-                    placeholder="DD/MM/YYYY"
-                    placeholderTextColor={Colors.textLight}
-                  />
-                </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Čas vážení</Text>
-                  <View style={styles.timingButtons}>
-                    <Pressable
-                      style={[styles.timingButton, weighInTiming === 'dayBefore' && styles.timingButtonActive]}
-                      onPress={() => setWeighInTiming('dayBefore')}
-                    >
-                      <Text style={[styles.timingButtonText, weighInTiming === 'dayBefore' && styles.timingButtonTextActive]}>
-                        Den před zápasem
-                      </Text>
-                    </Pressable>
-                    <Pressable
-                      style={[styles.timingButton, weighInTiming === 'dayOf' && styles.timingButtonActive]}
-                      onPress={() => setWeighInTiming('dayOf')}
-                    >
-                      <Text style={[styles.timingButtonText, weighInTiming === 'dayOf' && styles.timingButtonTextActive]}>
-                        V den zápasu
-                      </Text>
-                    </Pressable>
-                  </View>
-                </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Místo</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={location}
-                    onChangeText={setLocation}
-                    placeholder="Prague, Czech Republic"
-                    placeholderTextColor={Colors.textLight}
-                  />
-                </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Poznámky</Text>
-                  <TextInput
-                    style={[styles.input, styles.textArea]}
-                    value={notes}
-                    onChangeText={setNotes}
-                    placeholder="Další informace o zápasu..."
-                    placeholderTextColor={Colors.textLight}
-                    multiline
-                    numberOfLines={3}
-                  />
-                </View>
-
-                <View style={styles.phaseInfoContainer}>
-                  <Text style={styles.phaseInfoTitle}>ℹ️ Informace o fázích</Text>
-                  <Text style={styles.phaseInfoDescription}>
-                    Aplikace automaticky určí, ve které fázi se nacházíte podle zbývajících dní do zápasu:
-                    {'\n\n'}
-                    • 8+ dní: Fáze hubnutí (GWL){'\n'}
-                    • 7-1 dní: Fáze shazování vodou (RWL){'\n'}
-                    • Po vážení: Fáze obnovy (REGEN)
-                  </Text>
-                </View>
-
-                <View style={styles.dividerLine} />
-
-                <Text style={styles.sectionHeaderText}>Údaje pro měření a výpočty</Text>
-                <Text style={styles.sectionSubtext}>
-                  Tyto údaje se použijí pro plánování zápasu a výpočet denních cílů
-                </Text>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Aktuální váha (kg)</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={currentWeight}
-                    onChangeText={setCurrentWeight}
-                    keyboardType="decimal-pad"
-                    placeholderTextColor={Colors.textLight}
-                    placeholder="80.0"
-                  />
-                </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Disciplína</Text>
-                  <View style={styles.buttonGrid}>
-                    {disciplines.map((disc) => (
-                      <Pressable
-                        key={disc}
-                        style={[
-                          styles.optionButton,
-                          discipline === disc && styles.optionButtonActive,
-                        ]}
-                        onPress={() => setDiscipline(disc)}
-                      >
-                        <Text
-                          style={[
-                            styles.optionText,
-                            discipline === disc && styles.optionTextActive,
-                          ]}
-                        >
-                          {t.profile.disciplines[disc]}
-                        </Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Typ stravy</Text>
-                  <View style={styles.buttonGrid}>
-                    {dietTypes.map((diet) => (
-                      <Pressable
-                        key={diet}
-                        style={[
-                          styles.optionButton,
-                          dietType === diet && styles.optionButtonActive,
-                        ]}
-                        onPress={() => setDietType(diet)}
-                      >
-                        <Text
-                          style={[
-                            styles.optionText,
-                            dietType === diet && styles.optionTextActive,
-                          ]}
-                        >
-                          {t.profile.dietTypes[diet]}
-                        </Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Intenzita tréninku</Text>
-                  <View style={styles.buttonGrid}>
-                    {trainingIntensities.map((intensity) => (
-                      <Pressable
-                        key={intensity}
-                        style={[
-                          styles.optionButton,
-                          trainingIntensity === intensity && styles.optionButtonActive,
-                        ]}
-                        onPress={() => setTrainingIntensity(intensity)}
-                      >
-                        <Text
-                          style={[
-                            styles.optionText,
-                            trainingIntensity === intensity && styles.optionTextActive,
-                          ]}
-                        >
-                          {t.profile.trainingIntensities[intensity]}
-                        </Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Počet tréninků týdně</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={trainingsPerWeek}
-                    onChangeText={setTrainingsPerWeek}
-                    keyboardType="number-pad"
-                    placeholderTextColor={Colors.textLight}
-                    placeholder="6"
-                  />
-                </View>
-              </View>
-
-              <Pressable
-                style={[styles.saveButton, (!fightName || !fightDate || !targetWeightForFight) && styles.saveButtonDisabled]}
-                onPress={handleSaveFight}
-                disabled={!fightName || !fightDate || !targetWeightForFight}
-              >
-                <Text style={styles.saveButtonText}>Uložit</Text>
-              </Pressable>
-            </ScrollView>
-          </KeyboardAvoidingView>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -569,14 +159,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 24,
   },
-  addButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: Colors.gold,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+
   emptyCard: {
     backgroundColor: Colors.white,
     borderRadius: 20,
@@ -604,16 +187,11 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     lineHeight: 20,
   },
-  emptyButton: {
-    backgroundColor: Colors.gold,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  emptyButtonText: {
+  emptyNote: {
     fontSize: 14,
-    fontWeight: '700' as const,
-    color: Colors.black,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    fontStyle: 'italic' as const,
   },
   infoCard: {
     backgroundColor: Colors.white,
