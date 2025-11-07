@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -11,16 +12,19 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Plus, Swords, Calendar, X, Trash2 } from 'lucide-react-native';
+import { Plus, Swords, Calendar, X, Trash2, Edit3 } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
-import { WeighInTiming } from '@/constants/types';
+import { WeighInTiming, Discipline, DietType, TrainingIntensity } from '@/constants/types';
+
 
 export default function FightsScreen() {
-  const { t, fights, addFight, deleteFight } = useApp();
+  const { t, fights, addFight, deleteFight, updateFight, profile, updateProfile } = useApp();
   const insets = useSafeAreaInsets();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [editingFight, setEditingFight] = useState<string | null>(null);
+  
   const [fightName, setFightName] = useState('');
   const [opponent, setOpponent] = useState('');
   const [weightClass, setWeightClass] = useState('');
@@ -30,7 +34,79 @@ export default function FightsScreen() {
   const [location, setLocation] = useState('');
   const [notes, setNotes] = useState('');
 
-  const handleAddFight = async () => {
+  const [currentWeight, setCurrentWeight] = useState(
+    profile && profile.role === 'fighter' ? profile.currentWeight.toString() : ''
+  );
+
+  const [discipline, setDiscipline] = useState<Discipline>(profile?.discipline || 'mma');
+  const [dietType, setDietType] = useState<DietType>(
+    profile && profile.role === 'fighter' ? profile.dietType : 'standard'
+  );
+  const [trainingIntensity, setTrainingIntensity] = useState<TrainingIntensity>(
+    profile && profile.role === 'fighter' ? profile.trainingIntensity : 'moderate'
+  );
+  const [trainingsPerWeek, setTrainingsPerWeek] = useState(
+    profile && profile.role === 'fighter' && profile.trainingsPerWeek
+      ? profile.trainingsPerWeek.toString()
+      : ''
+  );
+
+  const disciplines: Discipline[] = ['mma', 'boxing', 'wrestling', 'bjj', 'muayThai', 'kickboxing'];
+  const dietTypes: DietType[] = ['standard', 'keto', 'paleo', 'vegetarian', 'vegan', 'other'];
+  const trainingIntensities: TrainingIntensity[] = ['low', 'moderate', 'high', 'professional'];
+
+  const resetForm = () => {
+    setEditingFight(null);
+    setFightName('');
+    setOpponent('');
+    setWeightClass('');
+    setTargetWeightForFight('');
+    setFightDate('');
+    setWeighInTiming('dayBefore');
+    setLocation('');
+    setNotes('');
+    setCurrentWeight(profile && profile.role === 'fighter' ? profile.currentWeight.toString() : '');
+    setDiscipline(profile?.discipline || 'mma');
+    setDietType(profile && profile.role === 'fighter' ? profile.dietType : 'standard');
+    setTrainingIntensity(profile && profile.role === 'fighter' ? profile.trainingIntensity : 'moderate');
+    setTrainingsPerWeek(
+      profile && profile.role === 'fighter' && profile.trainingsPerWeek
+        ? profile.trainingsPerWeek.toString()
+        : ''
+    );
+  };
+
+  const openAddModal = () => {
+    resetForm();
+    setIsModalVisible(true);
+  };
+
+  const openEditModal = (fight: any) => {
+    setEditingFight(fight.id);
+    setFightName(fight.name);
+    setOpponent(fight.opponent);
+    setWeightClass(fight.weightClass);
+    setTargetWeightForFight(fight.targetWeightForFight.toString());
+    const fightDateObj = new Date(fight.date);
+    setFightDate(`${fightDateObj.getDate()}/${fightDateObj.getMonth() + 1}/${fightDateObj.getFullYear()}`);
+    setWeighInTiming(fight.weighInTiming);
+    setLocation(fight.location || '');
+    setNotes(fight.notes || '');
+    
+    setCurrentWeight(profile && profile.role === 'fighter' ? profile.currentWeight.toString() : '');
+    setDiscipline(profile?.discipline || 'mma');
+    setDietType(profile && profile.role === 'fighter' ? profile.dietType : 'standard');
+    setTrainingIntensity(profile && profile.role === 'fighter' ? profile.trainingIntensity : 'moderate');
+    setTrainingsPerWeek(
+      profile && profile.role === 'fighter' && profile.trainingsPerWeek
+        ? profile.trainingsPerWeek.toString()
+        : ''
+    );
+    
+    setIsModalVisible(true);
+  };
+
+  const handleSaveFight = async () => {
     if (!fightName || !fightDate || !targetWeightForFight) return;
 
     const dateParts = fightDate.split('/');
@@ -45,25 +121,59 @@ export default function FightsScreen() {
       date = new Date(fightDate);
     }
 
-    await addFight({
-      name: fightName,
-      opponent: opponent || 'TBD',
-      weightClass: weightClass || 'N/A',
-      targetWeightForFight: parseFloat(targetWeightForFight),
-      date,
-      weighInTiming,
-      location,
-      notes,
-    });
+    const parsedCurrentWeight = parseFloat(currentWeight);
+    const parsedTargetWeight = parseFloat(targetWeightForFight);
+    const parsedTrainingsPerWeek = parseInt(trainingsPerWeek);
 
-    setFightName('');
-    setOpponent('');
-    setWeightClass('');
-    setTargetWeightForFight('');
-    setFightDate('');
-    setWeighInTiming('dayBefore');
-    setLocation('');
-    setNotes('');
+    if (
+      isNaN(parsedCurrentWeight) ||
+      isNaN(parsedTargetWeight) ||
+      isNaN(parsedTrainingsPerWeek) ||
+      parsedTrainingsPerWeek < 1 ||
+      parsedTrainingsPerWeek > 14
+    ) {
+      Alert.alert('Chyba', 'Prosím vyplňte všechny hodnoty správně');
+      return;
+    }
+
+    if (editingFight) {
+      await updateFight(editingFight, {
+        name: fightName,
+        opponent: opponent || 'TBD',
+        weightClass: weightClass || 'N/A',
+        targetWeightForFight: parsedTargetWeight,
+        date,
+        weighInTiming,
+        location,
+        notes,
+      });
+    } else {
+      await addFight({
+        name: fightName,
+        opponent: opponent || 'TBD',
+        weightClass: weightClass || 'N/A',
+        targetWeightForFight: parsedTargetWeight,
+        date,
+        weighInTiming,
+        location,
+        notes,
+      });
+    }
+
+    if (profile) {
+      await updateProfile({
+        currentWeight: parsedCurrentWeight,
+        targetWeight: parsedTargetWeight,
+        weightClass: `${parsedTargetWeight} kg`,
+        targetFightDate: date,
+        discipline,
+        dietType,
+        trainingIntensity,
+        trainingsPerWeek: parsedTrainingsPerWeek,
+      });
+    }
+
+    resetForm();
     setIsModalVisible(false);
   };
 
@@ -74,7 +184,7 @@ export default function FightsScreen() {
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
         <Text style={styles.headerTitle}>{t.fights.title}</Text>
-        <Pressable style={styles.addButton} onPress={() => setIsModalVisible(true)}>
+        <Pressable style={styles.addButton} onPress={openAddModal}>
           <Plus size={24} color={Colors.black} />
         </Pressable>
       </View>
@@ -90,7 +200,7 @@ export default function FightsScreen() {
             <View style={styles.emptyCard}>
               <Swords size={48} color={Colors.textSecondary} strokeWidth={1.5} />
               <Text style={styles.emptyText}>{t.dashboard.noFight}</Text>
-              <Pressable style={styles.emptyButton} onPress={() => setIsModalVisible(true)}>
+              <Pressable style={styles.emptyButton} onPress={openAddModal}>
                 <Text style={styles.emptyButtonText}>{t.fights.addFight}</Text>
               </Pressable>
             </View>
@@ -121,12 +231,20 @@ export default function FightsScreen() {
                       <Text style={styles.detailText}>{fight.location}</Text>
                     )}
                   </View>
-                  <Pressable
-                    style={styles.deleteButton}
-                    onPress={() => deleteFight(fight.id)}
-                  >
-                    <Trash2 size={18} color={Colors.error} />
-                  </Pressable>
+                  <View style={styles.actionButtons}>
+                    <Pressable
+                      style={styles.editButton}
+                      onPress={() => openEditModal(fight)}
+                    >
+                      <Edit3 size={18} color={Colors.gold} />
+                    </Pressable>
+                    <Pressable
+                      style={styles.deleteButton}
+                      onPress={() => deleteFight(fight.id)}
+                    >
+                      <Trash2 size={18} color={Colors.error} />
+                    </Pressable>
+                  </View>
                 </View>
               );
             })
@@ -169,7 +287,10 @@ export default function FightsScreen() {
         visible={isModalVisible}
         animationType="slide"
         presentationStyle="pageSheet"
-        onRequestClose={() => setIsModalVisible(false)}
+        onRequestClose={() => {
+          resetForm();
+          setIsModalVisible(false);
+        }}
       >
         <View style={styles.modalContainer}>
           <KeyboardAvoidingView
@@ -185,13 +306,20 @@ export default function FightsScreen() {
               keyboardShouldPersistTaps="handled"
             >
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>{t.fights.addFight}</Text>
-                <Pressable onPress={() => setIsModalVisible(false)}>
+                <Text style={styles.modalTitle}>
+                  {editingFight ? 'Upravit zápas' : t.fights.addFight}
+                </Text>
+                <Pressable onPress={() => {
+                  resetForm();
+                  setIsModalVisible(false);
+                }}>
                   <X size={28} color={Colors.textPrimary} />
                 </Pressable>
               </View>
 
               <View style={styles.form}>
+                <Text style={styles.sectionHeaderText}>Informace o zápasu</Text>
+                
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>{t.fights.fightName}</Text>
                   <TextInput
@@ -293,11 +421,117 @@ export default function FightsScreen() {
                     numberOfLines={3}
                   />
                 </View>
+
+                <View style={styles.dividerLine} />
+
+                <Text style={styles.sectionHeaderText}>Údaje pro měření a výpočty</Text>
+                <Text style={styles.sectionSubtext}>
+                  Tyto údaje se použijí pro plánování zápasu a výpočet denních cílů
+                </Text>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Aktuální váha (kg)</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={currentWeight}
+                    onChangeText={setCurrentWeight}
+                    keyboardType="decimal-pad"
+                    placeholderTextColor={Colors.textLight}
+                    placeholder="80.0"
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Disciplína</Text>
+                  <View style={styles.buttonGrid}>
+                    {disciplines.map((disc) => (
+                      <Pressable
+                        key={disc}
+                        style={[
+                          styles.optionButton,
+                          discipline === disc && styles.optionButtonActive,
+                        ]}
+                        onPress={() => setDiscipline(disc)}
+                      >
+                        <Text
+                          style={[
+                            styles.optionText,
+                            discipline === disc && styles.optionTextActive,
+                          ]}
+                        >
+                          {t.profile.disciplines[disc]}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Typ stravy</Text>
+                  <View style={styles.buttonGrid}>
+                    {dietTypes.map((diet) => (
+                      <Pressable
+                        key={diet}
+                        style={[
+                          styles.optionButton,
+                          dietType === diet && styles.optionButtonActive,
+                        ]}
+                        onPress={() => setDietType(diet)}
+                      >
+                        <Text
+                          style={[
+                            styles.optionText,
+                            dietType === diet && styles.optionTextActive,
+                          ]}
+                        >
+                          {t.profile.dietTypes[diet]}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Intenzita tréninku</Text>
+                  <View style={styles.buttonGrid}>
+                    {trainingIntensities.map((intensity) => (
+                      <Pressable
+                        key={intensity}
+                        style={[
+                          styles.optionButton,
+                          trainingIntensity === intensity && styles.optionButtonActive,
+                        ]}
+                        onPress={() => setTrainingIntensity(intensity)}
+                      >
+                        <Text
+                          style={[
+                            styles.optionText,
+                            trainingIntensity === intensity && styles.optionTextActive,
+                          ]}
+                        >
+                          {t.profile.trainingIntensities[intensity]}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Počet tréninků týdně</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={trainingsPerWeek}
+                    onChangeText={setTrainingsPerWeek}
+                    keyboardType="number-pad"
+                    placeholderTextColor={Colors.textLight}
+                    placeholder="6"
+                  />
+                </View>
               </View>
 
               <Pressable
                 style={[styles.saveButton, (!fightName || !fightDate || !targetWeightForFight) && styles.saveButtonDisabled]}
-                onPress={handleAddFight}
+                onPress={handleSaveFight}
                 disabled={!fightName || !fightDate || !targetWeightForFight}
               >
                 <Text style={styles.saveButtonText}>{t.common.save}</Text>
@@ -407,7 +641,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 12,
-    paddingRight: 40,
+    paddingRight: 80,
   },
   fightInfo: {
     flex: 1,
@@ -446,10 +680,17 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textSecondary,
   },
-  deleteButton: {
+  actionButtons: {
     position: 'absolute',
     top: 16,
     right: 16,
+    flexDirection: 'row',
+    gap: 8,
+  },
+  editButton: {
+    padding: 8,
+  },
+  deleteButton: {
     padding: 8,
   },
   modalContainer: {
@@ -478,6 +719,18 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: 20,
+  },
+  sectionHeaderText: {
+    fontSize: 20,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
+    marginTop: 8,
+  },
+  sectionSubtext: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginTop: -12,
+    lineHeight: 20,
   },
   inputGroup: {
     gap: 8,
@@ -541,5 +794,35 @@ const styles = StyleSheet.create({
     minHeight: 80,
     textAlignVertical: 'top' as const,
     paddingTop: 12,
+  },
+  dividerLine: {
+    height: 1,
+    backgroundColor: Colors.border.light,
+    marginVertical: 8,
+  },
+  buttonGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  optionButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: Colors.white,
+    borderWidth: 2,
+    borderColor: Colors.border.light,
+  },
+  optionButtonActive: {
+    borderColor: Colors.gold,
+    backgroundColor: Colors.lightGray,
+  },
+  optionText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.textPrimary,
+  },
+  optionTextActive: {
+    color: Colors.gold,
   },
 });

@@ -20,7 +20,6 @@ import {
   ChevronRight,
   X,
   Crown,
-  Settings,
   User,
 } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
@@ -83,13 +82,6 @@ export default function SettingsScreen() {
       >
         <View style={styles.section}>
           <View style={styles.card}>
-            <SettingItem
-              icon={Settings}
-              title="Upravit údaje pro měření"
-              subtitle="Váha, cíle, disciplína a výpočty"
-              onPress={() => router.push('/measurement-settings')}
-            />
-            <View style={styles.divider} />
             <SettingItem
               icon={User}
               title="Můj profil"
