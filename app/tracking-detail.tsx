@@ -98,7 +98,7 @@ export default function TrackingDetailScreen() {
     const weightRange = maxWeight - minWeight;
 
     const points = weights.map((weight, i) => {
-      const x = padding + (i / (weights.length - 1)) * plotWidth;
+      const x = padding + (i / Math.max(1, weights.length - 1)) * plotWidth;
       const y = padding + plotHeight - ((weight - minWeight) / weightRange) * plotHeight;
       return { x, y, weight };
     });
@@ -125,8 +125,10 @@ export default function TrackingDetailScreen() {
         {points.map((point, i) => {
           if (i === 0) return null;
           const prevPoint = points[i - 1];
-          const length = Math.sqrt(Math.pow(point.x - prevPoint.x, 2) + Math.pow(point.y - prevPoint.y, 2));
-          const angle = Math.atan2(point.y - prevPoint.y, point.x - prevPoint.x) * 180 / Math.PI;
+          const xDiff = point.x - prevPoint.x;
+          const yDiff = point.y - prevPoint.y;
+          const length = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+          const angle = Math.atan2(yDiff, xDiff) * 180 / Math.PI;
           
           return (
             <View
@@ -138,6 +140,7 @@ export default function TrackingDetailScreen() {
                   top: prevPoint.y,
                   width: length,
                   transform: [{ rotate: `${angle}deg` }],
+                  transformOrigin: 'left center',
                 },
               ]}
             />

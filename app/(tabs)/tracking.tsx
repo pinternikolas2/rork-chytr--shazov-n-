@@ -507,7 +507,7 @@ export default function TrackingScreen() {
                       const range = maxWeight - minWeight || 1;
                       
                       const points = arr.map((l, idx) => {
-                        const x = (idx / (arr.length - 1)) * 100;
+                        const x = (idx / Math.max(1, arr.length - 1)) * 100;
                         const y = 100 - ((l.weight - minWeight) / range) * 100;
                         return { x, y, weight: l.weight };
                       });
@@ -532,6 +532,7 @@ export default function TrackingScreen() {
                                 top: `${prevPoint.y}%`,
                                 width: `${length}%`,
                                 transform: [{ rotate: `${angle}deg` }],
+                                transformOrigin: 'left center',
                               },
                             ]}
                           />
@@ -542,7 +543,7 @@ export default function TrackingScreen() {
                       const maxWeight = Math.max(...arr.map(l => l.weight));
                       const minWeight = Math.min(...arr.map(l => l.weight));
                       const range = maxWeight - minWeight || 1;
-                      const x = (i / (arr.length - 1)) * 100;
+                      const x = (i / Math.max(1, arr.length - 1)) * 100;
                       const y = 100 - ((log.weight - minWeight) / range) * 100;
                       
                       return (

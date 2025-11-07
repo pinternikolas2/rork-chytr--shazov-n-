@@ -472,8 +472,8 @@ export default function DashboardScreen() {
                       
                       const points = arr.map((l, idx) => {
                         const x = (idx / Math.max(1, arr.length - 1)) * 100;
-                        const y = ((l.weight - minWeight) / range) * 80;
-                        return { x, y, weight: l.weight };
+                        const y = 100 - ((l.weight - minWeight) / range) * 100;
+                        return { x: `${x}%`, y: `${y}%`, weight: l.weight };
                       });
                       
                       return (
@@ -482,6 +482,16 @@ export default function DashboardScreen() {
                             if (i === 0) return null;
                             const prevPoint = points[i - 1];
                             
+                            const x1 = parseFloat(prevPoint.x);
+                            const y1 = parseFloat(prevPoint.y);
+                            const x2 = parseFloat(currentPoint.x);
+                            const y2 = parseFloat(currentPoint.y);
+                            
+                            const xDiff = x2 - x1;
+                            const yDiff = y2 - y1;
+                            const length = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+                            const angle = Math.atan2(yDiff, xDiff) * 180 / Math.PI;
+                            
                             return (
                               <View
                                 key={`line-${i}`}
@@ -489,20 +499,11 @@ export default function DashboardScreen() {
                                   styles.miniChartLine,
                                   {
                                     position: 'absolute' as const,
-                                    left: prevPoint.x + '%',
-                                    bottom: prevPoint.y,
-                                    width: Math.sqrt(
-                                      Math.pow(currentPoint.x - prevPoint.x, 2) + 
-                                      Math.pow(currentPoint.y - prevPoint.y, 2)
-                                    ) + '%',
-                                    transform: [
-                                      { 
-                                        rotate: Math.atan2(
-                                          currentPoint.y - prevPoint.y, 
-                                          currentPoint.x - prevPoint.x
-                                        ) + 'rad' 
-                                      }
-                                    ],
+                                    left: prevPoint.x,
+                                    top: prevPoint.y,
+                                    width: `${length}%`,
+                                    transform: [{ rotate: `${angle}deg` }],
+                                    transformOrigin: 'left center',
                                   },
                                 ]}
                               />
@@ -515,8 +516,10 @@ export default function DashboardScreen() {
                                 styles.miniChartDot,
                                 {
                                   position: 'absolute' as const,
-                                  left: point.x + '%',
-                                  bottom: point.y,
+                                  left: point.x,
+                                  top: point.y,
+                                  marginLeft: -4,
+                                  marginTop: -4,
                                 },
                               ]}
                             >
@@ -1000,6 +1003,7 @@ const styles = StyleSheet.create({
   miniChartLine: {
     height: 2,
     backgroundColor: Colors.gold,
+    transformOrigin: 'left center',
   },
   miniChartDot: {
     width: 8,
