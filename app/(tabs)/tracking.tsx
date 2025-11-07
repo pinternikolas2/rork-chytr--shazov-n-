@@ -12,7 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Scale, Droplets, BarChart3, TrendingDown, AlertCircle, Flame, Drumstick, Wheat, Dumbbell, Moon, Activity as ActivityIcon, ChevronRight, Calendar } from 'lucide-react-native';
+import { Scale, Droplets, BarChart3, TrendingDown, AlertCircle, Flame, Drumstick, Wheat, Dumbbell, Moon, Activity as ActivityIcon, ChevronRight, Calendar, Trash2 } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
@@ -23,8 +23,11 @@ export default function TrackingScreen() {
   const { 
     t, 
     addWeightLog, 
+    deleteWeightLog,
     addHydrationLog, 
+    deleteHydrationLog,
     addTrainingLog,
+    deleteTrainingLog,
     addBodyCompositionLog,
     getTodayTrainings,
     weightLogs, 
@@ -312,11 +315,36 @@ export default function TrackingScreen() {
               <View>
                 {todayTrainings.map((training) => (
                   <View key={training.id} style={styles.trainingItem}>
-                    <Text style={styles.trainingTypeText}>{training.type} - {training.duration} min</Text>
-                    <Text style={styles.trainingIntensityText}>Intenzita: {training.intensity}</Text>
-                    {training.caloriesBurned && (
-                      <Text style={styles.trainingCaloriesText}>{training.caloriesBurned} kcal</Text>
-                    )}
+                    <View style={styles.trainingItemContent}>
+                      <View style={styles.trainingItemLeft}>
+                        <Text style={styles.trainingTypeText}>{training.type} - {training.duration} min</Text>
+                        <Text style={styles.trainingIntensityText}>Intenzita: {training.intensity}</Text>
+                        {training.caloriesBurned && (
+                          <Text style={styles.trainingCaloriesText}>{training.caloriesBurned} kcal</Text>
+                        )}
+                      </View>
+                      <Pressable 
+                        style={styles.deleteButton}
+                        onPress={async () => {
+                          Alert.alert(
+                            'Smazat trénink',
+                            'Opravdu chcete smazat tento trénink?',
+                            [
+                              { text: 'Zrušit', style: 'cancel' },
+                              { 
+                                text: 'Smazat', 
+                                style: 'destructive',
+                                onPress: async () => {
+                                  await deleteTrainingLog(training.id);
+                                }
+                              }
+                            ]
+                          );
+                        }}
+                      >
+                        <Trash2 size={18} color={"#EF4444"} />
+                      </Pressable>
+                    </View>
                   </View>
                 ))}
                 <Pressable style={styles.addTrainingButton} onPress={() => setShowTrainingForm(true)}>
@@ -534,13 +562,36 @@ export default function TrackingScreen() {
                 <View style={styles.historyList}>
                   {filteredData.slice(0, 10).map((log) => (
                     <View key={log.id} style={styles.historyItem}>
-                      <View>
-                        <Text style={styles.historyValue}>
-                          {log.weight.toFixed(1)} {t.common.kg}
-                        </Text>
-                        <Text style={styles.historyDate}>
-                          {log.date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short', year: 'numeric' })} - {log.date.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })} ({t.tracking[log.time]})
-                        </Text>
+                      <View style={styles.historyItemContent}>
+                        <View>
+                          <Text style={styles.historyValue}>
+                            {log.weight.toFixed(1)} {t.common.kg}
+                          </Text>
+                          <Text style={styles.historyDate}>
+                            {log.date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short', year: 'numeric' })} - {log.date.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })} ({t.tracking[log.time]})
+                          </Text>
+                        </View>
+                        <Pressable 
+                          style={styles.deleteButton}
+                          onPress={async () => {
+                            Alert.alert(
+                              'Smazat záznam',
+                              'Opravdu chcete smazat tento záznam váhy?',
+                              [
+                                { text: 'Zrušit', style: 'cancel' },
+                                { 
+                                  text: 'Smazat', 
+                                  style: 'destructive',
+                                  onPress: async () => {
+                                    await deleteWeightLog(log.id);
+                                  }
+                                }
+                              ]
+                            );
+                          }}
+                        >
+                          <Trash2 size={18} color={"#EF4444"} />
+                        </Pressable>
                       </View>
                     </View>
                   ))}
@@ -917,6 +968,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border.light,
   },
+  historyItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   historyValue: {
     fontSize: 15,
     fontWeight: '700' as const,
@@ -938,6 +994,14 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 12,
     marginBottom: 8,
+  },
+  trainingItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  trainingItemLeft: {
+    flex: 1,
   },
   trainingTypeText: {
     fontSize: 14,
@@ -1030,5 +1094,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700' as const,
     color: Colors.textPrimary,
+  },
+  deleteButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border.light,
   },
 });

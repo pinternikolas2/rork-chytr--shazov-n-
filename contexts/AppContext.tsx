@@ -347,6 +347,12 @@ export const [AppProvider, useApp] = createContextHook(() => {
     }
   }, [weightLogs, profile]);
 
+  const deleteWeightLog = useCallback(async (id: string) => {
+    const updated = weightLogs.filter((l) => l.id !== id);
+    setWeightLogs(updated);
+    await AsyncStorage.setItem('weightLogs', JSON.stringify(updated));
+  }, [weightLogs]);
+
   const addHydrationLog = useCallback(async (amount: number, sodiumMg?: number, potassiumMg?: number, magnesiumMg?: number) => {
     const newLog: HydrationLog = {
       id: Date.now().toString(),
@@ -357,6 +363,12 @@ export const [AppProvider, useApp] = createContextHook(() => {
       magnesiumMg,
     };
     const updated = [...hydrationLogs, newLog];
+    setHydrationLogs(updated);
+    await AsyncStorage.setItem('hydrationLogs', JSON.stringify(updated));
+  }, [hydrationLogs]);
+
+  const deleteHydrationLog = useCallback(async (id: string) => {
+    const updated = hydrationLogs.filter((l) => l.id !== id);
     setHydrationLogs(updated);
     await AsyncStorage.setItem('hydrationLogs', JSON.stringify(updated));
   }, [hydrationLogs]);
@@ -418,6 +430,12 @@ export const [AppProvider, useApp] = createContextHook(() => {
     await AsyncStorage.setItem('sleepLogs', JSON.stringify(updated));
   }, [sleepLogs]);
 
+  const deleteSleepLog = useCallback(async (id: string) => {
+    const updated = sleepLogs.filter((l) => l.id !== id);
+    setSleepLogs(updated);
+    await AsyncStorage.setItem('sleepLogs', JSON.stringify(updated));
+  }, [sleepLogs]);
+
   const getTodaySleep = useCallback((): SleepLog | null => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -454,6 +472,12 @@ export const [AppProvider, useApp] = createContextHook(() => {
     await AsyncStorage.setItem('dailyNotes', JSON.stringify(updated));
   }, [dailyNotes]);
 
+  const deleteDailyNote = useCallback(async (id: string) => {
+    const updated = dailyNotes.filter((n) => n.id !== id);
+    setDailyNotes(updated);
+    await AsyncStorage.setItem('dailyNotes', JSON.stringify(updated));
+  }, [dailyNotes]);
+
   const getTodayNote = useCallback((): DailyNote | null => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -475,6 +499,12 @@ export const [AppProvider, useApp] = createContextHook(() => {
     await AsyncStorage.setItem('trainingLogs', JSON.stringify(updated));
   }, [trainingLogs]);
 
+  const deleteTrainingLog = useCallback(async (id: string) => {
+    const updated = trainingLogs.filter((l) => l.id !== id);
+    setTrainingLogs(updated);
+    await AsyncStorage.setItem('trainingLogs', JSON.stringify(updated));
+  }, [trainingLogs]);
+
   const getTodayTrainings = useCallback((): TrainingLog[] => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -491,6 +521,12 @@ export const [AppProvider, useApp] = createContextHook(() => {
       id: Date.now().toString(),
     };
     const updated = [...bodyCompositionLogs, newLog];
+    setBodyCompositionLogs(updated);
+    await AsyncStorage.setItem('bodyCompositionLogs', JSON.stringify(updated));
+  }, [bodyCompositionLogs]);
+
+  const deleteBodyCompositionLog = useCallback(async (id: string) => {
+    const updated = bodyCompositionLogs.filter((l) => l.id !== id);
     setBodyCompositionLogs(updated);
     await AsyncStorage.setItem('bodyCompositionLogs', JSON.stringify(updated));
   }, [bodyCompositionLogs]);
@@ -1120,19 +1156,25 @@ export const [AppProvider, useApp] = createContextHook(() => {
     updateFight,
     deleteFight,
     addWeightLog,
+    deleteWeightLog,
     addHydrationLog,
+    deleteHydrationLog,
     addSupplementLog,
     deleteSupplementLog,
     getTodaySupplements,
     addRegenerationLog,
     getTodayRegeneration,
     addSleepLog,
+    deleteSleepLog,
     getTodaySleep,
     addDailyNote,
+    deleteDailyNote,
     getTodayNote,
     addTrainingLog,
+    deleteTrainingLog,
     getTodayTrainings,
     addBodyCompositionLog,
+    deleteBodyCompositionLog,
     getLatestBodyComposition,
     addMealLog,
     updateMealLog,
@@ -1184,19 +1226,25 @@ export const [AppProvider, useApp] = createContextHook(() => {
     updateFight,
     deleteFight,
     addWeightLog,
+    deleteWeightLog,
     addHydrationLog,
+    deleteHydrationLog,
     addSupplementLog,
     deleteSupplementLog,
     getTodaySupplements,
     addRegenerationLog,
     getTodayRegeneration,
     addSleepLog,
+    deleteSleepLog,
     getTodaySleep,
     addDailyNote,
+    deleteDailyNote,
     getTodayNote,
     addTrainingLog,
+    deleteTrainingLog,
     getTodayTrainings,
     addBodyCompositionLog,
+    deleteBodyCompositionLog,
     getLatestBodyComposition,
     addMealLog,
     updateMealLog,

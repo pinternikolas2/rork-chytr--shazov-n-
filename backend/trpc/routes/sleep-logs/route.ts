@@ -65,3 +65,21 @@ export const getSleepLogsProcedure = publicProcedure
       notes: log.notes,
     }));
   });
+
+export const deleteSleepLogProcedure = publicProcedure
+  .input(z.object({ id: z.string() }))
+  .mutation(async ({ input, ctx }) => {
+    const { supabase } = ctx;
+
+    const { error } = await supabase
+      .from('sleep_logs')
+      .delete()
+      .eq('id', input.id);
+
+    if (error) {
+      console.error('Error deleting sleep log:', error);
+      throw new Error(`Failed to delete sleep log: ${error.message}`);
+    }
+
+    return { success: true };
+  });

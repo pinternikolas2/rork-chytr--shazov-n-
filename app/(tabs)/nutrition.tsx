@@ -1,13 +1,13 @@
 
-import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, Pressable, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Plus, Camera, Flame, Drumstick, Wheat, Droplet, Pizza, Utensils, Apple, ChefHat, PieChart } from 'lucide-react-native';
+import { Plus, Camera, Flame, Drumstick, Wheat, Droplet, Pizza, Utensils, Apple, ChefHat, PieChart, Trash2 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
 export default function NutritionScreen() {
-  const { t, getTodayNutrition, getNutritionGoals, getTodayMeals } = useApp();
+  const { t, getTodayNutrition, getNutritionGoals, getTodayMeals, deleteMealLog } = useApp();
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
@@ -186,16 +186,39 @@ export default function NutritionScreen() {
                         <View style={styles.mealIconContainer}>
                           <MealIcon size={20} color={Colors.gold} strokeWidth={2} />
                         </View>
-                        <View>
+                        <View style={styles.mealNameContainer}>
                           <Text style={styles.mealName}>{meal.name}</Text>
                           <Text style={styles.mealTime}>
                             {meal.mealType ? t.nutrition[meal.mealType] : t.nutrition.snack}
                           </Text>
                         </View>
                       </View>
-                      <View style={styles.mealCalories}>
-                        <Text style={styles.mealCaloriesValue}>{Math.round(meal.calories)}</Text>
-                        <Text style={styles.mealCaloriesUnit}>{t.common.kcal}</Text>
+                      <View style={styles.mealHeaderRight}>
+                        <View style={styles.mealCalories}>
+                          <Text style={styles.mealCaloriesValue}>{Math.round(meal.calories)}</Text>
+                          <Text style={styles.mealCaloriesUnit}>{t.common.kcal}</Text>
+                        </View>
+                        <Pressable 
+                          style={styles.deleteButton}
+                          onPress={async () => {
+                            Alert.alert(
+                              'Smazat jídlo',
+                              'Opravdu chcete smazat tento záznam jídla?',
+                              [
+                                { text: 'Zrušit', style: 'cancel' },
+                                { 
+                                  text: 'Smazat', 
+                                  style: 'destructive',
+                                  onPress: async () => {
+                                    await deleteMealLog(meal.id);
+                                  }
+                                }
+                              ]
+                            );
+                          }}
+                        >
+                          <Trash2 size={18} color={"#EF4444"} />
+                        </Pressable>
                       </View>
                     </View>
                     <View style={styles.mealMacros}>
@@ -420,6 +443,14 @@ const styles = StyleSheet.create({
     gap: 12,
     flex: 1,
   },
+  mealNameContainer: {
+    flex: 1,
+  },
+  mealHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   mealIconContainer: {
     width: 40,
     height: 40,
@@ -553,5 +584,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700' as const,
     color: Colors.textSecondary,
+  },
+  deleteButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.lightGray,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border.light,
   },
 });

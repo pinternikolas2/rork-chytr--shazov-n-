@@ -96,3 +96,21 @@ export const getDailyNotesProcedure = publicProcedure
       waterRetention: note.water_retention,
     }));
   });
+
+export const deleteDailyNoteProcedure = publicProcedure
+  .input(z.object({ id: z.string() }))
+  .mutation(async ({ input, ctx }) => {
+    const { supabase } = ctx;
+
+    const { error } = await supabase
+      .from('daily_notes')
+      .delete()
+      .eq('id', input.id);
+
+    if (error) {
+      console.error('Error deleting daily note:', error);
+      throw new Error(`Failed to delete daily note: ${error.message}`);
+    }
+
+    return { success: true };
+  });
