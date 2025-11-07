@@ -194,3 +194,69 @@ export interface SubscriptionInfo {
   trialEndsAt?: Date;
   autoRenew: boolean;
 }
+
+export type PrepPhase = 'GWL' | 'RWL' | 'REGEN' | 'MAINTENANCE';
+
+export interface PhaseInfo {
+  phase: PrepPhase;
+  startDate: Date;
+  endDate?: Date;
+  daysRemaining: number;
+  description: string;
+}
+
+export interface RWLProtocol {
+  day: number;
+  daysOut: number;
+  waterTargetMl: number;
+  sodiumTargetMg: number;
+  potassiumTargetMg?: number;
+  magnesiumTargetMg?: number;
+  phase: 'loading' | 'medium' | 'cutting' | 'final';
+  instructions: string[];
+  warnings?: string[];
+}
+
+export interface REGENProtocol {
+  timeElapsedMinutes: number;
+  taskNumber: number;
+  taskTitle: string;
+  fluidTargetMl: number;
+  carbsTargetG: number;
+  proteinTargetG?: number;
+  instructions: string[];
+  completed: boolean;
+}
+
+export interface MacroCyclingPlan {
+  date: Date;
+  trainingIntensity: TrainingIntensityLevel;
+  calorieTarget: number;
+  proteinG: number;
+  carbsG: number;
+  fatG: number;
+  carbPercentage: number;
+  fatPercentage: number;
+  reasoning: string;
+}
+
+export interface WeighInRecord {
+  id: string;
+  fightId: string;
+  weighInWeight: number;
+  weighInTime: Date;
+  targetWeight: number;
+  successful: boolean;
+  regenProtocolStarted?: Date;
+  fightTime?: Date;
+}
+
+export interface SupplementSchedule {
+  supplementName: string;
+  type: SupplementType;
+  phase: PrepPhase;
+  dosage: string;
+  timing: string;
+  action: 'start' | 'stop' | 'increase' | 'maintain';
+  reasoning: string;
+}

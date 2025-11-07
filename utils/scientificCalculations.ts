@@ -1,4 +1,4 @@
-import { FighterProfile, WeightLog } from '@/constants/types';
+import { UserProfile, WeightLog, MacroCyclingPlan, TrainingIntensityLevel, PrepPhase, TrainingLog } from '@/constants/types';
 
 export interface WaterLoadingSchedule {
   daysOut: number;
@@ -62,7 +62,7 @@ export class WeightCuttingScience {
     return bmr * (multipliers[trainingIntensity as keyof typeof multipliers] || 1.55);
   }
 
-  static getMetabolicData(profile: FighterProfile): MetabolicData {
+  static getMetabolicData(profile: UserProfile): MetabolicData {
     const bmr = this.calculateBMR(
       profile.currentWeight,
       profile.height,
@@ -177,7 +177,7 @@ export class WeightCuttingScience {
   }
 
   static generateWeightCutPlan(
-    profile: FighterProfile,
+    profile: UserProfile,
     fightDate: Date
   ): DailyWeightCutPlan[] {
     const now = new Date();
@@ -255,7 +255,7 @@ export class WeightCuttingScience {
   }
 
   static assessSafetyStatus(
-    profile: FighterProfile,
+    profile: UserProfile,
     recentWeightLogs: WeightLog[],
     daysUntilFight: number
   ): SafetyStatus {
@@ -333,7 +333,7 @@ export class WeightCuttingScience {
   }
 
   static generateRecoveryProtocol(
-    profile: FighterProfile,
+    profile: UserProfile,
     hoursUntilFight: number
   ): {
     timeline: {
@@ -441,5 +441,177 @@ export class WeightCuttingScience {
     }
 
     return todaySchedule.waterIntakeMl;
+  }
+
+  static generateMacroCyclingPlan(
+    profile: UserProfile,
+    phase: PrepPhase,
+    trainingLogs: TrainingLog[],
+    daysToGenerate: number = 7
+  ): MacroCyclingPlan[] {
+    const plan: MacroCyclingPlan[] = [];
+    const metabolicData = this.getMetabolicData(profile);
+    
+    const todayTraining = trainingLogs.filter(log => {
+      const logDate = new Date(log.date);
+      const today = new Date();
+      logDate.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
+      return logDate.getTime() === today.getTime();
+    });
+
+    const avgIntensity: TrainingIntensityLevel = todayTraining.length > 0 
+      ? todayTraining[0].intensity 
+      : 'medium';
+
+    for (let day = 0; day < daysToGenerate; day++) {
+      const date = new Date();
+      date.setDate(date.getDate() + day);
+      
+      const dayTrainings = trainingLogs.filter(log => {
+        const logDate = new Date(log.date);
+        logDate.setHours(0, 0, 0, 0);
+        date.setHours(0, 0, 0, 0);
+        return logDate.getTime() === date.getTime();
+      });
+
+      const dayIntensity: TrainingIntensityLevel = dayTrainings.length > 0
+        ? dayTrainings[0].intensity
+        : avgIntensity;
+
+      let calorieTarget: number;
+      let proteinG: number;
+      let carbsG: number;
+      let fatG: number;
+      let carbPercentage: number;
+      let fatPercentage: number;
+      let reasoning: string;
+
+      const proteinPerKg = 2.2;
+      proteinG = profile.currentWeight * proteinPerKg;
+
+      if (phase === 'GWL') {
+        if (dayIntensity === 'high' || dayIntensity === 'extreme') {
+          calorieTarget = metabolicData.tdee - 300;
+          const proteinCals = proteinG * 4;
+          const remainingCals = calorieTarget - proteinCals;
+          carbPercentage = 60;
+          fatPercentage = 40;
+          carbsG = (remainingCals * (carbPercentage / 100)) / 4;
+          fatG = (remainingCals * (fatPercentage / 100)) / 9;
+          reasoning = 'Vysoká intenzita - Zvýšený podíl sacharidů (60%) pro energii a výkon. Snížené tuky.';
+        } else if (dayIntensity === 'medium') {
+          calorieTarget = metabolicData.tdee - 400;
+          const proteinCals = proteinG * 4;
+          const remainingCals = calorieTarget - proteinCals;
+          carbPercentage = 45;
+          fatPercentage = 55;
+          carbsG = (remainingCals * (carbPercentage / 100)) / 4;
+          fatG = (remainingCals * (fatPercentage / 100)) / 9;
+          reasoning = 'Střední intenzita - Vyvážené makro (45% S / 55% T) pro stabilní energii.';
+        } else {
+          calorieTarget = metabolicData.tdee - 500;
+          const proteinCals = proteinG * 4;
+          const remainingCals = calorieTarget - proteinCals;
+          carbPercentage = 30;
+          fatPercentage = 70;
+          carbsG = (remainingCals * (carbPercentage / 100)) / 4;
+          fatG = (remainingCals * (fatPercentage / 100)) / 9;
+          reasoning = 'Nízká/Rest den - Snížené sacharidy (30%), zvýšené tuky (70%) pro spalování tuků.';
+        }
+      } else if (phase === 'RWL') {
+        calorieTarget = metabolicData.tdee * 0.7;
+        const proteinCals = proteinG * 4;
+        const remainingCals = calorieTarget - proteinCals;
+        carbPercentage = 40;
+        fatPercentage = 60;
+        carbsG = (remainingCals * (carbPercentage / 100)) / 4;
+        fatG = (remainingCals * (fatPercentage / 100)) / 9;
+        reasoning = 'RWL fáze - Mírné snížení kalorií, priorita na proteiny a elektrolyty.';
+      } else if (phase === 'REGEN') {
+        calorieTarget = metabolicData.tdee + 500;
+        const proteinCals = proteinG * 4;
+        const remainingCals = calorieTarget - proteinCals;
+        carbPercentage = 70;
+        fatPercentage = 30;
+        carbsG = (remainingCals * (carbPercentage / 100)) / 4;
+        fatG = (remainingCals * (fatPercentage / 100)) / 9;
+        reasoning = 'REGEN - Vysoké sacharidy (70%) pro rychlé doplnění glykogenu po cutu.';
+      } else {
+        calorieTarget = metabolicData.tdee;
+        const proteinCals = proteinG * 4;
+        const remainingCals = calorieTarget - proteinCals;
+        carbPercentage = 50;
+        fatPercentage = 50;
+        carbsG = (remainingCals * (carbPercentage / 100)) / 4;
+        fatG = (remainingCals * (fatPercentage / 100)) / 9;
+        reasoning = 'Maintenance - Vyvážená strava pro udržení váhy a výkonu.';
+      }
+
+      plan.push({
+        date,
+        trainingIntensity: dayIntensity,
+        calorieTarget: Math.round(calorieTarget),
+        proteinG: Math.round(proteinG),
+        carbsG: Math.round(carbsG),
+        fatG: Math.round(fatG),
+        carbPercentage,
+        fatPercentage,
+        reasoning,
+      });
+    }
+
+    return plan;
+  }
+
+  static calculateWeeklyWeightLossRate(
+    recentWeightLogs: WeightLog[],
+    currentWeight: number
+  ): number {
+    if (recentWeightLogs.length < 2) return 0;
+    
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    
+    const weekLogs = recentWeightLogs.filter(log => new Date(log.date) >= weekAgo);
+    if (weekLogs.length < 2) return 0;
+    
+    const sortedLogs = weekLogs.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const oldestWeight = sortedLogs[0].weight;
+    const latestWeight = sortedLogs[sortedLogs.length - 1].weight;
+    
+    return oldestWeight - latestWeight;
+  }
+
+  static checkSafetyThreshold(
+    weeklyLoss: number,
+    currentWeight: number
+  ): { isSafe: boolean; message: string; recommendedAdjustment: number } {
+    const percentageLoss = (weeklyLoss / currentWeight) * 100;
+    
+    if (percentageLoss > 1.0) {
+      const excessLoss = weeklyLoss - (currentWeight * 0.01);
+      const calorieAdjustment = Math.round(excessLoss * 7700);
+      
+      return {
+        isSafe: false,
+        message: `NEBEZPEČNÉ TEMPO: ${percentageLoss.toFixed(1)}% týdenní ztráty. Hrozí ztráta svalové hmoty a pokles výkonu.`,
+        recommendedAdjustment: calorieAdjustment,
+      };
+    }
+    
+    if (percentageLoss > 0.75) {
+      return {
+        isSafe: true,
+        message: `Mírně rychlé tempo: ${percentageLoss.toFixed(1)}% týdně. Monitorujte výkon a energii.`,
+        recommendedAdjustment: 100,
+      };
+    }
+    
+    return {
+      isSafe: true,
+      message: `Bezpečné tempo: ${percentageLoss.toFixed(1)}% týdně. Pokračujte v současném protokolu.`,
+      recommendedAdjustment: 0,
+    };
   }
 }
