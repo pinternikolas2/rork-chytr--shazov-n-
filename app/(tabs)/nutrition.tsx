@@ -77,7 +77,7 @@ export default function NutritionScreen() {
       >
 
         <View style={styles.goalsSection}>
-          <Text style={styles.sectionTitle}>{t.nutrition.todayGoals}</Text>
+          <Text style={styles.sectionTitle}>Dnešní cíle</Text>
           <View style={styles.goalsGrid}>
             {nutritionData.map((item, index) => {
               const Icon = item.icon;

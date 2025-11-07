@@ -122,17 +122,7 @@ export default function HydrationScreen() {
               <Pressable
                 key={amount}
                 style={styles.quickButton}
-                onPress={() => {
-                  if (!profile?.id) {
-                    Alert.alert('Chyba', 'Není přihlášen uživatel');
-                    return;
-                  }
-                  addLog.mutate({
-                    userId: profile.id,
-                    date: new Date(),
-                    amount,
-                  });
-                }}
+                onPress={() => setWaterAmount(amount.toString())}
               >
                 <Text style={styles.quickButtonText}>+{amount}ml</Text>
               </Pressable>

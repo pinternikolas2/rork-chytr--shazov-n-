@@ -72,8 +72,8 @@ export default function TrackingScreen() {
     setWaterInput('');
   };
 
-  const quickAddWater = async (amount: number) => {
-    await addHydrationLog(amount);
+  const quickAddWater = (amount: number) => {
+    setWaterInput(amount.toString());
   };
 
   const handleLogTraining = async () => {
@@ -904,16 +904,11 @@ const styles = StyleSheet.create({
     position: 'relative' as const,
     width: '100%',
     height: 140,
+    overflow: 'hidden',
   },
   historyChartLine: {
     height: 3,
     backgroundColor: Colors.gold,
-    transformOrigin: 'left center',
-    shadowColor: Colors.gold,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 3,
-    elevation: 2,
   },
   historyChartDot: {
     position: 'absolute' as const,
@@ -923,13 +918,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     borderWidth: 3,
     borderColor: Colors.gold,
-    marginLeft: -5,
-    marginTop: -5,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
+    transform: [{ translateX: -5 }, { translateY: -5 }],
     alignItems: 'center',
     justifyContent: 'center',
   },

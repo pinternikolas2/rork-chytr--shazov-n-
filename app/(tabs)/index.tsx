@@ -1363,11 +1363,11 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 80,
     marginBottom: 8,
+    overflow: 'hidden',
   },
   miniChartLine: {
     height: 2,
     backgroundColor: Colors.gold,
-    transformOrigin: 'left center',
   },
   miniChartDot: {
     width: 8,
@@ -1376,8 +1376,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     borderWidth: 2,
     borderColor: Colors.gold,
-    marginLeft: -4,
-    marginBottom: -4,
     alignItems: 'center',
     justifyContent: 'center',
   },
