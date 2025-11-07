@@ -99,17 +99,7 @@ export default function DashboardScreen() {
       .reduce((sum, log) => sum + (log.sodiumMg || 0), 0);
   }, [hydrationLogs]);
 
-  const weeklyWeightLossPercentage = useMemo(() => {
-    if (!profile || weightLogs.length < 2) return 0;
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    const recentLogs = weightLogs.filter(log => log.date >= weekAgo);
-    if (recentLogs.length < 2) return 0;
-    const oldest = recentLogs[0].weight;
-    const newest = recentLogs[recentLogs.length - 1].weight;
-    const weightLoss = oldest - newest;
-    return (weightLoss / oldest) * 100;
-  }, [weightLogs, profile]);
+
 
   useEffect(() => {
     Animated.parallel([
@@ -160,7 +150,7 @@ export default function DashboardScreen() {
           </Pressable>
         </Animated.View>
 
-        {currentPhase && (
+        {currentPhase && currentPhase.phase === 'RWL' && daysUntilFight && (
           <Animated.View 
             style={[
               styles.phaseCard,
@@ -170,34 +160,11 @@ export default function DashboardScreen() {
               },
             ]}
           >
-            <View style={[
-              styles.phaseBadge,
-              currentPhase.phase === 'GWL' && styles.phaseBadgeGWL,
-              currentPhase.phase === 'RWL' && styles.phaseBadgeRWL,
-              currentPhase.phase === 'REGEN' && styles.phaseBadgeREGEN,
-            ]}>
-              <Text style={styles.phaseBadgeText}>{currentPhase.phase}</Text>
+            <View style={[styles.phaseBadge, styles.phaseBadgeRWL]}>
+              <Text style={styles.phaseBadgeText}>RWL</Text>
             </View>
             <Text style={styles.phaseDescription}>{currentPhase.description}</Text>
             
-            {currentPhase.phase === 'GWL' && weeklyWeightLossPercentage > 1 && (
-              <View style={styles.safetySemaphore}>
-                <View style={styles.semaphoreRed} />
-                <View style={styles.semaphoreContent}>
-                  <AlertTriangle size={18} color="#EF4444" />
-                  <View style={styles.semaphoreTextContainer}>
-                    <Text style={styles.semaphoreTitle}>NEBEZPEČNÉ TEMPO HUBNUTÍ!</Text>
-                    <Text style={styles.semaphoreText}>
-                      Týdenní úbytek: {weeklyWeightLossPercentage.toFixed(2)}% (bezpečné maximum: 1%)
-                    </Text>
-                    <Text style={styles.semaphoreAction}>
-                      ⚠️ Hrozí ztráta svalové hmoty. Zvyšte příjem o 200-300 kcal.
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            )}
-
             {currentPhase.phase === 'RWL' && daysUntilFight && (
               <View style={styles.rwlProtocolCard}>
                 <Text style={styles.rwlTitle}>DENNÍ PROTOKOL (D-{daysUntilFight})</Text>
@@ -283,79 +250,98 @@ export default function DashboardScreen() {
               </View>
             )}
 
-            {currentPhase.phase === 'REGEN' && activeREGEN && (
-              <View style={styles.regenProtocolCard}>
-                <Text style={styles.regenTitle}>PROTOKOL OBNOVY VÝKONU</Text>
-                <View style={styles.regenTasksContainer}>
-                  {activeREGEN.protocols.map((task, idx) => {
-                    const now = new Date();
-                    const weighInTime = activeREGEN.record.regenProtocolStarted || activeREGEN.record.weighInTime;
-                    const minutesSinceWeighIn = Math.floor((now.getTime() - weighInTime.getTime()) / (1000 * 60));
-                    const isActive = minutesSinceWeighIn >= task.timeElapsedMinutes && !task.completed;
-                    const minutesRemaining = Math.max(0, task.timeElapsedMinutes - minutesSinceWeighIn);
-                    const hoursRemaining = Math.floor(minutesRemaining / 60);
-                    const minsRemaining = minutesRemaining % 60;
-                    
-                    return (
-                      <View 
-                        key={idx} 
-                        style={[
-                          styles.regenTaskCard,
-                          task.completed && styles.regenTaskCompleted,
-                          isActive && styles.regenTaskActive,
-                        ]}
-                      >
-                        <View style={styles.regenTaskHeader}>
-                          <View style={[
-                            styles.regenTaskNumber,
-                            task.completed && styles.regenTaskNumberCompleted,
-                            isActive && styles.regenTaskNumberActive,
-                          ]}>
-                            <Text style={[
-                              styles.regenTaskNumberText,
-                              (task.completed || isActive) && styles.regenTaskNumberTextWhite,
-                            ]}>{task.taskNumber}</Text>
-                          </View>
-                          <Text style={styles.regenTaskTitle}>{task.taskTitle}</Text>
+          </Animated.View>
+        )}
+
+        {currentPhase && currentPhase.phase === 'REGEN' && activeREGEN && (
+          <Animated.View 
+            style={[
+              styles.phaseCard,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            <View style={[
+              styles.phaseBadge,
+              styles.phaseBadgeREGEN,
+            ]}>
+              <Text style={styles.phaseBadgeText}>REGEN</Text>
+            </View>
+            <Text style={styles.phaseDescription}>{currentPhase.description}</Text>
+            
+            <View style={styles.regenProtocolCard}>
+              <Text style={styles.regenTitle}>PROTOKOL OBNOVY VÝKONU</Text>
+              <View style={styles.regenTasksContainer}>
+                {activeREGEN.protocols.map((task, idx) => {
+                  const now = new Date();
+                  const weighInTime = activeREGEN.record.regenProtocolStarted || activeREGEN.record.weighInTime;
+                  const minutesSinceWeighIn = Math.floor((now.getTime() - weighInTime.getTime()) / (1000 * 60));
+                  const isActive = minutesSinceWeighIn >= task.timeElapsedMinutes && !task.completed;
+                  const minutesRemaining = Math.max(0, task.timeElapsedMinutes - minutesSinceWeighIn);
+                  const hoursRemaining = Math.floor(minutesRemaining / 60);
+                  const minsRemaining = minutesRemaining % 60;
+                  
+                  return (
+                    <View 
+                      key={idx} 
+                      style={[
+                        styles.regenTaskCard,
+                        task.completed && styles.regenTaskCompleted,
+                        isActive && styles.regenTaskActive,
+                      ]}
+                    >
+                      <View style={styles.regenTaskHeader}>
+                        <View style={[
+                          styles.regenTaskNumber,
+                          task.completed && styles.regenTaskNumberCompleted,
+                          isActive && styles.regenTaskNumberActive,
+                        ]}>
+                          <Text style={[
+                            styles.regenTaskNumberText,
+                            (task.completed || isActive) && styles.regenTaskNumberTextWhite,
+                          ]}>{task.taskNumber}</Text>
                         </View>
-                        
-                        {isActive && !task.completed && (
-                          <View style={styles.regenCountdown}>
-                            <Clock size={16} color={Colors.gold} />
-                            <Text style={styles.regenCountdownText}>
-                              {hoursRemaining > 0 ? `Za ${hoursRemaining}h ${minsRemaining}m` : minutesRemaining > 0 ? `Za ${minsRemaining}m` : 'NYNÍ'}
-                            </Text>
+                        <Text style={styles.regenTaskTitle}>{task.taskTitle}</Text>
+                      </View>
+                      
+                      {isActive && !task.completed && (
+                        <View style={styles.regenCountdown}>
+                          <Clock size={16} color={Colors.gold} />
+                          <Text style={styles.regenCountdownText}>
+                            {hoursRemaining > 0 ? `Za ${hoursRemaining}h ${minsRemaining}m` : minutesRemaining > 0 ? `Za ${minsRemaining}m` : 'NYNÍ'}
+                          </Text>
+                        </View>
+                      )}
+
+                      <View style={styles.regenTaskTargets}>
+                        <View style={styles.regenTargetItem}>
+                          <Droplets size={16} color="#3B9AE1" />
+                          <Text style={styles.regenTargetText}>{task.fluidTargetMl}ml</Text>
+                        </View>
+                        <View style={styles.regenTargetItem}>
+                          <Zap size={16} color="#F4C430" />
+                          <Text style={styles.regenTargetText}>{task.carbsTargetG}g sacharidů</Text>
+                        </View>
+                        {task.proteinTargetG && (
+                          <View style={styles.regenTargetItem}>
+                            <Target size={16} color="#4ECDC4" />
+                            <Text style={styles.regenTargetText}>{task.proteinTargetG}g bílkovin</Text>
                           </View>
                         )}
-
-                        <View style={styles.regenTaskTargets}>
-                          <View style={styles.regenTargetItem}>
-                            <Droplets size={16} color="#3B9AE1" />
-                            <Text style={styles.regenTargetText}>{task.fluidTargetMl}ml</Text>
-                          </View>
-                          <View style={styles.regenTargetItem}>
-                            <Zap size={16} color="#F4C430" />
-                            <Text style={styles.regenTargetText}>{task.carbsTargetG}g sacharidů</Text>
-                          </View>
-                          {task.proteinTargetG && (
-                            <View style={styles.regenTargetItem}>
-                              <Target size={16} color="#4ECDC4" />
-                              <Text style={styles.regenTargetText}>{task.proteinTargetG}g bílkovin</Text>
-                            </View>
-                          )}
-                        </View>
-
-                        <View style={styles.regenInstructionsList}>
-                          {task.instructions.slice(0, 2).map((instruction, i) => (
-                            <Text key={i} style={styles.regenInstructionText}>• {instruction}</Text>
-                          ))}
-                        </View>
                       </View>
-                    );
-                  })}
-                </View>
+
+                      <View style={styles.regenInstructionsList}>
+                        {task.instructions.slice(0, 2).map((instruction, i) => (
+                          <Text key={i} style={styles.regenInstructionText}>• {instruction}</Text>
+                        ))}
+                      </View>
+                    </View>
+                  );
+                })}
               </View>
-            )}
+            </View>
           </Animated.View>
         )}
 
@@ -393,6 +379,16 @@ export default function DashboardScreen() {
                 <Text style={styles.fightCardOpponent}>vs {upcomingFight.opponent}</Text>
               </View>
               <View style={styles.daysContainer}>
+                {currentPhase && (
+                  <View style={[
+                    styles.fightPhaseBadge,
+                    currentPhase.phase === 'GWL' && styles.fightPhaseBadgeGWL,
+                    currentPhase.phase === 'RWL' && styles.fightPhaseBadgeRWL,
+                    currentPhase.phase === 'REGEN' && styles.fightPhaseBadgeREGEN,
+                  ]}>
+                    <Text style={styles.fightPhaseBadgeText}>{currentPhase.phase}</Text>
+                  </View>
+                )}
                 <View style={styles.daysRow}>
                   <Clock size={18} color={Colors.gold} />
                   <Text style={styles.daysNumber}>{daysUntilFight}</Text>
@@ -1312,40 +1308,26 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 16,
   },
-  safetySemaphore: {
+  fightPhaseBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 12,
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: '#EF4444',
+    marginBottom: 8,
   },
-  semaphoreRed: {
-    height: 4,
-    backgroundColor: '#EF4444',
+  fightPhaseBadgeGWL: {
+    backgroundColor: '#10B981',
   },
-  semaphoreContent: {
-    flexDirection: 'row',
-    padding: 14,
-    gap: 12,
-    backgroundColor: '#FEF2F2',
+  fightPhaseBadgeRWL: {
+    backgroundColor: '#F59E0B',
   },
-  semaphoreTextContainer: {
-    flex: 1,
+  fightPhaseBadgeREGEN: {
+    backgroundColor: '#3B82F6',
   },
-  semaphoreTitle: {
-    fontSize: 13,
+  fightPhaseBadgeText: {
+    fontSize: 10,
     fontWeight: '700' as const,
-    color: '#EF4444',
-    marginBottom: 4,
-  },
-  semaphoreText: {
-    fontSize: 12,
-    color: '#DC2626',
-    marginBottom: 4,
-  },
-  semaphoreAction: {
-    fontSize: 12,
-    color: '#991B1B',
-    fontWeight: '600' as const,
+    color: Colors.white,
+    textTransform: 'uppercase' as const,
   },
   rwlProtocolCard: {
     marginTop: 4,
