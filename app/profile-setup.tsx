@@ -36,6 +36,7 @@ export default function ProfileSetupScreen() {
   const [discipline, setDiscipline] = useState<Discipline>('mma');
   const [dietType, setDietType] = useState<DietType>('standard');
   const [trainingIntensity, setTrainingIntensity] = useState<TrainingIntensity>('moderate');
+  const [trainingsPerWeek, setTrainingsPerWeek] = useState('3');
   const [hasPreviousExperience, setHasPreviousExperience] = useState(false);
   const [trainerName, setTrainerName] = useState('');
 
@@ -63,12 +64,9 @@ export default function ProfileSetupScreen() {
         userId = authUser.id;
       }
 
-      const role = authUser?.user_metadata?.role || 'fighter';
-      console.log('[ProfileSetup] User role:', role);
-
       await completeOnboarding({
         id: userId,
-        role,
+        role: 'fighter',
         fullName,
         age: parseInt(age, 10),
         height: parseInt(height, 10),
@@ -81,6 +79,7 @@ export default function ProfileSetupScreen() {
         discipline,
         dietType,
         trainingIntensity,
+        trainingsPerWeek: parseInt(trainingsPerWeek, 10),
         hasPreviousExperience,
         trainerName: trainerName.trim() || undefined,
       });
@@ -354,6 +353,18 @@ export default function ProfileSetupScreen() {
                   </Pressable>
                 ))}
               </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Tréninků týdně</Text>
+              <TextInput
+                style={styles.input}
+                value={trainingsPerWeek}
+                onChangeText={setTrainingsPerWeek}
+                placeholder="3"
+                placeholderTextColor={Colors.textLight}
+                keyboardType="number-pad"
+              />
             </View>
 
             <View style={styles.inputGroup}>

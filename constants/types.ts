@@ -1,6 +1,6 @@
 import { Language } from './translations';
 
-export type UserRole = 'fighter' | 'coach';
+export type UserRole = 'fighter';
 
 export type Gender = 'male' | 'female';
 
@@ -18,10 +18,6 @@ export interface UserProfile {
   height: number;
   gender: Gender;
   discipline: Discipline;
-}
-
-export interface FighterProfile extends UserProfile {
-  role: 'fighter';
   currentWeight: number;
   targetWeight: number;
   startingWeight?: number;
@@ -34,18 +30,6 @@ export interface FighterProfile extends UserProfile {
   hasPreviousExperience: boolean;
   trainerName?: string;
   profilePhotoUri?: string;
-  coachId?: string;
-}
-
-export interface CoachProfile extends UserProfile {
-  role: 'coach';
-  linkedFighters: string[];
-  isPremium: boolean;
-  subscriptionEndDate?: Date;
-  profilePhotoUri?: string;
-  certifications?: string[];
-  yearsOfExperience?: number;
-  specializations?: Discipline[];
 }
 
 export type WeighInTiming = 'dayOf' | 'dayBefore';

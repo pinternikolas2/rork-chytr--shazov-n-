@@ -2,7 +2,7 @@ import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Language, translations } from '@/constants/translations';
-import { AppSettings, Fight, FighterProfile, CoachProfile, HydrationLog, WeightLog, MealLog, CustomFood, SupplementLog, RegenerationLog, SleepLog, DailyNote, TrainingLog, BodyCompositionLog } from '@/constants/types';
+import { AppSettings, Fight, UserProfile, HydrationLog, WeightLog, MealLog, CustomFood, SupplementLog, RegenerationLog, SleepLog, DailyNote, TrainingLog, BodyCompositionLog } from '@/constants/types';
 import { WeightCuttingScience } from '@/utils/scientificCalculations';
 import type { SafetyStatus, DailyWeightCutPlan, BodyCompositionEstimate, MetabolicData } from '@/utils/scientificCalculations';
 import { trpcClient } from '@/lib/trpc';
@@ -19,7 +19,7 @@ const DEFAULT_SETTINGS: AppSettings = {
 
 export const [AppProvider, useApp] = createContextHook(() => {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
-  const [profile, setProfile] = useState<FighterProfile | CoachProfile | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [fights, setFights] = useState<Fight[]>([]);
   const [weightLogs, setWeightLogs] = useState<WeightLog[]>([]);
   const [hydrationLogs, setHydrationLogs] = useState<HydrationLog[]>([]);
@@ -220,7 +220,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
     updateSettings({ language });
   }, [updateSettings]);
 
-  const completeOnboarding = useCallback(async (userProfile: FighterProfile | CoachProfile) => {
+  const completeOnboarding = useCallback(async (userProfile: UserProfile) => {
     console.log('[AppContext] Completing onboarding for user:', userProfile.id);
     setProfile(userProfile);
     await AsyncStorage.setItem('profile', JSON.stringify(userProfile));
@@ -234,12 +234,12 @@ export const [AppProvider, useApp] = createContextHook(() => {
     }
   }, [updateSettings]);
 
-  const updateProfile = useCallback(async (updates: Partial<FighterProfile> | Partial<CoachProfile>) => {
+  const updateProfile = useCallback(async (updates: Partial<UserProfile>) => {
     if (!profile) {
       console.log('[AppContext] No profile found, user should complete onboarding');
       return;
     }
-    const updated = { ...profile, ...updates } as FighterProfile | CoachProfile;
+    const updated = { ...profile, ...updates } as UserProfile;
     setProfile(updated);
     await AsyncStorage.setItem('profile', JSON.stringify(updated));
     
@@ -260,13 +260,13 @@ export const [AppProvider, useApp] = createContextHook(() => {
     setFights(updated);
     await AsyncStorage.setItem('fights', JSON.stringify(updated));
 
-    if (profile && profile.role === 'fighter') {
+    if (profile) {
       const updatedProfile = { 
         ...profile, 
         targetWeight: fight.targetWeightForFight,
         startingWeight: profile.startingWeight || profile.currentWeight,
         targetFightDate: fight.date
-      } as FighterProfile;
+      } as UserProfile;
       console.log('[AppContext] New fight created - startingWeight:', updatedProfile.startingWeight, 'currentWeight:', profile.currentWeight, 'targetWeight:', fight.targetWeightForFight);
       setProfile(updatedProfile);
       await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
@@ -316,8 +316,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
         console.error('[AppContext] Failed to sync weight log to backend:', error);
       }
 
-      if (profile.role === 'fighter' && time === 'morning') {
-        const updatedProfile = { ...profile, currentWeight: weight } as FighterProfile;
+      if (time === 'morning') {
+        const updatedProfile = { ...profile, currentWeight: weight } as UserProfile;
         console.log('[AppContext] Weight logged - currentWeight:', weight, 'startingWeight:', updatedProfile.startingWeight, 'targetWeight:', updatedProfile.targetWeight);
         setProfile(updatedProfile);
         await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
@@ -590,7 +590,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
   }, [getTodayMeals]);
 
   const getBodyComposition = useCallback((): BodyCompositionEstimate | null => {
-    if (!profile || profile.role !== 'fighter') return null;
+    if (!profile) return null;
     return WeightCuttingScience.estimateBodyComposition(
       profile.currentWeight,
       profile.height,
@@ -600,12 +600,12 @@ export const [AppProvider, useApp] = createContextHook(() => {
   }, [profile]);
 
   const getMetabolicData = useCallback((): MetabolicData | null => {
-    if (!profile || profile.role !== 'fighter') return null;
+    if (!profile) return null;
     return WeightCuttingScience.getMetabolicData(profile);
   }, [profile]);
 
   const getNutritionGoals = useCallback(() => {
-    if (!profile || profile.role !== 'fighter') {
+    if (!profile) {
       return {
         calories: 2000,
         protein: 150,
@@ -667,7 +667,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
   }, [profile, getMetabolicData, getUpcomingFight]);
 
   const getDailyHydrationGoal = useCallback((): number => {
-    if (!profile || profile.role !== 'fighter') return 3000;
+    if (!profile) return 3000;
     const upcomingFight = getUpcomingFight();
     if (!upcomingFight) return profile.currentWeight * 35;
     
@@ -681,14 +681,14 @@ export const [AppProvider, useApp] = createContextHook(() => {
   }, [profile, getUpcomingFight]);
 
   const getWeightCutPlan = useCallback((): DailyWeightCutPlan[] => {
-    if (!profile || profile.role !== 'fighter') return [];
+    if (!profile) return [];
     const upcomingFight = getUpcomingFight();
     if (!upcomingFight) return [];
     return WeightCuttingScience.generateWeightCutPlan(profile, upcomingFight.date);
   }, [profile, getUpcomingFight]);
 
   const getSafetyStatus = useCallback((): SafetyStatus | null => {
-    if (!profile || profile.role !== 'fighter') return null;
+    if (!profile) return null;
     const upcomingFight = getUpcomingFight();
     if (!upcomingFight) return null;
     
@@ -698,7 +698,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
   }, [profile, weightLogs, getUpcomingFight]);
 
   const getWeightProgress = useCallback((): number => {
-    if (!profile || profile.role !== 'fighter') return 0;
+    if (!profile) return 0;
     const startWeight = profile.startingWeight || profile.currentWeight;
     const total = startWeight - profile.targetWeight;
     if (total <= 0) return 100;

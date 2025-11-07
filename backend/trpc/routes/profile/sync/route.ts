@@ -3,7 +3,7 @@ import { publicProcedure } from '@/backend/trpc/create-context';
 
 const profileSchema = z.object({
   id: z.string(),
-  role: z.enum(['fighter', 'coach']),
+  role: z.enum(['fighter']),
   fullName: z.string(),
   age: z.number(),
   height: z.number(),
@@ -21,13 +21,6 @@ const profileSchema = z.object({
   hasPreviousExperience: z.boolean().optional(),
   trainerName: z.string().optional(),
   profilePhotoUri: z.string().optional(),
-  coachId: z.string().optional(),
-  linkedFighters: z.array(z.string()).optional(),
-  isPremium: z.boolean().optional(),
-  subscriptionEndDate: z.date().optional(),
-  certifications: z.array(z.string()).optional(),
-  yearsOfExperience: z.number().optional(),
-  specializations: z.array(z.enum(['mma', 'boxing', 'wrestling', 'bjj', 'muayThai', 'kickboxing'])).optional(),
 });
 
 export const syncProfileProcedure = publicProcedure
@@ -57,13 +50,6 @@ export const syncProfileProcedure = publicProcedure
         has_previous_experience: input.hasPreviousExperience,
         trainer_name: input.trainerName,
         profile_photo_uri: input.profilePhotoUri,
-        coach_id: input.coachId,
-        linked_fighters: input.linkedFighters,
-        is_premium: input.isPremium,
-        subscription_end_date: input.subscriptionEndDate,
-        certifications: input.certifications,
-        years_of_experience: input.yearsOfExperience,
-        specializations: input.specializations,
         updated_at: new Date(),
       })
       .select()
@@ -115,12 +101,5 @@ export const getProfileProcedure = publicProcedure
       hasPreviousExperience: data.has_previous_experience,
       trainerName: data.trainer_name,
       profilePhotoUri: data.profile_photo_uri,
-      coachId: data.coach_id,
-      linkedFighters: data.linked_fighters,
-      isPremium: data.is_premium,
-      subscriptionEndDate: data.subscription_end_date ? new Date(data.subscription_end_date) : undefined,
-      certifications: data.certifications,
-      yearsOfExperience: data.years_of_experience,
-      specializations: data.specializations,
     };
   });
