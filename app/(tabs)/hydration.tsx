@@ -3,127 +3,182 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
+  Alert,
 } from 'react-native';
+import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Droplet, Droplets, AlertTriangle } from 'lucide-react-native';
+import { Droplet, Droplets, AlertTriangle, Plus } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
+import { trpc } from '@/lib/trpc';
 
 
 export default function HydrationScreen() {
-  const { t, profile, getUpcomingFight, getCurrentPhase } = useApp();
+  const { profile } = useApp();
   const insets = useSafeAreaInsets();
-  const upcomingFight = getUpcomingFight();
-  const currentPhase = getCurrentPhase();
+  const [waterAmount, setWaterAmount] = useState('');
+
+  const hydrationLogs = trpc.hydrationLogs.list.useQuery(
+    { userId: profile?.id || '' },
+    { enabled: !!profile?.id }
+  );
+  
+  const addLog = trpc.hydrationLogs.add.useMutation({
+    onSuccess: () => {
+      hydrationLogs.refetch();
+      setWaterAmount('');
+    },
+  });
+
+  const todayLogs = hydrationLogs.data?.filter((log: { date: Date }) => {
+    const logDate = new Date(log.date);
+    const today = new Date();
+    return (
+      logDate.getDate() === today.getDate() &&
+      logDate.getMonth() === today.getMonth() &&
+      logDate.getFullYear() === today.getFullYear()
+    );
+  });
+
+  const todayTotal = todayLogs?.reduce((sum: number, log: { amount: number }) => sum + log.amount, 0) || 0;
+  const dailyGoal = 3000;
+
+  const handleAddWater = () => {
+    const amount = parseFloat(waterAmount);
+    if (!amount || amount <= 0) {
+      Alert.alert('Chyba', 'Zadejte platné množství vody');
+      return;
+    }
+
+    if (!profile?.id) {
+      Alert.alert('Chyba', 'Není přihlášen uživatel');
+      return;
+    }
+
+    addLog.mutate({
+      userId: profile.id,
+      date: new Date(),
+      amount,
+    });
+  };
 
 
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
-        <Text style={styles.headerTitle}>Zavodnění a Odvodnění</Text>
+        <Text style={styles.headerTitle}>Hydratace</Text>
       </View>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-
-        {!upcomingFight ? (
-          <View style={styles.emptyCard}>
-            <Droplet size={48} color={Colors.textSecondary} strokeWidth={1.5} />
-            <Text style={styles.emptyText}>Nemáte aktivní cíl zápasu</Text>
-            <Text style={styles.emptySubtext}>
-              Přidejte cíl zápasu pro zobrazení protokolu zavodnění/odvodnění
-            </Text>
-            <Text style={styles.emptyNote}>
-              Přidejte cíl zápasu na hlavní stránce
-            </Text>
+        <View style={styles.dailyOverviewCard}>
+          <View style={styles.overviewHeader}>
+            <Droplets size={28} color={Colors.gold} />
+            <Text style={styles.overviewTitle}>Dnešní hydratace</Text>
           </View>
-        ) : (
-          <>
-            <View style={styles.infoCard}>
-              <View style={styles.infoHeader}>
-                <Droplets size={24} color={Colors.gold} />
-                <Text style={styles.infoTitle}>Protokol zavodnění/odvodnění</Text>
-              </View>
-              <Text style={styles.infoDescription}>
-                Vědecky podložená metoda shazování váhy pomocí manipulace s vodou a elektrolyty.
-                {'\n\n'}
-                Tento protokol vám pomůže bezpečně shodit 3-7% tělesné hmotnosti v posledních 7 dnech před vážením.
-              </Text>
-            </View>
+          <View style={styles.progressContainer}>
+            <Text style={styles.progressAmount}>{todayTotal} ml</Text>
+            <Text style={styles.progressGoal}>/ {dailyGoal} ml</Text>
+          </View>
+          <View style={styles.progressBar}>
+            <View
+              style={[
+                styles.progressFill,
+                { width: `${Math.min((todayTotal / dailyGoal) * 100, 100)}%` },
+              ]}
+            />
+          </View>
+        </View>
 
-            <View style={styles.phaseOverviewCard}>
-              <Text style={styles.phaseOverviewTitle}>Fáze protokolu</Text>
-              
-              <View style={styles.phaseItem}>
-                <View style={[styles.phaseIcon, styles.phaseIconLoading]}>
-                  <Text style={styles.phaseIconText}>1</Text>
+        <View style={styles.addCard}>
+          <Text style={styles.addTitle}>Přidat vodu</Text>
+          <View style={styles.inputRow}>
+            <TextInput
+              style={styles.input}
+              placeholder="Množství (ml)"
+              placeholderTextColor={Colors.textSecondary}
+              keyboardType="numeric"
+              value={waterAmount}
+              onChangeText={setWaterAmount}
+            />
+            <Pressable
+              style={styles.addButton}
+              onPress={handleAddWater}
+              disabled={addLog.isPending}
+            >
+              {addLog.isPending ? (
+                <Text style={styles.addButtonText}>...</Text>
+              ) : (
+                <Plus size={24} color={Colors.white} strokeWidth={2.5} />
+              )}
+            </Pressable>
+          </View>
+          <View style={styles.quickButtons}>
+            {[250, 500, 750, 1000].map((amount) => (
+              <Pressable
+                key={amount}
+                style={styles.quickButton}
+                onPress={() => {
+                  if (!profile?.id) {
+                    Alert.alert('Chyba', 'Není přihlášen uživatel');
+                    return;
+                  }
+                  addLog.mutate({
+                    userId: profile.id,
+                    date: new Date(),
+                    amount,
+                  });
+                }}
+              >
+                <Text style={styles.quickButtonText}>+{amount}ml</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.historyCard}>
+          <Text style={styles.historyTitle}>Dnešní záznamy</Text>
+          {todayLogs && todayLogs.length > 0 ? (
+            todayLogs.map((log: { id?: string; amount: number; date: Date }, index: number) => (
+              <View key={log.id || index} style={styles.logItem}>
+                <View style={styles.logIcon}>
+                  <Droplet size={20} color={Colors.gold} />
                 </View>
-                <View style={styles.phaseContent}>
-                  <Text style={styles.phaseItemTitle}>Loading (D-7 až D-5)</Text>
-                  <Text style={styles.phaseItemDescription}>
-                    Načtení vody a sodíku - pij 8L denně, vysoký příjem sodíku (5000mg)
+                <View style={styles.logContent}>
+                  <Text style={styles.logAmount}>{log.amount} ml</Text>
+                  <Text style={styles.logTime}>
+                    {new Date(log.date).toLocaleTimeString('cs-CZ', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
                   </Text>
                 </View>
               </View>
-
-              <View style={styles.phaseItem}>
-                <View style={[styles.phaseIcon, styles.phaseIconCutting]}>
-                  <Text style={styles.phaseIconText}>2</Text>
-                </View>
-                <View style={styles.phaseContent}>
-                  <Text style={styles.phaseItemTitle}>Cutting (D-4 až D-1)</Text>
-                  <Text style={styles.phaseItemDescription}>
-                    Postupné snižování vody a sodíku - spustí se přirozená diuréza
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.phaseItem}>
-                <View style={[styles.phaseIcon, styles.phaseIconRegen]}>
-                  <Text style={styles.phaseIconText}>3</Text>
-                </View>
-                <View style={styles.phaseContent}>
-                  <Text style={styles.phaseItemTitle}>REGEN (Po vážení)</Text>
-                  <Text style={styles.phaseItemDescription}>
-                    Okamžitá rehydratace a obnova výkonu pro zápas
-                  </Text>
-                </View>
-              </View>
+            ))
+          ) : (
+            <View style={styles.emptyHistory}>
+              <Text style={styles.emptyHistoryText}>Zatím žádné záznamy</Text>
             </View>
+          )}
+        </View>
 
-            {currentPhase && currentPhase.phase === 'WATER_CUT' && (
-              <View style={styles.activePhaseCard}>
-                <View style={styles.activePhaseHeader}>
-                  <AlertTriangle size={20} color="#F59E0B" />
-                  <Text style={styles.activePhaseTitle}>Jste v aktivní fázi shazování</Text>
-                </View>
-                <Text style={styles.activePhaseDescription}>
-                  {currentPhase.description}
-                </Text>
-                <Text style={styles.activePhaseNote}>
-                  Podrobné denní instrukce najdete na hlavní stránce v Dashboard
-                </Text>
-              </View>
-            )}
-
-            <View style={styles.warningCard}>
-              <View style={styles.warningHeader}>
-                <AlertTriangle size={20} color="#EF4444" />
-                <Text style={styles.warningTitle}>Důležitá upozornění</Text>
-              </View>
-              <View style={styles.warningList}>
-                <Text style={styles.warningItem}>• Nikdy neprovádějte protokol bez konzultace s odborníkem</Text>
-                <Text style={styles.warningItem}>• Sledujte své tělo - při závratích OKAMŽITĚ přestaňte</Text>
-                <Text style={styles.warningItem}>• Nepoužívejte saunu déle než 20min bez přestávky</Text>
-                <Text style={styles.warningItem}>• Mějte trenéra/partnera poblíž během finální fáze</Text>
-                <Text style={styles.warningItem}>• Při jakýchkoli zdravotních potížích vyhledejte lékaře</Text>
-              </View>
-            </View>
-          </>
-        )}
+        <View style={styles.tipsCard}>
+          <View style={styles.tipsHeader}>
+            <AlertTriangle size={20} color="#3B82F6" />
+            <Text style={styles.tipsTitle}>Tipy pro správnou hydrataci</Text>
+          </View>
+          <View style={styles.tipsList}>
+            <Text style={styles.tipItem}>• Pijte pravidelně během celého dne</Text>
+            <Text style={styles.tipItem}>• Vodu pijte před, během a po tréninku</Text>
+            <Text style={styles.tipItem}>• Sledujte barvu moči - měla by být světle žlutá</Text>
+            <Text style={styles.tipItem}>• Zvyšte příjem při vyšších teplotách</Text>
+            <Text style={styles.tipItem}>• Minimálně 2-3L vody denně</Text>
+          </View>
+        </View>
       </ScrollView>
 
 
@@ -160,43 +215,10 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
 
-  emptyCard: {
+  dailyOverviewCard: {
     backgroundColor: Colors.white,
     borderRadius: 20,
-    padding: 48,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border.light,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: Colors.textPrimary,
-    fontWeight: '600' as const,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 20,
-  },
-  emptyNote: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    fontStyle: 'italic' as const,
-  },
-  infoCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    padding: 20,
+    padding: 24,
     marginBottom: 16,
     borderWidth: 1,
     borderColor: Colors.border.light,
@@ -206,25 +228,47 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  infoHeader: {
+  overviewHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    marginBottom: 16,
+    marginBottom: 20,
   },
-  infoTitle: {
-    fontSize: 18,
+  overviewTitle: {
+    fontSize: 20,
     fontWeight: '700' as const,
     color: Colors.textPrimary,
   },
-  infoDescription: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    lineHeight: 22,
+  progressContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginBottom: 12,
   },
-  phaseOverviewCard: {
+  progressAmount: {
+    fontSize: 36,
+    fontWeight: '800' as const,
+    color: Colors.textPrimary,
+  },
+  progressGoal: {
+    fontSize: 18,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+    marginLeft: 8,
+  },
+  progressBar: {
+    height: 12,
+    backgroundColor: Colors.lightGray,
+    borderRadius: 6,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: Colors.gold,
+    borderRadius: 6,
+  },
+  addCard: {
     backgroundColor: Colors.white,
-    borderRadius: 16,
+    borderRadius: 20,
     padding: 20,
     marginBottom: 16,
     borderWidth: 1,
@@ -235,108 +279,136 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  phaseOverviewTitle: {
+  addTitle: {
     fontSize: 16,
     fontWeight: '700' as const,
     color: Colors.textPrimary,
-    marginBottom: 20,
+    marginBottom: 12,
   },
-  phaseItem: {
+  inputRow: {
     flexDirection: 'row',
-    marginBottom: 20,
-    alignItems: 'flex-start',
+    gap: 12,
+    marginBottom: 16,
   },
-  phaseIcon: {
+  input: {
+    flex: 1,
+    backgroundColor: Colors.lightGray,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: Colors.textPrimary,
+    fontWeight: '600' as const,
+  },
+  addButton: {
+    backgroundColor: Colors.gold,
+    borderRadius: 12,
+    width: 56,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addButtonText: {
+    color: Colors.white,
+    fontSize: 18,
+    fontWeight: '700' as const,
+  },
+  quickButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  quickButton: {
+    flex: 1,
+    backgroundColor: Colors.lightGray,
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  quickButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.textPrimary,
+  },
+  historyCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  historyTitle: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
+    marginBottom: 16,
+  },
+  logItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border.light,
+  },
+  logIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
+    backgroundColor: Colors.lightGray,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16,
+    marginRight: 12,
   },
-  phaseIconLoading: {
-    backgroundColor: '#10B981',
-  },
-  phaseIconCutting: {
-    backgroundColor: '#F59E0B',
-  },
-  phaseIconRegen: {
-    backgroundColor: '#3B82F6',
-  },
-  phaseIconText: {
-    fontSize: 18,
-    fontWeight: '700' as const,
-    color: Colors.white,
-  },
-  phaseContent: {
+  logContent: {
     flex: 1,
   },
-  phaseItemTitle: {
-    fontSize: 15,
-    fontWeight: '700' as const,
+  logAmount: {
+    fontSize: 16,
+    fontWeight: '600' as const,
     color: Colors.textPrimary,
-    marginBottom: 4,
   },
-  phaseItemDescription: {
+  logTime: {
     fontSize: 13,
     color: Colors.textSecondary,
-    lineHeight: 19,
+    marginTop: 2,
   },
-  activePhaseCard: {
-    backgroundColor: '#FEF3C7',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    borderWidth: 2,
-    borderColor: '#F59E0B',
-  },
-  activePhaseHeader: {
-    flexDirection: 'row',
+  emptyHistory: {
+    paddingVertical: 32,
     alignItems: 'center',
-    gap: 10,
-    marginBottom: 12,
   },
-  activePhaseTitle: {
-    fontSize: 16,
-    fontWeight: '700' as const,
-    color: '#92400E',
-  },
-  activePhaseDescription: {
+  emptyHistoryText: {
     fontSize: 14,
-    color: '#78350F',
-    lineHeight: 20,
-    marginBottom: 12,
+    color: Colors.textSecondary,
   },
-  activePhaseNote: {
-    fontSize: 12,
-    color: '#92400E',
-    fontStyle: 'italic' as const,
-  },
-  warningCard: {
-    backgroundColor: '#FEE2E2',
-    borderRadius: 16,
+  tipsCard: {
+    backgroundColor: '#EFF6FF',
+    borderRadius: 20,
     padding: 20,
     marginBottom: 16,
-    borderWidth: 2,
-    borderColor: '#FCA5A5',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
   },
-  warningHeader: {
+  tipsHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     marginBottom: 12,
   },
-  warningTitle: {
+  tipsTitle: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#991B1B',
+    color: '#1E40AF',
   },
-  warningList: {
+  tipsList: {
     gap: 8,
   },
-  warningItem: {
+  tipItem: {
     fontSize: 13,
-    color: '#7F1D1D',
+    color: '#1E3A8A',
     lineHeight: 19,
   },
   modalContainer: {
@@ -387,7 +459,7 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     textTransform: 'uppercase' as const,
   },
-  input: {
+  waterInput: {
     backgroundColor: Colors.white,
     borderRadius: 12,
     padding: 16,
