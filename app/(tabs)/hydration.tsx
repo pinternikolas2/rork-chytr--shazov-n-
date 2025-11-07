@@ -1,177 +1,321 @@
+import { useState } from 'react';
 import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
-  Alert,
 } from 'react-native';
-import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Droplet, Droplets, AlertTriangle, Plus } from 'lucide-react-native';
+import { Droplets, Plus, Trash2, Info, TrendingUp, Target, Zap } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
-import { trpc } from '@/lib/trpc';
-
 
 export default function HydrationScreen() {
-  const { profile } = useApp();
+  const { 
+    addHydrationLog, 
+    deleteHydrationLog,
+    getTodayHydration,
+    getDailyHydrationGoal,
+    hydrationLogs,
+    getCurrentPhase,
+    getRWLProtocol,
+    getUpcomingFight,
+  } = useApp();
   const insets = useSafeAreaInsets();
-  const [waterAmount, setWaterAmount] = useState('');
 
-  const hydrationLogs = trpc.hydrationLogs.list.useQuery(
-    { userId: profile?.id || '' },
-    { enabled: !!profile?.id }
-  );
-  
-  const addLog = trpc.hydrationLogs.add.useMutation({
-    onSuccess: () => {
-      hydrationLogs.refetch();
-      setWaterAmount('');
-    },
-  });
+  const [waterInput, setWaterInput] = useState('');
 
-  const todayLogs = hydrationLogs.data?.filter((log: { date: Date }) => {
-    const logDate = new Date(log.date);
-    const today = new Date();
-    return (
-      logDate.getDate() === today.getDate() &&
-      logDate.getMonth() === today.getMonth() &&
-      logDate.getFullYear() === today.getFullYear()
-    );
-  });
+  const todayHydration = getTodayHydration();
+  const hydrationGoal = getDailyHydrationGoal();
+  const currentPhase = getCurrentPhase();
+  const upcomingFight = getUpcomingFight();
 
-  const todayTotal = todayLogs?.reduce((sum: number, log: { amount: number }) => sum + log.amount, 0) || 0;
-  const dailyGoal = 3000;
-
-  const handleAddWater = () => {
-    const amount = parseFloat(waterAmount);
-    if (!amount || amount <= 0) {
-      Alert.alert('Chyba', 'Zadejte platné množství vody');
-      return;
-    }
-
-    if (!profile?.id) {
-      Alert.alert('Chyba', 'Není přihlášen uživatel');
-      return;
-    }
-
-    addLog.mutate({
-      userId: profile.id,
-      date: new Date(),
-      amount,
-    });
+  const handleLogWater = async () => {
+    if (!waterInput) return;
+    const amount = parseInt(waterInput, 10);
+    if (isNaN(amount)) return;
+    
+    await addHydrationLog(amount);
+    setWaterInput('');
   };
 
+  const quickAddWater = async (amount: number) => {
+    await addHydrationLog(amount);
+  };
+
+  const getTodayLogs = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return hydrationLogs
+      .filter((log) => {
+        const logDate = new Date(log.date);
+        logDate.setHours(0, 0, 0, 0);
+        return logDate.getTime() === today.getTime();
+      })
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
+  };
+
+  const todayLogs = getTodayLogs();
+  const progress = Math.min((todayHydration / hydrationGoal) * 100, 100);
+
+  const getPhaseInfo = () => {
+    if (!currentPhase || !upcomingFight) {
+      return {
+        title: 'Údržbový režim',
+        description: 'Pij dostatek vody pro optimální výkon a regeneraci',
+        color: Colors.gold,
+        icon: '💧',
+      };
+    }
+
+    const now = new Date();
+    const daysUntilFight = Math.ceil((upcomingFight.date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (currentPhase.phase === 'WATER_CUT') {
+      const protocol = getRWLProtocol(daysUntilFight);
+      if (protocol) {
+        return {
+          title: `Fáze ${protocol.phase === 'loading' ? 'Zavodňování' : protocol.phase === 'medium' ? 'Přechodná' : protocol.phase === 'cutting' ? 'Odvodňování' : 'Finální'}`,
+          description: `D-${daysUntilFight}: ${protocol.waterTargetMl / 1000}L vody, ${protocol.sodiumTargetMg}mg sodíku`,
+          color: protocol.phase === 'loading' ? '#3B82F6' : protocol.phase === 'medium' ? '#F59E0B' : protocol.phase === 'cutting' ? '#EF4444' : '#DC2626',
+          icon: protocol.phase === 'loading' ? '💧' : protocol.phase === 'medium' ? '⚡' : protocol.phase === 'cutting' ? '🔥' : '🎯',
+          protocol,
+        };
+      }
+    }
+
+    if (currentPhase.phase === 'RECOVERY') {
+      return {
+        title: 'Obnova výkonu',
+        description: 'Rehydratace po vážení - maximální priorita',
+        color: '#10B981',
+        icon: '✨',
+      };
+    }
+
+    return {
+      title: 'Přípravná fáze',
+      description: 'Udržuj stabilní hydrataci pro optimální výkon',
+      color: Colors.gold,
+      icon: '💪',
+    };
+  };
+
+  const phaseInfo = getPhaseInfo();
 
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
-        <Text style={styles.headerTitle}>Hydratace</Text>
+        <View style={styles.headerTop}>
+          <Droplets size={28} color={Colors.gold} strokeWidth={2.5} />
+          <Text style={styles.headerTitle}>Hydratace</Text>
+        </View>
       </View>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
       >
-        <View style={styles.dailyOverviewCard}>
-          <View style={styles.overviewHeader}>
-            <Droplets size={28} color={Colors.gold} />
-            <Text style={styles.overviewTitle}>Dnešní hydratace</Text>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={[styles.phaseCard, { backgroundColor: phaseInfo.color + '15', borderColor: phaseInfo.color }]}>
+            <View style={styles.phaseHeader}>
+              <Text style={styles.phaseIcon}>{phaseInfo.icon}</Text>
+              <View style={styles.phaseTextContainer}>
+                <Text style={[styles.phaseTitle, { color: phaseInfo.color }]}>{phaseInfo.title}</Text>
+                <Text style={styles.phaseDescription}>{phaseInfo.description}</Text>
+              </View>
+            </View>
           </View>
-          <View style={styles.progressContainer}>
-            <Text style={styles.progressAmount}>{todayTotal} ml</Text>
-            <Text style={styles.progressGoal}>/ {dailyGoal} ml</Text>
-          </View>
-          <View style={styles.progressBar}>
-            <View
-              style={[
-                styles.progressFill,
-                { width: `${Math.min((todayTotal / dailyGoal) * 100, 100)}%` },
-              ]}
-            />
-          </View>
-        </View>
 
-        <View style={styles.addCard}>
-          <Text style={styles.addTitle}>Přidat vodu</Text>
-          <View style={styles.inputRow}>
-            <TextInput
-              style={styles.input}
-              placeholder="Množství (ml)"
-              placeholderTextColor={Colors.textSecondary}
-              keyboardType="numeric"
-              value={waterAmount}
-              onChangeText={setWaterAmount}
-            />
-            <Pressable
-              style={styles.addButton}
-              onPress={handleAddWater}
-              disabled={addLog.isPending}
-            >
-              {addLog.isPending ? (
-                <Text style={styles.addButtonText}>...</Text>
-              ) : (
-                <Plus size={24} color={Colors.white} strokeWidth={2.5} />
-              )}
-            </Pressable>
+          <View style={styles.progressCard}>
+            <View style={styles.progressHeader}>
+              <Text style={styles.progressTitle}>Dnešní hydratace</Text>
+              <Text style={styles.progressPercentage}>{Math.round(progress)}%</Text>
+            </View>
+            
+            <View style={styles.progressBarContainer}>
+              <View style={[styles.progressBar, { width: `${progress}%`, backgroundColor: phaseInfo.color }]} />
+            </View>
+            
+            <View style={styles.progressStats}>
+              <View style={styles.progressStat}>
+                <Text style={styles.progressStatValue}>{todayHydration}</Text>
+                <Text style={styles.progressStatLabel}>Vypito (ml)</Text>
+              </View>
+              <View style={styles.progressDivider} />
+              <View style={styles.progressStat}>
+                <Text style={styles.progressStatValue}>{hydrationGoal}</Text>
+                <Text style={styles.progressStatLabel}>Cíl (ml)</Text>
+              </View>
+              <View style={styles.progressDivider} />
+              <View style={styles.progressStat}>
+                <Text style={[styles.progressStatValue, { color: phaseInfo.color }]}>
+                  {Math.max(0, hydrationGoal - todayHydration)}
+                </Text>
+                <Text style={styles.progressStatLabel}>Zbývá (ml)</Text>
+              </View>
+            </View>
           </View>
-          <View style={styles.quickButtons}>
-            {[250, 500, 750, 1000].map((amount) => (
+
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Plus size={22} color={Colors.gold} strokeWidth={2.5} />
+              <Text style={styles.cardTitle}>Přidat vodu</Text>
+            </View>
+
+            <View style={styles.quickButtons}>
               <Pressable
-                key={amount}
-                style={styles.quickButton}
-                onPress={() => setWaterAmount(amount.toString())}
+                style={[styles.quickButton, { borderColor: phaseInfo.color }]}
+                onPress={() => quickAddWater(250)}
               >
-                <Text style={styles.quickButtonText}>+{amount}ml</Text>
+                <Text style={[styles.quickButtonText, { color: phaseInfo.color }]}>250ml</Text>
               </Pressable>
-            ))}
-          </View>
-        </View>
+              <Pressable
+                style={[styles.quickButton, { borderColor: phaseInfo.color }]}
+                onPress={() => quickAddWater(500)}
+              >
+                <Text style={[styles.quickButtonText, { color: phaseInfo.color }]}>500ml</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.quickButton, { borderColor: phaseInfo.color }]}
+                onPress={() => quickAddWater(750)}
+              >
+                <Text style={[styles.quickButtonText, { color: phaseInfo.color }]}>750ml</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.quickButton, { borderColor: phaseInfo.color }]}
+                onPress={() => quickAddWater(1000)}
+              >
+                <Text style={[styles.quickButtonText, { color: phaseInfo.color }]}>1L</Text>
+              </Pressable>
+            </View>
 
-        <View style={styles.historyCard}>
-          <Text style={styles.historyTitle}>Dnešní záznamy</Text>
-          {todayLogs && todayLogs.length > 0 ? (
-            todayLogs.map((log: { id?: string; amount: number; date: Date }, index: number) => (
-              <View key={log.id || index} style={styles.logItem}>
-                <View style={styles.logIcon}>
-                  <Droplet size={20} color={Colors.gold} />
+            <View style={styles.inputRow}>
+              <TextInput
+                style={styles.input}
+                value={waterInput}
+                onChangeText={setWaterInput}
+                placeholder="Vlastní množství (ml)"
+                placeholderTextColor={Colors.textLight}
+                keyboardType="number-pad"
+              />
+              <Pressable
+                style={[styles.addButton, !waterInput && styles.buttonDisabled, { backgroundColor: phaseInfo.color }]}
+                onPress={handleLogWater}
+                disabled={!waterInput}
+              >
+                <Plus size={20} color={Colors.white} strokeWidth={2.5} />
+              </Pressable>
+            </View>
+          </View>
+
+          {phaseInfo.protocol && (
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <Info size={22} color={Colors.gold} strokeWidth={2.5} />
+                <Text style={styles.cardTitle}>Dnešní protokol</Text>
+              </View>
+
+              <View style={styles.protocolGrid}>
+                <View style={styles.protocolItem}>
+                  <Droplets size={18} color={phaseInfo.color} />
+                  <Text style={styles.protocolValue}>{phaseInfo.protocol.waterTargetMl / 1000}L</Text>
+                  <Text style={styles.protocolLabel}>Voda</Text>
                 </View>
-                <View style={styles.logContent}>
-                  <Text style={styles.logAmount}>{log.amount} ml</Text>
-                  <Text style={styles.logTime}>
-                    {new Date(log.date).toLocaleTimeString('cs-CZ', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </Text>
+                <View style={styles.protocolItem}>
+                  <Target size={18} color={phaseInfo.color} />
+                  <Text style={styles.protocolValue}>{phaseInfo.protocol.sodiumTargetMg}mg</Text>
+                  <Text style={styles.protocolLabel}>Sodík</Text>
+                </View>
+                <View style={styles.protocolItem}>
+                  <Zap size={18} color={phaseInfo.color} />
+                  <Text style={styles.protocolValue}>{phaseInfo.protocol.potassiumTargetMg}mg</Text>
+                  <Text style={styles.protocolLabel}>Draslík</Text>
                 </View>
               </View>
-            ))
-          ) : (
-            <View style={styles.emptyHistory}>
-              <Text style={styles.emptyHistoryText}>Zatím žádné záznamy</Text>
+
+              <View style={styles.instructionsContainer}>
+                <Text style={styles.instructionsTitle}>Pokyny:</Text>
+                {phaseInfo.protocol.instructions.map((instruction, index) => (
+                  <Text key={index} style={styles.instructionText}>• {instruction}</Text>
+                ))}
+              </View>
+
+              {phaseInfo.protocol.warnings && phaseInfo.protocol.warnings.length > 0 && (
+                <View style={styles.warningsContainer}>
+                  <Text style={styles.warningsTitle}>⚠️ Upozornění:</Text>
+                  {phaseInfo.protocol.warnings.map((warning, index) => (
+                    <Text key={index} style={styles.warningText}>• {warning}</Text>
+                  ))}
+                </View>
+              )}
             </View>
           )}
-        </View>
 
-        <View style={styles.tipsCard}>
-          <View style={styles.tipsHeader}>
-            <AlertTriangle size={20} color="#3B82F6" />
-            <Text style={styles.tipsTitle}>Tipy pro správnou hydrataci</Text>
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <TrendingUp size={22} color={Colors.gold} strokeWidth={2.5} />
+              <Text style={styles.cardTitle}>Dnešní záznamy ({todayLogs.length})</Text>
+            </View>
+
+            {todayLogs.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Droplets size={48} color={Colors.textLight} strokeWidth={1.5} />
+                <Text style={styles.emptyStateText}>Zatím žádné záznamy</Text>
+                <Text style={styles.emptyStateSubtext}>Začni zaznamenávat hydrataci pomocí tlačítek výše</Text>
+              </View>
+            ) : (
+              <View style={styles.logsList}>
+                {todayLogs.map((log) => (
+                  <View key={log.id} style={styles.logItem}>
+                    <View style={styles.logItemContent}>
+                      <View style={styles.logItemLeft}>
+                        <View style={[styles.logItemDot, { backgroundColor: phaseInfo.color }]} />
+                        <View>
+                          <Text style={styles.logItemValue}>{log.amount} ml</Text>
+                          <Text style={styles.logItemTime}>
+                            {log.date.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}
+                          </Text>
+                        </View>
+                      </View>
+                      <Pressable
+                        style={styles.deleteButton}
+                        onPress={() => {
+                          Alert.alert(
+                            'Smazat záznam',
+                            'Opravdu chcete smazat tento záznam hydratace?',
+                            [
+                              { text: 'Zrušit', style: 'cancel' },
+                              {
+                                text: 'Smazat',
+                                style: 'destructive',
+                                onPress: async () => {
+                                  await deleteHydrationLog(log.id);
+                                },
+                              },
+                            ]
+                          );
+                        }}
+                      >
+                        <Trash2 size={18} color="#EF4444" strokeWidth={2} />
+                      </Pressable>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
-          <View style={styles.tipsList}>
-            <Text style={styles.tipItem}>• Pijte pravidelně během celého dne</Text>
-            <Text style={styles.tipItem}>• Vodu pijte před, během a po tréninku</Text>
-            <Text style={styles.tipItem}>• Sledujte barvu moči - měla by být světle žlutá</Text>
-            <Text style={styles.tipItem}>• Zvyšte příjem při vyšších teplotách</Text>
-            <Text style={styles.tipItem}>• Minimálně 2-3L vody denně</Text>
-          </View>
-        </View>
-      </ScrollView>
-
-
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }
@@ -182,373 +326,295 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.lightGray,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: 20,
     paddingBottom: 16,
     backgroundColor: Colors.white,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border.light,
   },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: '700' as const,
     color: Colors.textPrimary,
+  },
+  keyboardView: {
+    flex: 1,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingHorizontal: 16,
+    paddingTop: 16,
     paddingBottom: 24,
   },
-
-  dailyOverviewCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 20,
-    padding: 24,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: Colors.border.light,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+  phaseCard: {
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 14,
+    borderWidth: 2,
   },
-  overviewHeader: {
+  phaseHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    marginBottom: 20,
   },
-  overviewTitle: {
-    fontSize: 20,
+  phaseIcon: {
+    fontSize: 32,
+  },
+  phaseTextContainer: {
+    flex: 1,
+  },
+  phaseTitle: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    marginBottom: 4,
+  },
+  phaseDescription: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    lineHeight: 20,
+  },
+  progressCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  progressTitle: {
+    fontSize: 17,
     fontWeight: '700' as const,
     color: Colors.textPrimary,
   },
-  progressContainer: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    marginBottom: 12,
+  progressPercentage: {
+    fontSize: 20,
+    fontWeight: '700' as const,
+    color: Colors.gold,
   },
-  progressAmount: {
-    fontSize: 36,
-    fontWeight: '800' as const,
-    color: Colors.textPrimary,
-  },
-  progressGoal: {
-    fontSize: 18,
-    fontWeight: '600' as const,
-    color: Colors.textSecondary,
-    marginLeft: 8,
-  },
-  progressBar: {
+  progressBarContainer: {
     height: 12,
     backgroundColor: Colors.lightGray,
     borderRadius: 6,
     overflow: 'hidden',
+    marginBottom: 16,
   },
-  progressFill: {
+  progressBar: {
     height: '100%',
-    backgroundColor: Colors.gold,
     borderRadius: 6,
   },
-  addCard: {
+  progressStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  progressStat: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  progressStatValue: {
+    fontSize: 20,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
+    marginBottom: 4,
+  },
+  progressStatLabel: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+  },
+  progressDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: Colors.border.light,
+  },
+  card: {
     backgroundColor: Colors.white,
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 16,
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 14,
     borderWidth: 1,
     borderColor: Colors.border.light,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
   },
-  addTitle: {
-    fontSize: 16,
-    fontWeight: '700' as const,
-    color: Colors.textPrimary,
-    marginBottom: 12,
-  },
-  inputRow: {
+  cardHeader: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
-  },
-  input: {
-    flex: 1,
-    backgroundColor: Colors.lightGray,
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    color: Colors.textPrimary,
-    fontWeight: '600' as const,
-  },
-  addButton: {
-    backgroundColor: Colors.gold,
-    borderRadius: 12,
-    width: 56,
-    height: 56,
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 10,
+    marginBottom: 14,
   },
-  addButtonText: {
-    color: Colors.white,
-    fontSize: 18,
+  cardTitle: {
+    fontSize: 17,
     fontWeight: '700' as const,
+    color: Colors.textPrimary,
   },
   quickButtons: {
     flexDirection: 'row',
     gap: 8,
+    marginBottom: 14,
   },
   quickButton: {
     flex: 1,
-    backgroundColor: Colors.lightGray,
-    borderRadius: 10,
     paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: Colors.white,
     alignItems: 'center',
+    borderWidth: 2,
   },
   quickButtonText: {
     fontSize: 14,
-    fontWeight: '600' as const,
-    color: Colors.textPrimary,
+    fontWeight: '700' as const,
   },
-  historyCard: {
+  inputRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  input: {
+    flex: 1,
     backgroundColor: Colors.white,
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 16,
+    borderRadius: 10,
+    padding: 14,
+    fontSize: 15,
+    color: Colors.textPrimary,
     borderWidth: 1,
     borderColor: Colors.border.light,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
   },
-  historyTitle: {
-    fontSize: 16,
-    fontWeight: '700' as const,
-    color: Colors.textPrimary,
-    marginBottom: 16,
-  },
-  logItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border.light,
-  },
-  logIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.lightGray,
+  addButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
   },
-  logContent: {
-    flex: 1,
-  },
-  logAmount: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: Colors.textPrimary,
-  },
-  logTime: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  emptyHistory: {
-    paddingVertical: 32,
-    alignItems: 'center',
-  },
-  emptyHistoryText: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-  },
-  tipsCard: {
-    backgroundColor: '#EFF6FF',
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#BFDBFE',
-  },
-  tipsHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 12,
-  },
-  tipsTitle: {
-    fontSize: 16,
-    fontWeight: '700' as const,
-    color: '#1E40AF',
-  },
-  tipsList: {
-    gap: 8,
-  },
-  tipItem: {
-    fontSize: 13,
-    color: '#1E3A8A',
-    lineHeight: 19,
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: Colors.white,
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  modalScroll: {
-    flex: 1,
-  },
-  modalContent: {
-    paddingHorizontal: 24,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  modalTitle: {
-    fontSize: 28,
-    fontWeight: '700' as const,
-    color: Colors.textPrimary,
-  },
-  form: {
-    gap: 20,
-  },
-  sectionHeaderText: {
-    fontSize: 20,
-    fontWeight: '700' as const,
-    color: Colors.textPrimary,
-    marginTop: 8,
-  },
-  sectionSubtext: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    marginTop: -12,
-    lineHeight: 20,
-  },
-  inputGroup: {
-    gap: 8,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: Colors.textSecondary,
-    textTransform: 'uppercase' as const,
-  },
-  waterInput: {
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    color: Colors.textPrimary,
-    borderWidth: 1,
-    borderColor: Colors.border.light,
-  },
-  saveButton: {
-    backgroundColor: Colors.gold,
-    borderRadius: 16,
-    padding: 18,
-    alignItems: 'center',
-    marginTop: 32,
-  },
-  saveButtonDisabled: {
+  buttonDisabled: {
     opacity: 0.5,
   },
-  saveButtonText: {
-    color: Colors.black,
-    fontSize: 18,
-    fontWeight: '700' as const,
-  },
-  timingButtons: {
+  protocolGrid: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
+    marginBottom: 16,
   },
-  timingButton: {
+  protocolItem: {
     flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: Colors.white,
-    borderWidth: 2,
-    borderColor: Colors.border.light,
+    backgroundColor: Colors.lightGray,
+    borderRadius: 10,
+    padding: 12,
     alignItems: 'center',
+    gap: 6,
   },
-  timingButtonActive: {
-    borderColor: Colors.gold,
-    backgroundColor: Colors.lightGray,
-  },
-  timingButtonText: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: Colors.textSecondary,
-  },
-  timingButtonTextActive: {
-    color: Colors.gold,
-  },
-  textArea: {
-    minHeight: 80,
-    textAlignVertical: 'top' as const,
-    paddingTop: 12,
-  },
-  dividerLine: {
-    height: 1,
-    backgroundColor: Colors.border.light,
-    marginVertical: 8,
-  },
-  buttonGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  optionButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: Colors.white,
-    borderWidth: 2,
-    borderColor: Colors.border.light,
-  },
-  optionButtonActive: {
-    borderColor: Colors.gold,
-    backgroundColor: Colors.lightGray,
-  },
-  optionText: {
-    fontSize: 14,
-    fontWeight: '600' as const,
+  protocolValue: {
+    fontSize: 16,
+    fontWeight: '700' as const,
     color: Colors.textPrimary,
   },
-  optionTextActive: {
-    color: Colors.gold,
+  protocolLabel: {
+    fontSize: 11,
+    color: Colors.textSecondary,
   },
-  phaseInfoContainer: {
-    backgroundColor: '#F0F9FF',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#BAE6FD',
+  instructionsContainer: {
+    backgroundColor: Colors.lightGray,
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 12,
   },
-  phaseInfoTitle: {
+  instructionsTitle: {
     fontSize: 14,
     fontWeight: '700' as const,
-    color: '#0369A1',
+    color: Colors.textPrimary,
     marginBottom: 8,
   },
-  phaseInfoDescription: {
+  instructionText: {
     fontSize: 13,
-    color: '#075985',
-    lineHeight: 19,
+    color: Colors.textSecondary,
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+  warningsContainer: {
+    backgroundColor: '#FEF2F2',
+    borderRadius: 10,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+  },
+  warningsTitle: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: '#DC2626',
+    marginBottom: 8,
+  },
+  warningText: {
+    fontSize: 13,
+    color: '#DC2626',
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.textPrimary,
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  emptyStateSubtext: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+  },
+  logsList: {
+    gap: 8,
+  },
+  logItem: {
+    backgroundColor: Colors.lightGray,
+    borderRadius: 10,
+    padding: 12,
+  },
+  logItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  logItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  logItemDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  logItemValue: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
+    marginBottom: 2,
+  },
+  logItemTime: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+  },
+  deleteButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border.light,
   },
 });

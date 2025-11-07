@@ -12,7 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Scale, Droplets, BarChart3, TrendingDown, AlertCircle, Flame, Drumstick, Wheat, Dumbbell, Moon, Activity as ActivityIcon, ChevronRight, Calendar, Trash2 } from 'lucide-react-native';
+import { Scale, Droplets, BarChart3, Dumbbell, Moon, Activity as ActivityIcon, ChevronRight, Calendar, Trash2 } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
@@ -24,8 +24,6 @@ export default function TrackingScreen() {
     t, 
     addWeightLog, 
     deleteWeightLog,
-    addHydrationLog, 
-    deleteHydrationLog,
     addTrainingLog,
     deleteTrainingLog,
     addBodyCompositionLog,
@@ -34,13 +32,11 @@ export default function TrackingScreen() {
     getTodayHydration,
     getTodayNutrition,
     getNutritionGoals,
-    profile 
   } = useApp();
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
   const [weightInput, setWeightInput] = useState('');
-  const [waterInput, setWaterInput] = useState('');
   const [selectedTime, setSelectedTime] = useState<'morning' | 'evening'>('morning');
   const [bodyFatInput, setBodyFatInput] = useState('');
   const [muscleMassInput, setMuscleMassInput] = useState('');
@@ -64,19 +60,6 @@ export default function TrackingScreen() {
     await addWeightLog(weight, selectedTime);
     setWeightInput('');
     Alert.alert(t.common.success, 'Váha byla zaznamenána');
-  };
-
-  const handleLogWater = async () => {
-    if (!waterInput) return;
-    const amount = parseInt(waterInput, 10);
-    if (isNaN(amount)) return;
-    
-    await addHydrationLog(amount);
-    setWaterInput('');
-  };
-
-  const quickAddWater = (amount: number) => {
-    setWaterInput(amount.toString());
   };
 
   const handleLogTraining = async () => {
@@ -111,13 +94,6 @@ export default function TrackingScreen() {
   };
 
   const todayTrainings = getTodayTrainings();
-
-  const caloriesProgress = (todayNutrition.calories / nutritionGoals.calories) * 100;
-  const proteinProgress = (todayNutrition.protein / nutritionGoals.protein) * 100;
-  const carbsProgress = (todayNutrition.carbs / nutritionGoals.carbs) * 100;
-  const fatProgress = (todayNutrition.fat / nutritionGoals.fat) * 100;
-  const sodiumProgress = (todayNutrition.sodium / nutritionGoals.sodium) * 100;
-  const waterProgress = (todayHydration / 3000) * 100;
 
   const metrics: { key: MetricType; label: string }[] = [
     { key: 'weight', label: 'Váha' },
@@ -240,42 +216,9 @@ export default function TrackingScreen() {
               </View>
             </View>
 
-            <TextInput
-              style={styles.input}
-              value={waterInput}
-              onChangeText={setWaterInput}
-              placeholder={t.tracking.enterWater}
-              placeholderTextColor={Colors.textLight}
-              keyboardType="number-pad"
-            />
-
-            <View style={styles.quickButtons}>
-              <Pressable
-                style={styles.quickButton}
-                onPress={() => quickAddWater(250)}
-              >
-                <Text style={styles.quickButtonText}>250ml</Text>
-              </Pressable>
-              <Pressable
-                style={styles.quickButton}
-                onPress={() => quickAddWater(500)}
-              >
-                <Text style={styles.quickButtonText}>500ml</Text>
-              </Pressable>
-              <Pressable
-                style={styles.quickButton}
-                onPress={() => quickAddWater(1000)}
-              >
-                <Text style={styles.quickButtonText}>1L</Text>
-              </Pressable>
-            </View>
-
-            <Pressable
-              style={[styles.button, !waterInput && styles.buttonDisabled]}
-              onPress={handleLogWater}
-              disabled={!waterInput}
-            >
-              <Text style={styles.buttonText}>{t.tracking.save}</Text>
+            <Pressable style={styles.navigateButton} onPress={() => router.push('/hydration')}>
+              <Text style={styles.navigateButtonText}>Přejít do Hydratace</Text>
+              <ChevronRight size={20} color={Colors.black} />
             </Pressable>
           </View>
 
@@ -723,7 +666,6 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
   },
   hydrationStats: {
-    flexDirection: 'row',
     marginBottom: 14,
   },
   statBox: {
@@ -743,25 +685,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textSecondary,
     textAlign: 'center',
-  },
-  quickButtons: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 14,
-  },
-  quickButton: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: Colors.lightGray,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.gold,
-  },
-  quickButtonText: {
-    fontSize: 13,
-    fontWeight: '600' as const,
-    color: Colors.gold,
   },
   nutritionSummary: {
     backgroundColor: Colors.lightGray,
