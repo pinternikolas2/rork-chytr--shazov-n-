@@ -1,12 +1,12 @@
 import { useMemo, useEffect, useRef } from 'react';
-import { Animated, Image, Pressable, ScrollView, StyleSheet, Text, View, Dimensions } from 'react-native';
+import { Animated, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Plus, Droplets, TrendingDown, AlertTriangle, Activity, Brain as BrainIcon, Flame, Target, Clock, User, ChevronRight, Award, Zap, X } from 'lucide-react-native';
+import { Plus, Droplets, TrendingDown, AlertTriangle, Activity, Flame, Target, Clock, User, ChevronRight, Award, Zap, X } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 
 export default function DashboardScreen() {
   const { 
@@ -19,12 +19,15 @@ export default function DashboardScreen() {
     getBodyComposition,
     getMetabolicData,
     getWeightCutPlan,
-    getWeightProgress,
     weightLogs,
     getTodayNutrition,
     getNutritionGoals,
     dangerBannerDismissed,
-    dismissDangerBanner 
+    dismissDangerBanner,
+    getCurrentPhase,
+    getRWLProtocol,
+    getActiveREGENProtocol,
+    hydrationLogs 
   } = useApp();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -51,7 +54,7 @@ export default function DashboardScreen() {
     return weightLogs.slice(-7).reverse();
   }, [weightLogs]);
 
-  const weightProgress = getWeightProgress();
+
 
   const hydrationProgress = (todayHydration / dailyHydrationGoal) * 100;
 
@@ -81,6 +84,33 @@ export default function DashboardScreen() {
     return oldest - newest;
   }, [weightLogs]);
 
+  const currentPhase = getCurrentPhase();
+  const activeREGEN = getActiveREGENProtocol();
+
+  const getTodaySodium = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return hydrationLogs
+      .filter((log) => {
+        const logDate = new Date(log.date);
+        logDate.setHours(0, 0, 0, 0);
+        return logDate.getTime() === today.getTime();
+      })
+      .reduce((sum, log) => sum + (log.sodiumMg || 0), 0);
+  }, [hydrationLogs]);
+
+  const weeklyWeightLossPercentage = useMemo(() => {
+    if (!profile || weightLogs.length < 2) return 0;
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const recentLogs = weightLogs.filter(log => log.date >= weekAgo);
+    if (recentLogs.length < 2) return 0;
+    const oldest = recentLogs[0].weight;
+    const newest = recentLogs[recentLogs.length - 1].weight;
+    const weightLoss = oldest - newest;
+    return (weightLoss / oldest) * 100;
+  }, [weightLogs, profile]);
+
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -95,7 +125,7 @@ export default function DashboardScreen() {
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+  }, [fadeAnim, slideAnim]);
 
   return (
     <View style={styles.container}>
@@ -129,6 +159,205 @@ export default function DashboardScreen() {
             <User size={20} color={Colors.textSecondary} />
           </Pressable>
         </Animated.View>
+
+        {currentPhase && (
+          <Animated.View 
+            style={[
+              styles.phaseCard,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            <View style={[
+              styles.phaseBadge,
+              currentPhase.phase === 'GWL' && styles.phaseBadgeGWL,
+              currentPhase.phase === 'RWL' && styles.phaseBadgeRWL,
+              currentPhase.phase === 'REGEN' && styles.phaseBadgeREGEN,
+            ]}>
+              <Text style={styles.phaseBadgeText}>{currentPhase.phase}</Text>
+            </View>
+            <Text style={styles.phaseDescription}>{currentPhase.description}</Text>
+            
+            {currentPhase.phase === 'GWL' && weeklyWeightLossPercentage > 1 && (
+              <View style={styles.safetySemaphore}>
+                <View style={styles.semaphoreRed} />
+                <View style={styles.semaphoreContent}>
+                  <AlertTriangle size={18} color="#EF4444" />
+                  <View style={styles.semaphoreTextContainer}>
+                    <Text style={styles.semaphoreTitle}>NEBEZPEČNÉ TEMPO HUBNUTÍ!</Text>
+                    <Text style={styles.semaphoreText}>
+                      Týdenní úbytek: {weeklyWeightLossPercentage.toFixed(2)}% (bezpečné maximum: 1%)
+                    </Text>
+                    <Text style={styles.semaphoreAction}>
+                      ⚠️ Hrozí ztráta svalové hmoty. Zvyšte příjem o 200-300 kcal.
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            )}
+
+            {currentPhase.phase === 'RWL' && daysUntilFight && (
+              <View style={styles.rwlProtocolCard}>
+                <Text style={styles.rwlTitle}>DENNÍ PROTOKOL (D-{daysUntilFight})</Text>
+                {(() => {
+                  const protocol = getRWLProtocol(daysUntilFight);
+                  if (!protocol) return null;
+                  const todayHydration = getTodayHydration();
+                  const todaySodium = getTodaySodium;
+                  const waterProgress = (todayHydration / protocol.waterTargetMl) * 100;
+                  const sodiumProgress = (todaySodium / protocol.sodiumTargetMg) * 100;
+                  
+                  return (
+                    <>
+                      <View style={styles.rwlMetricRow}>
+                        <View style={styles.rwlMetricContainer}>
+                          <View style={styles.rwlMetricHeader}>
+                            <Droplets size={20} color="#3B9AE1" />
+                            <Text style={styles.rwlMetricLabel}>Voda</Text>
+                          </View>
+                          <View style={styles.rwlProgressContainer}>
+                            <View style={styles.rwlProgressBar}>
+                              <View style={[
+                                styles.rwlProgressFill,
+                                { 
+                                  width: `${Math.min(100, waterProgress)}%`,
+                                  backgroundColor: waterProgress >= 100 ? '#10B981' : '#3B9AE1'
+                                }
+                              ]} />
+                            </View>
+                            <Text style={styles.rwlProgressText}>
+                              {(todayHydration / 1000).toFixed(1)}L / {(protocol.waterTargetMl / 1000).toFixed(1)}L
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+
+                      <View style={styles.rwlMetricRow}>
+                        <View style={styles.rwlMetricContainer}>
+                          <View style={styles.rwlMetricHeader}>
+                            <AlertTriangle size={20} color="#EF4444" />
+                            <Text style={styles.rwlMetricLabel}>Sodík</Text>
+                          </View>
+                          <View style={styles.rwlProgressContainer}>
+                            <View style={styles.rwlProgressBar}>
+                              <View style={[
+                                styles.rwlProgressFill,
+                                { 
+                                  width: `${Math.min(100, sodiumProgress)}%`,
+                                  backgroundColor: sodiumProgress > 100 ? '#EF4444' : sodiumProgress >= 80 ? '#F59E0B' : '#10B981'
+                                }
+                              ]} />
+                            </View>
+                            <Text style={styles.rwlProgressText}>
+                              {todaySodium.toFixed(0)} / {protocol.sodiumTargetMg} mg
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+
+                      <View style={styles.rwlInstructionsContainer}>
+                        <Text style={styles.rwlInstructionsTitle}>Instrukce pro dnešek:</Text>
+                        {protocol.instructions.map((instruction, idx) => (
+                          <View key={idx} style={styles.rwlInstructionRow}>
+                            <Text style={styles.rwlInstructionBullet}>•</Text>
+                            <Text style={styles.rwlInstructionText}>{instruction}</Text>
+                          </View>
+                        ))}
+                      </View>
+
+                      {protocol.warnings && protocol.warnings.length > 0 && (
+                        <View style={styles.rwlWarningsContainer}>
+                          {protocol.warnings.map((warning, idx) => (
+                            <View key={idx} style={styles.rwlWarningRow}>
+                              <AlertTriangle size={14} color="#EF4444" />
+                              <Text style={styles.rwlWarningText}>{warning}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      )}
+                    </>
+                  );
+                })()}
+              </View>
+            )}
+
+            {currentPhase.phase === 'REGEN' && activeREGEN && (
+              <View style={styles.regenProtocolCard}>
+                <Text style={styles.regenTitle}>PROTOKOL OBNOVY VÝKONU</Text>
+                <View style={styles.regenTasksContainer}>
+                  {activeREGEN.protocols.map((task, idx) => {
+                    const now = new Date();
+                    const weighInTime = activeREGEN.record.regenProtocolStarted || activeREGEN.record.weighInTime;
+                    const minutesSinceWeighIn = Math.floor((now.getTime() - weighInTime.getTime()) / (1000 * 60));
+                    const isActive = minutesSinceWeighIn >= task.timeElapsedMinutes && !task.completed;
+                    const minutesRemaining = Math.max(0, task.timeElapsedMinutes - minutesSinceWeighIn);
+                    const hoursRemaining = Math.floor(minutesRemaining / 60);
+                    const minsRemaining = minutesRemaining % 60;
+                    
+                    return (
+                      <View 
+                        key={idx} 
+                        style={[
+                          styles.regenTaskCard,
+                          task.completed && styles.regenTaskCompleted,
+                          isActive && styles.regenTaskActive,
+                        ]}
+                      >
+                        <View style={styles.regenTaskHeader}>
+                          <View style={[
+                            styles.regenTaskNumber,
+                            task.completed && styles.regenTaskNumberCompleted,
+                            isActive && styles.regenTaskNumberActive,
+                          ]}>
+                            <Text style={[
+                              styles.regenTaskNumberText,
+                              (task.completed || isActive) && styles.regenTaskNumberTextWhite,
+                            ]}>{task.taskNumber}</Text>
+                          </View>
+                          <Text style={styles.regenTaskTitle}>{task.taskTitle}</Text>
+                        </View>
+                        
+                        {isActive && !task.completed && (
+                          <View style={styles.regenCountdown}>
+                            <Clock size={16} color={Colors.gold} />
+                            <Text style={styles.regenCountdownText}>
+                              {hoursRemaining > 0 ? `Za ${hoursRemaining}h ${minsRemaining}m` : minutesRemaining > 0 ? `Za ${minsRemaining}m` : 'NYNÍ'}
+                            </Text>
+                          </View>
+                        )}
+
+                        <View style={styles.regenTaskTargets}>
+                          <View style={styles.regenTargetItem}>
+                            <Droplets size={16} color="#3B9AE1" />
+                            <Text style={styles.regenTargetText}>{task.fluidTargetMl}ml</Text>
+                          </View>
+                          <View style={styles.regenTargetItem}>
+                            <Zap size={16} color="#F4C430" />
+                            <Text style={styles.regenTargetText}>{task.carbsTargetG}g sacharidů</Text>
+                          </View>
+                          {task.proteinTargetG && (
+                            <View style={styles.regenTargetItem}>
+                              <Target size={16} color="#4ECDC4" />
+                              <Text style={styles.regenTargetText}>{task.proteinTargetG}g bílkovin</Text>
+                            </View>
+                          )}
+                        </View>
+
+                        <View style={styles.regenInstructionsList}>
+                          {task.instructions.slice(0, 2).map((instruction, i) => (
+                            <Text key={i} style={styles.regenInstructionText}>• {instruction}</Text>
+                          ))}
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
+          </Animated.View>
+        )}
 
         {safetyStatus && safetyStatus.level === 'danger' && !dangerBannerDismissed && (
           <Animated.View 
@@ -1041,5 +1270,282 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600' as const,
     color: Colors.textSecondary,
+  },
+  phaseCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: Colors.gold,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  phaseBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginBottom: 12,
+  },
+  phaseBadgeGWL: {
+    backgroundColor: '#10B981',
+  },
+  phaseBadgeRWL: {
+    backgroundColor: '#F59E0B',
+  },
+  phaseBadgeREGEN: {
+    backgroundColor: '#3B82F6',
+  },
+  phaseBadgeText: {
+    fontSize: 12,
+    fontWeight: '700' as const,
+    color: Colors.white,
+    textTransform: 'uppercase' as const,
+  },
+  phaseDescription: {
+    fontSize: 14,
+    color: Colors.textPrimary,
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  safetySemaphore: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#EF4444',
+  },
+  semaphoreRed: {
+    height: 4,
+    backgroundColor: '#EF4444',
+  },
+  semaphoreContent: {
+    flexDirection: 'row',
+    padding: 14,
+    gap: 12,
+    backgroundColor: '#FEF2F2',
+  },
+  semaphoreTextContainer: {
+    flex: 1,
+  },
+  semaphoreTitle: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: '#EF4444',
+    marginBottom: 4,
+  },
+  semaphoreText: {
+    fontSize: 12,
+    color: '#DC2626',
+    marginBottom: 4,
+  },
+  semaphoreAction: {
+    fontSize: 12,
+    color: '#991B1B',
+    fontWeight: '600' as const,
+  },
+  rwlProtocolCard: {
+    marginTop: 4,
+  },
+  rwlTitle: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
+    marginBottom: 16,
+    textTransform: 'uppercase' as const,
+  },
+  rwlMetricRow: {
+    marginBottom: 16,
+  },
+  rwlMetricContainer: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 14,
+  },
+  rwlMetricHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+  },
+  rwlMetricLabel: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: Colors.textPrimary,
+  },
+  rwlProgressContainer: {
+    gap: 6,
+  },
+  rwlProgressBar: {
+    width: '100%',
+    height: 8,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  rwlProgressFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  rwlProgressText: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    fontWeight: '600' as const,
+  },
+  rwlInstructionsContainer: {
+    backgroundColor: '#F0FDF4',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+  },
+  rwlInstructionsTitle: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: '#166534',
+    marginBottom: 10,
+  },
+  rwlInstructionRow: {
+    flexDirection: 'row',
+    marginBottom: 6,
+    paddingRight: 8,
+  },
+  rwlInstructionBullet: {
+    fontSize: 14,
+    color: '#16A34A',
+    marginRight: 8,
+    fontWeight: '700' as const,
+  },
+  rwlInstructionText: {
+    flex: 1,
+    fontSize: 12,
+    color: '#166534',
+    lineHeight: 18,
+  },
+  rwlWarningsContainer: {
+    backgroundColor: '#FEF2F2',
+    borderRadius: 12,
+    padding: 14,
+    gap: 8,
+  },
+  rwlWarningRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  rwlWarningText: {
+    flex: 1,
+    fontSize: 12,
+    color: '#991B1B',
+    lineHeight: 18,
+  },
+  regenProtocolCard: {
+    marginTop: 4,
+  },
+  regenTitle: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
+    marginBottom: 16,
+    textTransform: 'uppercase' as const,
+  },
+  regenTasksContainer: {
+    gap: 12,
+  },
+  regenTaskCard: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+  },
+  regenTaskCompleted: {
+    backgroundColor: '#F0FDF4',
+    borderColor: '#86EFAC',
+    opacity: 0.7,
+  },
+  regenTaskActive: {
+    backgroundColor: '#FEF3C7',
+    borderColor: Colors.gold,
+  },
+  regenTaskHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
+  regenTaskNumber: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#E5E7EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  regenTaskNumberCompleted: {
+    backgroundColor: '#10B981',
+  },
+  regenTaskNumberActive: {
+    backgroundColor: Colors.gold,
+  },
+  regenTaskNumberText: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
+  },
+  regenTaskNumberTextWhite: {
+    color: Colors.white,
+  },
+  regenTaskTitle: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: Colors.textPrimary,
+  },
+  regenCountdown: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    marginBottom: 12,
+  },
+  regenCountdownText: {
+    fontSize: 12,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
+  },
+  regenTaskTargets: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 12,
+  },
+  regenTargetItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.white,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  regenTargetText: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+    color: Colors.textPrimary,
+  },
+  regenInstructionsList: {
+    gap: 4,
+  },
+  regenInstructionText: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    lineHeight: 16,
   },
 });
