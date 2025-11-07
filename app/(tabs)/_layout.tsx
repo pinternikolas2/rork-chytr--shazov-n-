@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Home, Activity, Swords, Brain, User2, UtensilsCrossed } from "lucide-react-native";
+import { Home, Activity, Droplet, Brain, User2, UtensilsCrossed } from "lucide-react-native";
 import React from "react";
 import { Colors } from "@/constants/colors";
 import { useApp } from "@/contexts/AppContext";
@@ -73,11 +73,11 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="fights"
+        name="hydration"
         options={{
-          title: t.fights.title,
+          title: "Hydratace",
           tabBarIcon: ({ color, focused }) => (
-            <Swords 
+            <Droplet 
               color={color} 
               size={focused ? 26 : 24} 
               strokeWidth={focused ? 2.5 : 2}

@@ -1,7 +1,7 @@
-import { useMemo, useEffect, useRef } from 'react';
+import { useMemo, useEffect, useRef, useState } from 'react';
 import { Animated, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Plus, Droplets, TrendingDown, AlertTriangle, Activity, Flame, Target, Clock, User, ChevronRight, Award, Zap, X } from 'lucide-react-native';
+import { Plus, Droplets, TrendingDown, AlertTriangle, Activity, Flame, Target, Clock, User, ChevronRight, Award, Zap, X, LogOut } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
@@ -12,7 +12,8 @@ export default function DashboardScreen() {
   const { 
     t, 
     profile, 
-    getUpcomingFight, 
+    getUpcomingFight,
+    deleteFight, 
     getTodayHydration, 
     getDailyHydrationGoal,
     getSafetyStatus,
@@ -31,6 +32,7 @@ export default function DashboardScreen() {
   } = useApp();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const [showEndFightDialog, setShowEndFightDialog] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
@@ -429,11 +431,18 @@ export default function DashboardScreen() {
                 Doporučený pokles: {recommendedWeeklyLoss.toFixed(2)} kg/týden
               </Text>
             </View>
+            <Pressable 
+              style={styles.endFightButton} 
+              onPress={() => setShowEndFightDialog(true)}
+            >
+              <LogOut size={16} color={Colors.error} />
+              <Text style={styles.endFightButtonText}>Ukončit zápas</Text>
+            </Pressable>
           </Animated.View>
         ) : (
           <View style={styles.noFightCard}>
             <Text style={styles.noFightText}>{t.dashboard.noFight}</Text>
-            <Pressable style={styles.addFightButton} onPress={() => router.push('/fights')}>
+            <Pressable style={styles.addFightButton} onPress={() => router.push('/hydration')}>
               <Plus size={20} color={Colors.black} />
               <Text style={styles.addFightButtonText}>{t.dashboard.addFight}</Text>
             </Pressable>
@@ -702,6 +711,39 @@ export default function DashboardScreen() {
           )}
         </Animated.View>
       </ScrollView>
+
+      {showEndFightDialog && upcomingFight && (
+        <View style={styles.dialogOverlay}>
+          <Pressable 
+            style={styles.dialogBackdrop} 
+            onPress={() => setShowEndFightDialog(false)}
+          />
+          <View style={[styles.dialogContainer, { paddingBottom: insets.bottom + 20 }]}>
+            <Text style={styles.dialogTitle}>Ukončit zápas?</Text>
+            <Text style={styles.dialogMessage}>
+              Opravdu chcete ukončit cíl shazování pro zápas "{upcomingFight.name}"?
+              {"\n\n"}Po ukončení budete moci zadat nový cíl zápasu.
+            </Text>
+            <View style={styles.dialogButtons}>
+              <Pressable 
+                style={styles.dialogButtonCancel} 
+                onPress={() => setShowEndFightDialog(false)}
+              >
+                <Text style={styles.dialogButtonCancelText}>Zrušit</Text>
+              </Pressable>
+              <Pressable 
+                style={styles.dialogButtonConfirm} 
+                onPress={() => {
+                  deleteFight(upcomingFight.id);
+                  setShowEndFightDialog(false);
+                }}
+              >
+                <Text style={styles.dialogButtonConfirmText}>Ukončit</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -1534,5 +1576,91 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.textSecondary,
     lineHeight: 16,
+  },
+  endFightButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    backgroundColor: '#FEE2E2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  endFightButtonText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: Colors.error,
+  },
+  dialogOverlay: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'flex-end',
+    zIndex: 1000,
+  },
+  dialogBackdrop: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  dialogContainer: {
+    backgroundColor: Colors.white,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 24,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  dialogTitle: {
+    fontSize: 20,
+    fontWeight: '700' as const,
+    color: Colors.textPrimary,
+    marginBottom: 12,
+  },
+  dialogMessage: {
+    fontSize: 15,
+    color: Colors.textSecondary,
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  dialogButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  dialogButtonCancel: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: Colors.lightGray,
+    alignItems: 'center',
+  },
+  dialogButtonCancelText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+  },
+  dialogButtonConfirm: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: Colors.error,
+    alignItems: 'center',
+  },
+  dialogButtonConfirmText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: Colors.white,
   },
 });
