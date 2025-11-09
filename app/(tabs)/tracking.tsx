@@ -16,7 +16,7 @@ import { Scale, Droplets, BarChart3, Dumbbell, Moon, Activity as ActivityIcon, C
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
-type MetricType = 'weight' | 'calories' | 'protein' | 'water' | 'sleep' | 'training' | 'bodyFat' | 'sodium';
+type MetricType = 'weight' | 'water' | 'training' | 'bodyFat';
 type TimeRange = '7days' | 'month' | '3months' | 'year';
 
 export default function TrackingScreen() {
@@ -97,13 +97,9 @@ export default function TrackingScreen() {
 
   const metrics: { key: MetricType; label: string }[] = [
     { key: 'weight', label: 'Váha' },
-    { key: 'calories', label: 'Kalorie' },
-    { key: 'protein', label: 'Bílkoviny' },
-    { key: 'water', label: 'Voda' },
-    { key: 'sleep', label: 'Spánek' },
+    { key: 'water', label: 'Hydratace' },
     { key: 'training', label: 'Trénink' },
     { key: 'bodyFat', label: 'Tělesný tuk' },
-    { key: 'sodium', label: 'Sodík' },
   ];
 
   const timeRanges: { key: TimeRange; label: string }[] = [
@@ -114,7 +110,6 @@ export default function TrackingScreen() {
   ];
 
   const getFilteredData = () => {
-    if (selectedMetric !== 'weight') return [];
     const now = new Date();
     let daysBack = 7;
     if (selectedTimeRange === 'month') daysBack = 30;
@@ -122,7 +117,12 @@ export default function TrackingScreen() {
     if (selectedTimeRange === 'year') daysBack = 365;
     
     const cutoffDate = new Date(now.getTime() - daysBack * 24 * 60 * 60 * 1000);
-    return weightLogs.filter(log => log.date >= cutoffDate).reverse();
+    
+    if (selectedMetric === 'weight') {
+      return weightLogs.filter(log => log.date >= cutoffDate).reverse();
+    }
+    
+    return [];
   };
 
   const filteredData = getFilteredData();
