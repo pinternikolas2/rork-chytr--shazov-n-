@@ -265,15 +265,43 @@ export const [AppProvider, useApp] = createContextHook(() => {
   }, [profile]);
 
   const addFight = useCallback(async (fight: Omit<Fight, 'id'>) => {
-    const newFight: Fight = {
-      ...fight,
-      id: Date.now().toString(),
-    };
-    const updated = [...fights, newFight];
-    setFights(updated);
-    await AsyncStorage.setItem('fights', JSON.stringify(updated));
+    if (!profile) {
+      console.error('[AppContext] Cannot add fight without profile');
+      return;
+    }
 
-    if (profile) {
+    try {
+      console.log('[AppContext] Syncing fight to backend...');
+      const backendFight = await trpcClient.fights.add.mutate({
+        userId: profile.id,
+        name: fight.name,
+        opponent: fight.opponent,
+        weightClass: fight.weightClass,
+        targetWeightForFight: fight.targetWeightForFight,
+        date: fight.date,
+        weighInTime: fight.weighInTime,
+        location: fight.location,
+        notes: fight.notes,
+      });
+      console.log('[AppContext] Fight synced to backend successfully');
+
+      const newFight: Fight = {
+        id: backendFight.id,
+        name: backendFight.name,
+        opponent: backendFight.opponent,
+        weightClass: backendFight.weightClass,
+        targetWeightForFight: backendFight.targetWeightForFight,
+        date: backendFight.date,
+        weighInTime: backendFight.weighInTime,
+        weighInTiming: 'dayBefore' as const,
+        location: backendFight.location,
+        notes: backendFight.notes,
+      };
+
+      const updated = [...fights, newFight];
+      setFights(updated);
+      await AsyncStorage.setItem('fights', JSON.stringify(updated));
+
       const updatedProfile = { 
         ...profile, 
         targetWeight: fight.targetWeightForFight,
@@ -290,6 +318,15 @@ export const [AppProvider, useApp] = createContextHook(() => {
       } catch (error) {
         console.error('[AppContext] Failed to sync updated profile to backend:', error);
       }
+    } catch (error) {
+      console.error('[AppContext] Failed to sync fight to backend:', error);
+      const newFight: Fight = {
+        ...fight,
+        id: Date.now().toString(),
+      };
+      const updated = [...fights, newFight];
+      setFights(updated);
+      await AsyncStorage.setItem('fights', JSON.stringify(updated));
     }
   }, [fights, profile]);
 
