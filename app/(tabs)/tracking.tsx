@@ -158,7 +158,8 @@ export default function TrackingScreen() {
       <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
         <Text style={styles.headerTitle}>{t.tracking.title}</Text>
         <Pressable style={styles.statsButton} onPress={() => router.push('/tracking-detail')}>
-          <BarChart3 size={20} color={Colors.gold} strokeWidth={2.5} />
+          <BarChart3 size={18} color={Colors.gold} strokeWidth={2.5} />
+          <Text style={styles.statsButtonText}>Detailní statistiky</Text>
         </Pressable>
       </View>
       <KeyboardAvoidingView
@@ -649,14 +650,20 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
   statsButton: {
-    width: 40,
-    height: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 20,
     backgroundColor: Colors.lightGray,
-    alignItems: 'center',
-    justifyContent: 'center',
     borderWidth: 2,
     borderColor: Colors.gold,
+  },
+  statsButtonText: {
+    fontSize: 12,
+    fontWeight: '700' as const,
+    color: Colors.gold,
   },
   keyboardView: {
     flex: 1,
