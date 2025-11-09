@@ -79,9 +79,21 @@ export default function HydrationScreen() {
     if (currentPhase.phase === 'WATER_CUT') {
       const protocol = getRWLProtocol(daysUntilFight);
       if (protocol) {
+        let phaseExplanation = '';
+        if (protocol.phase === 'loading') {
+          phaseExplanation = 'Nasycení těla vodou a sodíkem, učení organismu vypouštět přebytečnou vodu';
+        } else if (protocol.phase === 'medium') {
+          phaseExplanation = 'Postupné snižování vody a sodíku, tělo stále vypouští více než přijímá';
+        } else if (protocol.phase === 'cutting') {
+          phaseExplanation = 'Minimální voda a téměř nulový sodík pro maximální vyloučení vody z těla';
+        } else {
+          phaseExplanation = 'Finální cut s minimální hydratací před vážením';
+        }
+
         return {
           title: `Fáze ${protocol.phase === 'loading' ? 'Zavodňování' : protocol.phase === 'medium' ? 'Přechodná' : protocol.phase === 'cutting' ? 'Odvodňování' : 'Finální'}`,
           description: `D-${daysUntilFight}: ${protocol.waterTargetMl / 1000}L vody, ${protocol.sodiumTargetMg}mg sodíku`,
+          phaseExplanation,
           color: protocol.phase === 'loading' ? '#3B82F6' : protocol.phase === 'medium' ? '#F59E0B' : protocol.phase === 'cutting' ? '#EF4444' : '#DC2626',
           icon: protocol.phase === 'loading' ? '💧' : protocol.phase === 'medium' ? '⚡' : protocol.phase === 'cutting' ? '🔥' : '🎯',
           protocol,
@@ -131,6 +143,9 @@ export default function HydrationScreen() {
               <Text style={styles.phaseIcon}>{phaseInfo.icon}</Text>
               <View style={styles.phaseTextContainer}>
                 <Text style={[styles.phaseTitle, { color: phaseInfo.color }]}>{phaseInfo.title}</Text>
+                {phaseInfo.phaseExplanation && (
+                  <Text style={styles.phaseExplanation}>{phaseInfo.phaseExplanation}</Text>
+                )}
                 <Text style={styles.phaseDescription}>{phaseInfo.description}</Text>
               </View>
             </View>
@@ -374,6 +389,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700' as const,
     marginBottom: 4,
+  },
+  phaseExplanation: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    lineHeight: 18,
+    fontStyle: 'italic' as const,
+    marginTop: 3,
+    marginBottom: 6,
   },
   phaseDescription: {
     fontSize: 14,
