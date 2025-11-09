@@ -1,31 +1,105 @@
 
 import { ScrollView, StyleSheet, Text, View, Pressable, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Plus, Camera, Flame, Drumstick, Wheat, Droplet, Pizza, Utensils, Apple, ChefHat, PieChart, Trash2 } from 'lucide-react-native';
+import { Plus, Camera, Flame, Drumstick, Wheat, Droplet, Pizza, Utensils, Apple, ChefHat, PieChart, Trash2, Calendar, CalendarDays, CalendarRange } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
+import { useState, useMemo, useCallback } from 'react';
+import type { MealLog } from '@/constants/types';
+
+type TimePeriod = 'day' | 'week' | 'month';
 
 export default function NutritionScreen() {
-  const { t, getTodayNutrition, getNutritionGoals, getTodayMeals, deleteMealLog } = useApp();
+  const { t, getTodayNutrition, getNutritionGoals, deleteMealLog, mealLogs } = useApp();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('day');
+
+  const getMealsForPeriod = useCallback((period: TimePeriod): MealLog[] => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    switch (period) {
+      case 'day':
+        return mealLogs.filter((log) => {
+          const logDate = new Date(log.date);
+          logDate.setHours(0, 0, 0, 0);
+          return logDate.getTime() === today.getTime();
+        });
+      
+      case 'week':
+        const weekAgo = new Date(today);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        return mealLogs.filter((log) => {
+          const logDate = new Date(log.date);
+          return logDate >= weekAgo && logDate <= now;
+        });
+      
+      case 'month':
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        return mealLogs.filter((log) => {
+          const logDate = new Date(log.date);
+          return logDate >= monthStart && logDate <= now;
+        });
+      
+      default:
+        return [];
+    }
+  }, [mealLogs]);
+
+  const periodMeals = useMemo(() => getMealsForPeriod(timePeriod), [timePeriod, getMealsForPeriod]);
+  
+  const periodNutrition = useMemo(() => {
+    return periodMeals.reduce(
+      (acc, meal) => ({
+        calories: acc.calories + meal.calories,
+        protein: acc.protein + meal.protein,
+        carbs: acc.carbs + meal.carbs,
+        fat: acc.fat + meal.fat,
+        sodium: acc.sodium + meal.sodiumMg,
+        fiber: acc.fiber + (meal.fiber || 0),
+      }),
+      { calories: 0, protein: 0, carbs: 0, fat: 0, sodium: 0, fiber: 0 }
+    );
+  }, [periodMeals]);
+
+  const getDaysInPeriod = (period: TimePeriod): number => {
+    switch (period) {
+      case 'day': return 1;
+      case 'week': return 7;
+      case 'month': {
+        const now = new Date();
+        return now.getDate();
+      }
+      default: return 1;
+    }
+  };
+
+  const daysInPeriod = getDaysInPeriod(timePeriod);
+  const avgNutrition = {
+    calories: periodNutrition.calories / daysInPeriod,
+    protein: periodNutrition.protein / daysInPeriod,
+    carbs: periodNutrition.carbs / daysInPeriod,
+    fat: periodNutrition.fat / daysInPeriod,
+  };
 
   const todayNutrition = getTodayNutrition();
   const goals = getNutritionGoals();
-  const todayMeals = getTodayMeals();
 
-  const caloriesProgress = (todayNutrition.calories / goals.calories) * 100;
-  const proteinProgress = (todayNutrition.protein / goals.protein) * 100;
-  const carbsProgress = (todayNutrition.carbs / goals.carbs) * 100;
-  const fatProgress = (todayNutrition.fat / goals.fat) * 100;
+  const displayNutrition = timePeriod === 'day' ? todayNutrition : avgNutrition;
+
+  const caloriesProgress = (displayNutrition.calories / goals.calories) * 100;
+  const proteinProgress = (displayNutrition.protein / goals.protein) * 100;
+  const carbsProgress = (displayNutrition.carbs / goals.carbs) * 100;
+  const fatProgress = (displayNutrition.fat / goals.fat) * 100;
 
   const nutritionData = [
     {
       icon: Flame,
       color: '#FF6B6B',
       label: t.nutrition.calories,
-      current: Math.round(todayNutrition.calories),
+      current: Math.round(displayNutrition.calories),
       goal: goals.calories,
       progress: caloriesProgress,
       unit: t.common.kcal,
@@ -34,7 +108,7 @@ export default function NutritionScreen() {
       icon: Drumstick,
       color: '#6366F1',
       label: t.nutrition.protein,
-      current: Math.round(todayNutrition.protein),
+      current: Math.round(displayNutrition.protein),
       goal: goals.protein,
       progress: proteinProgress,
       unit: t.common.g,
@@ -43,7 +117,7 @@ export default function NutritionScreen() {
       icon: Wheat,
       color: '#F59E0B',
       label: t.nutrition.carbs,
-      current: Math.round(todayNutrition.carbs),
+      current: Math.round(displayNutrition.carbs),
       goal: goals.carbs,
       progress: carbsProgress,
       unit: t.common.g,
@@ -52,7 +126,7 @@ export default function NutritionScreen() {
       icon: Droplet,
       color: '#10B981',
       label: t.nutrition.fat,
-      current: Math.round(todayNutrition.fat),
+      current: Math.round(displayNutrition.fat),
       goal: goals.fat,
       progress: fatProgress,
       unit: t.common.g,
@@ -75,9 +149,32 @@ export default function NutritionScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <View style={styles.periodSelector}>
+          <Pressable 
+            style={[styles.periodButton, timePeriod === 'day' && styles.periodButtonActive]}
+            onPress={() => setTimePeriod('day')}
+          >
+            <Calendar size={18} color={timePeriod === 'day' ? Colors.gold : Colors.textSecondary} />
+            <Text style={[styles.periodButtonText, timePeriod === 'day' && styles.periodButtonTextActive]}>Den</Text>
+          </Pressable>
+          <Pressable 
+            style={[styles.periodButton, timePeriod === 'week' && styles.periodButtonActive]}
+            onPress={() => setTimePeriod('week')}
+          >
+            <CalendarDays size={18} color={timePeriod === 'week' ? Colors.gold : Colors.textSecondary} />
+            <Text style={[styles.periodButtonText, timePeriod === 'week' && styles.periodButtonTextActive]}>Týden</Text>
+          </Pressable>
+          <Pressable 
+            style={[styles.periodButton, timePeriod === 'month' && styles.periodButtonActive]}
+            onPress={() => setTimePeriod('month')}
+          >
+            <CalendarRange size={18} color={timePeriod === 'month' ? Colors.gold : Colors.textSecondary} />
+            <Text style={[styles.periodButtonText, timePeriod === 'month' && styles.periodButtonTextActive]}>Měsíc</Text>
+          </Pressable>
+        </View>
 
         <View style={styles.goalsSection}>
-          <Text style={styles.sectionTitle}>Dnešní cíle</Text>
+          <Text style={styles.sectionTitle}>{timePeriod === 'day' ? 'Dnešní cíle' : timePeriod === 'week' ? 'Průměrné denní hodnoty (týden)' : 'Průměrné denní hodnoty (měsíc)'}</Text>
           <View style={styles.goalsGrid}>
             {nutritionData.map((item, index) => {
               const Icon = item.icon;
@@ -119,7 +216,7 @@ export default function NutritionScreen() {
           </View>
           <View style={styles.macroCircleContainer}>
             <View style={styles.macroCircle}>
-              <Text style={styles.macroCircleValue}>{todayNutrition.calories}</Text>
+              <Text style={styles.macroCircleValue}>{Math.round(displayNutrition.calories)}</Text>
               <Text style={styles.macroCircleLabel}>{t.common.kcal}</Text>
             </View>
           </View>
@@ -128,36 +225,36 @@ export default function NutritionScreen() {
               <View style={[styles.macroDot, { backgroundColor: '#6366F1' }]} />
               <View style={styles.macroBreakdownText}>
                 <Text style={styles.macroBreakdownLabel}>Bílkoviny</Text>
-                <Text style={styles.macroBreakdownValue}>{todayNutrition.protein}g ({Math.round((todayNutrition.protein * 4 / todayNutrition.calories) * 100) || 0}%)</Text>
+                <Text style={styles.macroBreakdownValue}>{Math.round(displayNutrition.protein)}g ({Math.round((displayNutrition.protein * 4 / displayNutrition.calories) * 100) || 0}%)</Text>
               </View>
             </View>
             <View style={styles.macroBreakdownItem}>
               <View style={[styles.macroDot, { backgroundColor: '#F59E0B' }]} />
               <View style={styles.macroBreakdownText}>
                 <Text style={styles.macroBreakdownLabel}>Sacharidy</Text>
-                <Text style={styles.macroBreakdownValue}>{todayNutrition.carbs}g ({Math.round((todayNutrition.carbs * 4 / todayNutrition.calories) * 100) || 0}%)</Text>
+                <Text style={styles.macroBreakdownValue}>{Math.round(displayNutrition.carbs)}g ({Math.round((displayNutrition.carbs * 4 / displayNutrition.calories) * 100) || 0}%)</Text>
               </View>
             </View>
             <View style={styles.macroBreakdownItem}>
               <View style={[styles.macroDot, { backgroundColor: '#10B981' }]} />
               <View style={styles.macroBreakdownText}>
                 <Text style={styles.macroBreakdownLabel}>Tuky</Text>
-                <Text style={styles.macroBreakdownValue}>{todayNutrition.fat}g ({Math.round((todayNutrition.fat * 9 / todayNutrition.calories) * 100) || 0}%)</Text>
+                <Text style={styles.macroBreakdownValue}>{Math.round(displayNutrition.fat)}g ({Math.round((displayNutrition.fat * 9 / displayNutrition.calories) * 100) || 0}%)</Text>
               </View>
             </View>
           </View>
         </View>
 
         <View style={styles.mealsSection}>
-          <Text style={styles.sectionTitle}>{t.nutrition.meals}</Text>
+          <Text style={styles.sectionTitle}>{timePeriod === 'day' ? t.nutrition.meals : timePeriod === 'week' ? 'Jídla za týden' : 'Jídla za měsíc'}</Text>
           
-          {todayMeals.length === 0 ? (
+          {periodMeals.length === 0 ? (
             <View style={styles.emptyState}>
               <View style={styles.emptyIconContainer}>
                 <ChefHat size={64} color={Colors.gold} strokeWidth={1.5} />
               </View>
-              <Text style={styles.emptyTitle}>{t.nutrition.noMealsToday}</Text>
-              <Text style={styles.emptyDescription}>{t.nutrition.startLogging}</Text>
+              <Text style={styles.emptyTitle}>{timePeriod === 'day' ? t.nutrition.noMealsToday : timePeriod === 'week' ? 'Žádná jídla za poslední týden' : 'Žádná jídla tento měsíc'}</Text>
+              <Text style={styles.emptyDescription}>{timePeriod === 'day' ? t.nutrition.startLogging : 'Začni zaznamenávat jídla'}</Text>
               <Pressable
                 style={styles.scanButton}
                 onPress={() => router.push('/add-meal')}
@@ -168,7 +265,7 @@ export default function NutritionScreen() {
             </View>
           ) : (
             <View style={styles.mealsList}>
-              {todayMeals.map((meal) => {
+              {periodMeals.map((meal) => {
                 const getMealIcon = (mealType: string | undefined) => {
                   switch(mealType) {
                     case 'breakfast': return Apple;
@@ -594,5 +691,38 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: Colors.border.light,
+  },
+  periodSelector: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 20,
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+  },
+  periodButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: 'transparent',
+  },
+  periodButtonActive: {
+    backgroundColor: Colors.gold + '20',
+  },
+  periodButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+  },
+  periodButtonTextActive: {
+    color: Colors.gold,
+    fontWeight: '700' as const,
   },
 });
