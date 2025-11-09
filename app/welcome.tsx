@@ -17,18 +17,26 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 export default function WelcomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { t, settings, setLanguage } = useApp();
+  const { t, settings, setLanguage, profile } = useApp();
   const { startTrial, markWelcomeSeen, skipWelcome } = useSubscription();
 
   const handleTryFree = async () => {
     await startTrial();
     await markWelcomeSeen();
-    router.replace('/(tabs)');
+    if (!profile) {
+      router.replace('/profile-setup');
+    } else {
+      router.replace('/(tabs)');
+    }
   };
 
   const handleContinueWithoutAccount = async () => {
     await skipWelcome();
-    router.replace('/(tabs)');
+    if (!profile) {
+      router.replace('/profile-setup');
+    } else {
+      router.replace('/(tabs)');
+    }
   };
 
   const handleLogin = () => {

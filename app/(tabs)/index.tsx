@@ -444,7 +444,16 @@ export default function DashboardScreen() {
         ) : (
           <View style={styles.noFightCard}>
             <Text style={styles.noFightText}>{t.dashboard.noFight}</Text>
-            <Pressable style={styles.addFightButton} onPress={() => setShowAddFightModal(true)}>
+            <Pressable style={styles.addFightButton} onPress={() => {
+              if (!profile) {
+                Alert.alert(
+                  'Chybí profil',
+                  'Nejprve prosím vytvořte svůj profil v nastavení.'
+                );
+                return;
+              }
+              setShowAddFightModal(true);
+            }}>
               <Plus size={20} color={Colors.black} />
               <Text style={styles.addFightButtonText}>{t.dashboard.addFight}</Text>
             </Pressable>
