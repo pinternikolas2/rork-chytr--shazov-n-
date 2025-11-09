@@ -325,9 +325,9 @@ export default function TrackingScreen() {
               <View style={styles.trainingForm}>
                 <Text style={styles.formLabel}>Typ tréninku</Text>
                 <View style={styles.typeSelector}>
-                  {(['strength', 'cardio', 'technique', 'sparring', 'other'] as const).map((type) => (
+                  {(['strength', 'cardio', 'technique', 'sparring', 'other'] as const).map((type, index) => (
                     <Pressable
-                      key={type}
+                      key={`${type}-${index}`}
                       style={[styles.typeButton, trainingType === type && styles.typeButtonActive]}
                       onPress={() => setTrainingType(type)}
                     >
@@ -348,9 +348,9 @@ export default function TrackingScreen() {
                 />
                 <Text style={styles.formLabel}>Intenzita</Text>
                 <View style={styles.intensitySelector}>
-                  {(['low', 'medium', 'high', 'extreme'] as const).map((intensity) => (
+                  {(['low', 'medium', 'high', 'extreme'] as const).map((intensity, index) => (
                     <Pressable
-                      key={intensity}
+                      key={`${intensity}-${index}`}
                       style={[styles.intensityButton, trainingIntensity === intensity && styles.intensityButtonActive]}
                       onPress={() => setTrainingIntensity(intensity)}
                     >
