@@ -27,11 +27,14 @@ export default function TrackingScreen() {
     addTrainingLog,
     deleteTrainingLog,
     addBodyCompositionLog,
+    deleteBodyCompositionLog,
     getTodayTrainings,
     weightLogs, 
+    hydrationLogs,
+    trainingLogs,
+    bodyCompositionLogs,
     getTodayHydration,
     getTodayNutrition,
-    getNutritionGoals,
   } = useApp();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -50,7 +53,6 @@ export default function TrackingScreen() {
 
   const todayHydration = getTodayHydration();
   const todayNutrition = getTodayNutrition();
-  const nutritionGoals = getNutritionGoals();
 
   const handleLogWeight = async () => {
     if (!weightInput) return;
@@ -119,7 +121,31 @@ export default function TrackingScreen() {
     const cutoffDate = new Date(now.getTime() - daysBack * 24 * 60 * 60 * 1000);
     
     if (selectedMetric === 'weight') {
-      return weightLogs.filter(log => log.date >= cutoffDate).reverse();
+      return weightLogs.filter(log => log.date >= cutoffDate).sort((a, b) => b.date.getTime() - a.date.getTime());
+    }
+    
+    if (selectedMetric === 'water') {
+      const dailyTotals = new Map<string, { date: Date; amount: number }>();
+      hydrationLogs.forEach(log => {
+        if (log.date >= cutoffDate) {
+          const dateKey = new Date(log.date).toDateString();
+          const existing = dailyTotals.get(dateKey);
+          if (existing) {
+            existing.amount += log.amount;
+          } else {
+            dailyTotals.set(dateKey, { date: new Date(log.date), amount: log.amount });
+          }
+        }
+      });
+      return Array.from(dailyTotals.values()).sort((a, b) => b.date.getTime() - a.date.getTime());
+    }
+    
+    if (selectedMetric === 'training') {
+      return trainingLogs.filter(log => log.date >= cutoffDate).sort((a, b) => b.date.getTime() - a.date.getTime());
+    }
+    
+    if (selectedMetric === 'bodyFat') {
+      return bodyCompositionLogs.filter(log => log.date >= cutoffDate).sort((a, b) => b.date.getTime() - a.date.getTime());
     }
     
     return [];
@@ -468,28 +494,56 @@ export default function TrackingScreen() {
               ))}
             </View>
 
-            {selectedMetric === 'weight' && filteredData.length > 0 ? (
+            {filteredData.length > 0 ? (
               <>
                 <View style={styles.historyChartContainer}>
                   <View style={styles.historyChart}>
                     {(() => {
                       const arr = filteredData.slice(0, 10);
-                      const weights = arr.map(l => l.weight);
-                      const maxWeight = Math.max(...weights);
-                      const minWeight = Math.min(...weights);
-                      const range = maxWeight - minWeight || 1;
+                      let values: number[] = [];
+                      
+                      if (selectedMetric === 'weight') {
+                        values = arr.map((l: any) => l.weight);
+                      } else if (selectedMetric === 'water') {
+                        values = arr.map((l: any) => l.amount);
+                      } else if (selectedMetric === 'training') {
+                        values = arr.map((l: any) => l.duration);
+                      } else if (selectedMetric === 'bodyFat') {
+                        values = arr.map((l: any) => l.bodyFatPercentage || l.muscleMass || 0);
+                      }
+                      
+                      const maxValue = Math.max(...values);
+                      const minValue = Math.min(...values);
+                      const range = maxValue - minValue || 1;
                       
                       return (
                         <View style={styles.chartBarsContainer}>
-                          {arr.map((log, i) => {
-                            const heightPercent = ((log.weight - minWeight) / range) * 100;
+                          {arr.map((log: any, i) => {
+                            let value = 0;
+                            let label = '';
+                            
+                            if (selectedMetric === 'weight') {
+                              value = log.weight;
+                              label = `${log.weight.toFixed(1)} kg`;
+                            } else if (selectedMetric === 'water') {
+                              value = log.amount;
+                              label = `${(log.amount / 1000).toFixed(1)}L`;
+                            } else if (selectedMetric === 'training') {
+                              value = log.duration;
+                              label = `${log.duration}min`;
+                            } else if (selectedMetric === 'bodyFat') {
+                              value = log.bodyFatPercentage || log.muscleMass || 0;
+                              label = log.bodyFatPercentage ? `${log.bodyFatPercentage.toFixed(1)}%` : `${log.muscleMass?.toFixed(1)}kg`;
+                            }
+                            
+                            const heightPercent = ((value - minValue) / range) * 100;
                             
                             return (
-                              <View key={`bar-${log.id}`} style={styles.chartBarColumn}>
+                              <View key={`bar-${log.id || i}`} style={styles.chartBarColumn}>
                                 <View style={styles.chartBarWrapper}>
                                   <View style={[styles.chartBar, { height: `${heightPercent}%` }]} />
                                 </View>
-                                <Text style={styles.chartBarValue}>{log.weight.toFixed(1)}</Text>
+                                <Text style={styles.chartBarValue}>{label}</Text>
                                 <Text style={styles.chartBarLabel}>
                                   {log.date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short' })}
                                 </Text>
@@ -503,41 +557,65 @@ export default function TrackingScreen() {
                 </View>
 
                 <View style={styles.historyList}>
-                  {filteredData.slice(0, 10).map((log) => (
-                    <View key={log.id} style={styles.historyItem}>
-                      <View style={styles.historyItemContent}>
-                        <View>
-                          <Text style={styles.historyValue}>
-                            {log.weight.toFixed(1)} {t.common.kg}
-                          </Text>
-                          <Text style={styles.historyDate}>
-                            {log.date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short', year: 'numeric' })} - {log.date.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })} ({t.tracking[log.time]})
-                          </Text>
+                  {filteredData.slice(0, 10).map((log: any) => {
+                    let mainText = '';
+                    let subText = '';
+                    let deleteFunction: (() => Promise<void>) | null = null;
+                    
+                    if (selectedMetric === 'weight') {
+                      mainText = `${log.weight.toFixed(1)} ${t.common.kg}`;
+                      const timeText = log.time === 'morning' ? t.tracking.morning : t.tracking.evening;
+                      subText = `${log.date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short', year: 'numeric' })} - ${log.date.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })} (${timeText})`;
+                      deleteFunction = async () => await deleteWeightLog(log.id);
+                    } else if (selectedMetric === 'water') {
+                      mainText = `${log.amount} ml`;
+                      subText = log.date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short', year: 'numeric' });
+                      deleteFunction = null;
+                    } else if (selectedMetric === 'training') {
+                      mainText = `${log.type} - ${log.duration} min`;
+                      subText = `Intenzita: ${log.intensity} | ${log.date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+                      deleteFunction = async () => await deleteTrainingLog(log.id);
+                    } else if (selectedMetric === 'bodyFat') {
+                      const parts: string[] = [];
+                      if (log.bodyFatPercentage) parts.push(`Tuk: ${log.bodyFatPercentage.toFixed(1)}%`);
+                      if (log.muscleMass) parts.push(`Svaly: ${log.muscleMass.toFixed(1)} kg`);
+                      mainText = parts.join(', ');
+                      subText = log.date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short', year: 'numeric' });
+                      deleteFunction = async () => await deleteBodyCompositionLog(log.id);
+                    }
+                    
+                    return (
+                      <View key={log.id} style={styles.historyItem}>
+                        <View style={styles.historyItemContent}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.historyValue}>{mainText}</Text>
+                            <Text style={styles.historyDate}>{subText}</Text>
+                          </View>
+                          {deleteFunction && (
+                            <Pressable 
+                              style={styles.deleteButton}
+                              onPress={async () => {
+                                Alert.alert(
+                                  'Smazat záznam',
+                                  'Opravdu chcete smazat tento záznam?',
+                                  [
+                                    { text: 'Zrušit', style: 'cancel' },
+                                    { 
+                                      text: 'Smazat', 
+                                      style: 'destructive',
+                                      onPress: deleteFunction
+                                    }
+                                  ]
+                                );
+                              }}
+                            >
+                              <Trash2 size={18} color={"#EF4444"} />
+                            </Pressable>
+                          )}
                         </View>
-                        <Pressable 
-                          style={styles.deleteButton}
-                          onPress={async () => {
-                            Alert.alert(
-                              'Smazat záznam',
-                              'Opravdu chcete smazat tento záznam váhy?',
-                              [
-                                { text: 'Zrušit', style: 'cancel' },
-                                { 
-                                  text: 'Smazat', 
-                                  style: 'destructive',
-                                  onPress: async () => {
-                                    await deleteWeightLog(log.id);
-                                  }
-                                }
-                              ]
-                            );
-                          }}
-                        >
-                          <Trash2 size={18} color={"#EF4444"} />
-                        </Pressable>
                       </View>
-                    </View>
-                  ))}
+                    );
+                  })}
                 </View>
               </>
             ) : (
