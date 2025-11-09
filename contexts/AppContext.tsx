@@ -329,18 +329,16 @@ export const [AppProvider, useApp] = createContextHook(() => {
         console.error('[AppContext] Failed to sync weight log to backend:', error);
       }
 
-      if (time === 'morning') {
-        const updatedProfile = { ...profile, currentWeight: weight } as UserProfile;
-        console.log('[AppContext] Weight logged - currentWeight:', weight, 'startingWeight:', updatedProfile.startingWeight, 'targetWeight:', updatedProfile.targetWeight);
-        setProfile(updatedProfile);
-        await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
-        
-        try {
-          await trpcClient.profile.sync.mutate(updatedProfile);
-          console.log('[AppContext] Updated profile synced to backend');
-        } catch (error) {
-          console.error('[AppContext] Failed to sync updated profile to backend:', error);
-        }
+      const updatedProfile = { ...profile, currentWeight: weight } as UserProfile;
+      console.log('[AppContext] Weight logged - currentWeight:', weight, 'time:', time, 'startingWeight:', updatedProfile.startingWeight, 'targetWeight:', updatedProfile.targetWeight);
+      setProfile(updatedProfile);
+      await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
+      
+      try {
+        await trpcClient.profile.sync.mutate(updatedProfile);
+        console.log('[AppContext] Updated profile synced to backend');
+      } catch (error) {
+        console.error('[AppContext] Failed to sync updated profile to backend:', error);
       }
     } else {
       console.log('[AppContext] Weight log added locally without profile');
