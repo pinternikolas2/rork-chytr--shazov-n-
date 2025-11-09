@@ -44,8 +44,8 @@ export default function HydrationScreen() {
     setWaterInput('');
   };
 
-  const quickAddWater = async (amount: number) => {
-    await addHydrationLog(amount);
+  const quickSelectAmount = (amount: number) => {
+    setWaterInput(amount.toString());
   };
 
   const getTodayLogs = () => {
@@ -175,25 +175,25 @@ export default function HydrationScreen() {
             <View style={styles.quickButtons}>
               <Pressable
                 style={[styles.quickButton, { borderColor: phaseInfo.color }]}
-                onPress={() => quickAddWater(250)}
+                onPress={() => quickSelectAmount(250)}
               >
                 <Text style={[styles.quickButtonText, { color: phaseInfo.color }]}>250ml</Text>
               </Pressable>
               <Pressable
                 style={[styles.quickButton, { borderColor: phaseInfo.color }]}
-                onPress={() => quickAddWater(500)}
+                onPress={() => quickSelectAmount(500)}
               >
                 <Text style={[styles.quickButtonText, { color: phaseInfo.color }]}>500ml</Text>
               </Pressable>
               <Pressable
                 style={[styles.quickButton, { borderColor: phaseInfo.color }]}
-                onPress={() => quickAddWater(750)}
+                onPress={() => quickSelectAmount(750)}
               >
                 <Text style={[styles.quickButtonText, { color: phaseInfo.color }]}>750ml</Text>
               </Pressable>
               <Pressable
                 style={[styles.quickButton, { borderColor: phaseInfo.color }]}
-                onPress={() => quickAddWater(1000)}
+                onPress={() => quickSelectAmount(1000)}
               >
                 <Text style={[styles.quickButtonText, { color: phaseInfo.color }]}>1L</Text>
               </Pressable>
