@@ -557,7 +557,7 @@ export default function TrackingScreen() {
                 </View>
 
                 <View style={styles.historyList}>
-                  {filteredData.slice(0, 10).map((log: any) => {
+                  {filteredData.slice(0, 10).map((log: any, index: number) => {
                     let mainText = '';
                     let subText = '';
                     let deleteFunction: (() => Promise<void>) | null = null;
@@ -585,7 +585,7 @@ export default function TrackingScreen() {
                     }
                     
                     return (
-                      <View key={log.id} style={styles.historyItem}>
+                      <View key={log.id || `history-${index}`} style={styles.historyItem}>
                         <View style={styles.historyItemContent}>
                           <View style={{ flex: 1 }}>
                             <Text style={styles.historyValue}>{mainText}</Text>
