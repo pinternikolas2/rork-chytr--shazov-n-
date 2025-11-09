@@ -9,12 +9,15 @@ import {
   TextInput,
   View,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Brain, Send, Sparkles, Bot, User } from 'lucide-react-native';
+import { Brain, Send, Sparkles, Bot, User, Crown } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { generateText } from '@rork/toolkit-sdk';
+import { useRouter } from 'expo-router';
 
 type Message = {
   id: string;
@@ -24,7 +27,9 @@ type Message = {
 
 export default function AIScreen() {
   const { t, profile, getUpcomingFight, getTodayHydration, getDailyHydrationGoal, getTodayMeals, getTodayNutrition, getNutritionGoals, weightLogs } = useApp();
+  const { hasAccessToFeature, isTrial, trialDaysRemaining } = useSubscription();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const scrollViewRef = useRef<ScrollView>(null);
   
   const [input, setInput] = useState('');
@@ -47,6 +52,18 @@ export default function AIScreen() {
 
   const handleSendMessage = async (message: string) => {
     if (!message.trim() || isGenerating) return;
+
+    if (!hasAccessToFeature('ai_advisor')) {
+      Alert.alert(
+        'Premium Funkce',
+        'AI poradce je dostupný pouze v Premium verzi. Získejte neomezený přístup k AI poradci pro personalizované rady.',
+        [
+          { text: 'Zrušit', style: 'cancel' },
+          { text: 'Zobrazit Premium', onPress: () => router.push('/subscription') }
+        ]
+      );
+      return;
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -179,6 +196,12 @@ Provide clear, actionable, and safe advice based on this data. Always prioritize
             <Text style={styles.title}>{t.ai.title}</Text>
             <Text style={styles.subtitle}>{t.ai.helpText}</Text>
           </View>
+          {isTrial && trialDaysRemaining > 0 && (
+            <Pressable style={styles.trialBadge} onPress={() => router.push('/subscription')}>
+              <Crown size={14} color={Colors.gold} />
+              <Text style={styles.trialBadgeText}>{trialDaysRemaining}d</Text>
+            </Pressable>
+          )}
         </View>
 
         <ScrollView
@@ -548,5 +571,21 @@ const styles = StyleSheet.create({
   },
   sendButtonPressed: {
     transform: [{ scale: 0.95 }],
+  },
+  trialBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Colors.lightGray,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.gold,
+  },
+  trialBadgeText: {
+    fontSize: 12,
+    fontWeight: '700' as const,
+    color: Colors.gold,
   },
 });
