@@ -17,7 +17,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
-import { generateObject } from '@rork/toolkit-sdk';
+import { generateObject } from '@rork-ai/toolkit-sdk';
 import { z } from 'zod';
 import type { MealType } from '@/constants/types';
 

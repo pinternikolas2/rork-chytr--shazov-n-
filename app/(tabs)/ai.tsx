@@ -16,7 +16,7 @@ import { Brain, Send, Sparkles, Bot, User, Crown } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
-import { generateText } from '@rork/toolkit-sdk';
+import { generateText } from '@rork-ai/toolkit-sdk';
 import { useRouter } from 'expo-router';
 
 type Message = {
