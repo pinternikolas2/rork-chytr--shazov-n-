@@ -12,7 +12,7 @@ import {
   View,
   Alert,
 } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import { Discipline, DietType, Gender, TrainingIntensity } from '@/constants/types';
@@ -29,10 +29,6 @@ export default function ProfileSetupScreen() {
   const [height, setHeight] = useState('');
   const [gender, setGender] = useState<Gender>('male');
   const [currentWeight, setCurrentWeight] = useState('');
-  const [targetWeight, setTargetWeight] = useState('');
-  const [weightClass, setWeightClass] = useState('');
-  const [targetFightDate, setTargetFightDate] = useState<Date | null>(null);
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [discipline, setDiscipline] = useState<Discipline>('mma');
   const [dietType, setDietType] = useState<DietType>('standard');
   const [trainingIntensity, setTrainingIntensity] = useState<TrainingIntensity>('moderate');
@@ -46,8 +42,8 @@ export default function ProfileSetupScreen() {
   const trainingIntensities: TrainingIntensity[] = ['low', 'moderate', 'high', 'professional'];
 
   const handleComplete = async () => {
-    if (!fullName || !age || !height || !currentWeight || !targetWeight || !weightClass || !targetFightDate) {
-      Alert.alert(t.common.error, settings.language === 'cs' ? 'Prosím vyplňte všechna pole' : 'Please fill in all fields');
+    if (!fullName || !age || !height || !currentWeight) {
+      Alert.alert(t.common.error, settings.language === 'cs' ? 'Prosím vyplňte všechna povinná pole' : 'Please fill in all required fields');
       return;
     }
 
@@ -72,10 +68,7 @@ export default function ProfileSetupScreen() {
         height: parseInt(height, 10),
         gender,
         currentWeight: parseFloat(currentWeight),
-        targetWeight: parseFloat(targetWeight),
         startingWeight: parseFloat(currentWeight),
-        weightClass,
-        targetFightDate: targetFightDate,
         discipline,
         dietType,
         trainingIntensity,
@@ -97,10 +90,7 @@ export default function ProfileSetupScreen() {
     fullName.trim() !== '' &&
     age !== '' &&
     height !== '' &&
-    currentWeight !== '' &&
-    targetWeight !== '' &&
-    weightClass.trim() !== '' &&
-    targetFightDate !== null;
+    currentWeight !== '';
 
   return (
     <View style={[styles.container, { backgroundColor: Colors.white }]}>
@@ -183,101 +173,16 @@ export default function ProfileSetupScreen() {
               </View>
             </View>
 
-            <View style={styles.row}>
-              <View style={[styles.inputGroup, styles.halfWidth]}>
-                <Text style={styles.label}>{t.profile.currentWeight}</Text>
-                <TextInput
-                  style={styles.input}
-                  value={currentWeight}
-                  onChangeText={setCurrentWeight}
-                  placeholder="80.0"
-                  placeholderTextColor={Colors.textLight}
-                  keyboardType="decimal-pad"
-                />
-              </View>
-
-              <View style={[styles.inputGroup, styles.halfWidth]}>
-                <Text style={styles.label}>{t.profile.targetWeight}</Text>
-                <TextInput
-                  style={styles.input}
-                  value={targetWeight}
-                  onChangeText={setTargetWeight}
-                  placeholder="77.0"
-                  placeholderTextColor={Colors.textLight}
-                  keyboardType="decimal-pad"
-                />
-              </View>
-            </View>
-
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t.profile.weightClass}</Text>
+              <Text style={styles.label}>{t.profile.currentWeight}</Text>
               <TextInput
                 style={styles.input}
-                value={weightClass}
-                onChangeText={setWeightClass}
-                placeholder="77 kg"
+                value={currentWeight}
+                onChangeText={setCurrentWeight}
+                placeholder="80.0"
                 placeholderTextColor={Colors.textLight}
+                keyboardType="decimal-pad"
               />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t.profile.targetFightDate}</Text>
-              <Pressable
-                style={styles.datePickerButton}
-                onPress={() => setShowDatePicker(true)}
-              >
-                <Text style={[styles.datePickerText, !targetFightDate && styles.datePickerPlaceholder]}>
-                  {targetFightDate
-                    ? targetFightDate.toLocaleDateString(settings.language === 'cs' ? 'cs-CZ' : 'en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })
-                    : settings.language === 'cs' ? 'Vyberte datum' : 'Select date'}
-                </Text>
-              </Pressable>
-              {showDatePicker && (
-                <View style={styles.datePickerContainer}>
-                  <DateTimePicker
-                    value={targetFightDate || new Date()}
-                    mode="date"
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    minimumDate={new Date()}
-                    onChange={(event, selectedDate) => {
-                      if (Platform.OS === 'android') {
-                        setShowDatePicker(false);
-                        if (event.type === 'set' && selectedDate) {
-                          setTargetFightDate(selectedDate);
-                        }
-                      } else if (Platform.OS === 'ios' && selectedDate) {
-                        setTargetFightDate(selectedDate);
-                      }
-                    }}
-                    locale={settings.language === 'cs' ? 'cs-CZ' : 'en-US'}
-                    textColor={Colors.textPrimary}
-                  />
-                  {Platform.OS === 'ios' && (
-                    <View style={styles.datePickerButtons}>
-                      <Pressable
-                        style={styles.datePickerCancelButton}
-                        onPress={() => setShowDatePicker(false)}
-                      >
-                        <Text style={styles.datePickerCancelText}>
-                          {settings.language === 'cs' ? 'Zrušit' : 'Cancel'}
-                        </Text>
-                      </Pressable>
-                      <Pressable
-                        style={styles.datePickerConfirmButton}
-                        onPress={() => setShowDatePicker(false)}
-                      >
-                        <Text style={styles.datePickerConfirmText}>
-                          {settings.language === 'cs' ? 'Potvrdit' : 'Confirm'}
-                        </Text>
-                      </Pressable>
-                    </View>
-                  )}
-                </View>
-              )}
             </View>
 
             <View style={styles.inputGroup}>
