@@ -39,7 +39,6 @@ CREATE TABLE profiles (
   current_weight NUMERIC(5,2),
   target_weight NUMERIC(5,2),
   starting_weight NUMERIC(5,2),
-  weight_class VARCHAR(50),
   
   -- Údaje o tréninku a zápasech
   target_fight_date TIMESTAMPTZ,
@@ -66,7 +65,6 @@ CREATE TABLE fights (
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   name VARCHAR(255) NOT NULL,
   opponent VARCHAR(255) NOT NULL,
-  weight_class VARCHAR(50) NOT NULL,
   target_weight_for_fight NUMERIC(5,2) NOT NULL CHECK (target_weight_for_fight > 0),
   date TIMESTAMPTZ NOT NULL,
   weigh_in_time TIMESTAMPTZ,

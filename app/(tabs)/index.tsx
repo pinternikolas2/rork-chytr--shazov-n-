@@ -681,7 +681,6 @@ function AddFightModal({ visible, onClose }: { visible: boolean; onClose: () => 
 
   const [fightName, setFightName] = useState('');
   const [opponent, setOpponent] = useState('');
-  const [weightClass, setWeightClass] = useState('');
   const [targetWeightForFight, setTargetWeightForFight] = useState('');
   const [fightDate, setFightDate] = useState('');
   const [weighInTiming, setWeighInTiming] = useState<WeighInTiming>('dayBefore');
@@ -742,7 +741,6 @@ function AddFightModal({ visible, onClose }: { visible: boolean; onClose: () => 
     await addFight({
       name: fightName,
       opponent: opponent || 'TBD',
-      weightClass: weightClass || 'N/A',
       targetWeightForFight: parsedTargetWeight,
       date,
       weighInTiming,
@@ -754,7 +752,6 @@ function AddFightModal({ visible, onClose }: { visible: boolean; onClose: () => 
       await updateProfile({
         currentWeight: parsedCurrentWeight,
         targetWeight: parsedTargetWeight,
-        weightClass: `${parsedTargetWeight} kg`,
         targetFightDate: date,
         discipline,
         dietType,
@@ -814,17 +811,6 @@ function AddFightModal({ visible, onClose }: { visible: boolean; onClose: () => 
                   value={opponent}
                   onChangeText={setOpponent}
                   placeholder="John Doe"
-                  placeholderTextColor={Colors.textLight}
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Váhová kategorie</Text>
-                <TextInput
-                  style={styles.input}
-                  value={weightClass}
-                  onChangeText={setWeightClass}
-                  placeholder="77kg"
                   placeholderTextColor={Colors.textLight}
                 />
               </View>

@@ -6,7 +6,6 @@ const fightSchema = z.object({
   userId: z.string(),
   name: z.string(),
   opponent: z.string(),
-  weightClass: z.string(),
   targetWeightForFight: z.number(),
   date: z.date(),
   weighInTime: z.date().optional(),
@@ -25,7 +24,6 @@ export const addFightProcedure = publicProcedure
         user_id: input.userId,
         name: input.name,
         opponent: input.opponent,
-        weight_class: input.weightClass,
         target_weight_for_fight: input.targetWeightForFight,
         date: input.date,
         weigh_in_time: input.weighInTime,
@@ -44,7 +42,6 @@ export const addFightProcedure = publicProcedure
       id: data.id,
       name: data.name,
       opponent: data.opponent,
-      weightClass: data.weight_class,
       targetWeightForFight: data.target_weight_for_fight,
       date: new Date(data.date),
       weighInTime: data.weigh_in_time ? new Date(data.weigh_in_time) : undefined,
@@ -65,7 +62,6 @@ export const updateFightProcedure = publicProcedure
     const updateData: Record<string, unknown> = {};
     if (input.updates.name) updateData.name = input.updates.name;
     if (input.updates.opponent) updateData.opponent = input.updates.opponent;
-    if (input.updates.weightClass) updateData.weight_class = input.updates.weightClass;
     if (input.updates.targetWeightForFight !== undefined) updateData.target_weight_for_fight = input.updates.targetWeightForFight;
     if (input.updates.date) updateData.date = input.updates.date;
     if (input.updates.weighInTime !== undefined) updateData.weigh_in_time = input.updates.weighInTime;
@@ -89,7 +85,6 @@ export const updateFightProcedure = publicProcedure
       id: data.id,
       name: data.name,
       opponent: data.opponent,
-      weightClass: data.weight_class,
       targetWeightForFight: data.target_weight_for_fight,
       date: new Date(data.date),
       weighInTime: data.weigh_in_time ? new Date(data.weigh_in_time) : undefined,
@@ -137,7 +132,6 @@ export const getFightsProcedure = publicProcedure
       id: fight.id,
       name: fight.name,
       opponent: fight.opponent,
-      weightClass: fight.weight_class,
       targetWeightForFight: fight.target_weight_for_fight,
       date: new Date(fight.date),
       weighInTime: fight.weigh_in_time ? new Date(fight.weigh_in_time) : undefined,

@@ -71,7 +71,6 @@ export default function ProfileSetupScreen() {
         currentWeight: parseFloat(currentWeight),
         targetWeight: parseFloat(currentWeight),
         startingWeight: parseFloat(currentWeight),
-        weightClass: '',
         discipline,
         dietType,
         trainingIntensity,

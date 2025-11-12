@@ -21,7 +21,6 @@ export interface UserProfile {
   currentWeight: number;
   targetWeight: number;
   startingWeight?: number;
-  weightClass: string;
   targetFightDate?: Date;
   cuttingStartDate?: Date;
   dietType: DietType;
@@ -38,7 +37,6 @@ export interface Fight {
   id: string;
   name: string;
   opponent: string;
-  weightClass: string;
   targetWeightForFight: number;
   date: Date;
   weighInTime?: Date;
