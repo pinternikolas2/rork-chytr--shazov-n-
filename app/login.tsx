@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
-import { Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react-native';
-import React, { useState } from 'react';
+import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react-native';
+import React, { useState, useEffect } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -27,10 +27,56 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [touched, setTouched] = useState({ email: false, password: false });
+
+  useEffect(() => {
+    if (touched.email && email) {
+      validateEmail(email);
+    }
+  }, [email, touched.email]);
+
+  useEffect(() => {
+    if (touched.password && password) {
+      validatePassword(password);
+    }
+  }, [password, touched.password]);
+
+  const validateEmail = (value: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!value) {
+      setEmailError(t.auth?.emptyFields || 'Email je povinný');
+      return false;
+    }
+    if (!emailRegex.test(value)) {
+      setEmailError('Neplatný formát emailu');
+      return false;
+    }
+    setEmailError('');
+    return true;
+  };
+
+  const validatePassword = (value: string): boolean => {
+    if (!value) {
+      setPasswordError(t.auth?.emptyFields || 'Heslo je povinné');
+      return false;
+    }
+    if (value.length < 6) {
+      setPasswordError(t.auth?.passwordTooShort || 'Heslo musí mít alespoň 6 znaků');
+      return false;
+    }
+    setPasswordError('');
+    return true;
+  };
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      setError(t.auth?.emptyFields || 'Please fill in all fields');
+    setTouched({ email: true, password: true });
+
+    const isEmailValid = validateEmail(email);
+    const isPasswordValid = validatePassword(password);
+
+    if (!isEmailValid || !isPasswordValid) {
       return;
     }
 
@@ -46,7 +92,13 @@ export default function LoginScreen() {
 
       if (signInError) {
         console.error('[Login] Sign in error:', signInError);
-        setError(signInError.message);
+        if (signInError.message.toLowerCase().includes('invalid login')) {
+          setError('Neplatný email nebo heslo');
+        } else if (signInError.message.toLowerCase().includes('email not confirmed')) {
+          setError('Email nebyl potvrzen. Zkontrolujte svou e-mailovou schránku.');
+        } else {
+          setError(signInError.message);
+        }
         return;
       }
 
@@ -133,57 +185,80 @@ export default function LoginScreen() {
           ) : null}
 
           <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <View style={styles.inputIconContainer}>
-                <Mail size={20} color={Colors.textSecondary} />
+            <View>
+              <View style={[
+                styles.inputContainer,
+                emailError && touched.email && styles.inputError,
+                !emailError && email && touched.email && styles.inputSuccess,
+              ]}>
+                <View style={styles.inputIconContainer}>
+                  <Mail size={20} color={emailError && touched.email ? Colors.error : Colors.textSecondary} />
+                </View>
+                <TextInput
+                  style={styles.input}
+                  placeholder={t.auth?.email || 'Email'}
+                  placeholderTextColor={Colors.textLight}
+                  value={email}
+                  onChangeText={(text) => {
+                    setEmail(text);
+                    setError('');
+                  }}
+                  onBlur={() => setTouched({ ...touched, email: true })}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  autoComplete="email"
+                  textContentType="emailAddress"
+                  editable={!isLoading}
+                />
+                {!emailError && email && touched.email && (
+                  <CheckCircle2 size={20} color={Colors.gold} style={{ marginLeft: 8 }} />
+                )}
               </View>
-              <TextInput
-                style={styles.input}
-                placeholder={t.auth?.email || 'Email'}
-                placeholderTextColor={Colors.textLight}
-                value={email}
-                onChangeText={(text) => {
-                  setEmail(text);
-                  setError('');
-                }}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                autoComplete="email"
-                textContentType="emailAddress"
-                editable={!isLoading}
-              />
+              {emailError && touched.email && (
+                <Text style={styles.inputErrorText}>{emailError}</Text>
+              )}
             </View>
 
-            <View style={styles.inputContainer}>
-              <View style={styles.inputIconContainer}>
-                <Lock size={20} color={Colors.textSecondary} />
+            <View>
+              <View style={[
+                styles.inputContainer,
+                passwordError && touched.password && styles.inputError,
+                !passwordError && password && touched.password && styles.inputSuccess,
+              ]}>
+                <View style={styles.inputIconContainer}>
+                  <Lock size={20} color={passwordError && touched.password ? Colors.error : Colors.textSecondary} />
+                </View>
+                <TextInput
+                  style={styles.input}
+                  placeholder={t.auth?.password || 'Heslo'}
+                  placeholderTextColor={Colors.textLight}
+                  value={password}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    setError('');
+                  }}
+                  onBlur={() => setTouched({ ...touched, password: true })}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  autoComplete="password"
+                  textContentType="password"
+                  editable={!isLoading}
+                />
+                <Pressable
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.eyeButton}
+                  disabled={isLoading}
+                >
+                  {showPassword ? (
+                    <EyeOff size={20} color={Colors.textSecondary} />
+                  ) : (
+                    <Eye size={20} color={Colors.textSecondary} />
+                  )}
+                </Pressable>
               </View>
-              <TextInput
-                style={styles.input}
-                placeholder={t.auth?.password || 'Heslo'}
-                placeholderTextColor={Colors.textLight}
-                value={password}
-                onChangeText={(text) => {
-                  setPassword(text);
-                  setError('');
-                }}
-                secureTextEntry={!showPassword}
-                autoCapitalize="none"
-                autoComplete="password"
-                textContentType="password"
-                editable={!isLoading}
-              />
-              <Pressable
-                onPress={() => setShowPassword(!showPassword)}
-                style={styles.eyeButton}
-                disabled={isLoading}
-              >
-                {showPassword ? (
-                  <EyeOff size={20} color={Colors.textSecondary} />
-                ) : (
-                  <Eye size={20} color={Colors.textSecondary} />
-                )}
-              </Pressable>
+              {passwordError && touched.password && (
+                <Text style={styles.inputErrorText}>{passwordError}</Text>
+              )}
             </View>
 
             <Pressable onPress={handleForgotPassword} disabled={isLoading}>
@@ -286,6 +361,22 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 16,
     height: 56,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  inputError: {
+    borderColor: Colors.error,
+    backgroundColor: '#FEF2F2',
+  },
+  inputSuccess: {
+    borderColor: Colors.gold,
+    backgroundColor: '#FFFBEB',
+  },
+  inputErrorText: {
+    fontSize: 13,
+    color: Colors.error,
+    marginTop: 6,
+    marginLeft: 16,
   },
   inputIconContainer: {
     marginRight: 12,

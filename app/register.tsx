@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
-import { Mail, Lock, Eye, EyeOff, AlertCircle, User } from 'lucide-react-native';
-import React, { useState } from 'react';
+import { Mail, Lock, Eye, EyeOff, AlertCircle, User, CheckCircle2 } from 'lucide-react-native';
+import React, { useState, useEffect } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -30,24 +30,116 @@ export default function RegisterScreen() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [nameError, setNameError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
+  const [touched, setTouched] = useState({ 
+    name: false, 
+    email: false, 
+    password: false, 
+    confirmPassword: false 
+  });
+
+  useEffect(() => {
+    if (touched.name && name) {
+      validateName(name);
+    }
+  }, [name, touched.name]);
+
+  useEffect(() => {
+    if (touched.email && email) {
+      validateEmail(email);
+    }
+  }, [email, touched.email]);
+
+  useEffect(() => {
+    if (touched.password && password) {
+      validatePasswordField(password);
+    }
+  }, [password, touched.password]);
+
+  useEffect(() => {
+    if (touched.confirmPassword && confirmPassword) {
+      validateConfirmPassword(confirmPassword);
+    }
+  }, [confirmPassword, password, touched.confirmPassword]);
+
+  const validateName = (value: string): boolean => {
+    if (!value.trim()) {
+      setNameError('Jméno je povinné');
+      return false;
+    }
+    if (value.trim().length < 2) {
+      setNameError('Jméno musí mít alespoň 2 znaky');
+      return false;
+    }
+    setNameError('');
+    return true;
+  };
+
+  const validateEmail = (value: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!value) {
+      setEmailError('Email je povinný');
+      return false;
+    }
+    if (!emailRegex.test(value)) {
+      setEmailError('Neplatný formát emailu');
+      return false;
+    }
+    setEmailError('');
+    return true;
+  };
+
+  const validatePasswordField = (value: string): boolean => {
+    if (!value) {
+      setPasswordError('Heslo je povinné');
+      return false;
+    }
+    if (value.length < 6) {
+      setPasswordError('Heslo musí mít alespoň 6 znaků');
+      return false;
+    }
+    if (value.length < 8) {
+      setPasswordError('Pro lepší zabezpečení doporučujeme alespoň 8 znaků');
+    } else {
+      setPasswordError('');
+    }
+    return true;
+  };
+
+  const validateConfirmPassword = (value: string): boolean => {
+    if (!value) {
+      setConfirmPasswordError('Potvrzení hesla je povinné');
+      return false;
+    }
+    if (value !== password) {
+      setConfirmPasswordError('Hesla se neshodují');
+      return false;
+    }
+    setConfirmPasswordError('');
+    return true;
+  };
 
   const validatePassword = (pass: string): boolean => {
     return pass.length >= 6;
   };
 
   const handleRegister = async () => {
-    if (!name || !email || !password || !confirmPassword) {
-      setError(t.auth?.emptyFields || 'Please fill in all fields');
-      return;
-    }
+    setTouched({ 
+      name: true, 
+      email: true, 
+      password: true, 
+      confirmPassword: true 
+    });
 
-    if (password !== confirmPassword) {
-      setError(t.auth?.passwordMismatch || 'Passwords do not match');
-      return;
-    }
+    const isNameValid = validateName(name);
+    const isEmailValid = validateEmail(email);
+    const isPasswordValid = validatePasswordField(password);
+    const isConfirmPasswordValid = validateConfirmPassword(confirmPassword);
 
-    if (!validatePassword(password)) {
-      setError(t.auth?.passwordTooShort || 'Password must be at least 6 characters');
+    if (!isNameValid || !isEmailValid || !isPasswordValid || !isConfirmPasswordValid) {
       return;
     }
 
@@ -89,8 +181,12 @@ export default function RegisterScreen() {
         
         if (signUpError.message.includes('Invalid API key') || signUpError.message.includes('API key')) {
           setError('Chyba konfigurace aplikace. Kontaktujte podporu.');
+        } else if (signUpError.message.toLowerCase().includes('already registered') || signUpError.message.toLowerCase().includes('already been registered')) {
+          setError('Tento email je již zaregistrován. Zkuste se přihlásit.');
         } else if (signUpError.message.toLowerCase().includes('email')) {
-          setError('Tento email je již zaregistrován nebo neplatný.');
+          setError('Email je neplatný nebo již existuje.');
+        } else if (signUpError.message.toLowerCase().includes('weak password')) {
+          setError('Heslo je příliš slabé. Použijte kombinaci písmen a čísel.');
         } else {
           setError(signUpError.message);
         }
@@ -159,114 +255,159 @@ export default function RegisterScreen() {
           ) : null}
 
           <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <View style={styles.inputIconContainer}>
-                <User size={20} color={Colors.textSecondary} />
-              </View>
-              <TextInput
-                style={styles.input}
-                placeholder={t.auth?.name || 'Jméno'}
-                placeholderTextColor={Colors.textLight}
-                value={name}
-                onChangeText={(text) => {
-                  setName(text);
-                  setError('');
-                }}
-                autoCapitalize="words"
-                autoComplete="name"
-                textContentType="name"
-                editable={!isLoading}
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <View style={styles.inputIconContainer}>
-                <Mail size={20} color={Colors.textSecondary} />
-              </View>
-              <TextInput
-                style={styles.input}
-                placeholder={t.auth?.email || 'Email'}
-                placeholderTextColor={Colors.textLight}
-                value={email}
-                onChangeText={(text) => {
-                  setEmail(text);
-                  setError('');
-                }}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                autoComplete="email"
-                textContentType="emailAddress"
-                editable={!isLoading}
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <View style={styles.inputIconContainer}>
-                <Lock size={20} color={Colors.textSecondary} />
-              </View>
-              <TextInput
-                style={styles.input}
-                placeholder={t.auth?.password || 'Heslo'}
-                placeholderTextColor={Colors.textLight}
-                value={password}
-                onChangeText={(text) => {
-                  setPassword(text);
-                  setError('');
-                }}
-                secureTextEntry={!showPassword}
-                autoCapitalize="none"
-                autoComplete="password-new"
-                textContentType="newPassword"
-                editable={!isLoading}
-              />
-              <Pressable
-                onPress={() => setShowPassword(!showPassword)}
-                style={styles.eyeButton}
-                disabled={isLoading}
-              >
-                {showPassword ? (
-                  <EyeOff size={20} color={Colors.textSecondary} />
-                ) : (
-                  <Eye size={20} color={Colors.textSecondary} />
+            <View>
+              <View style={[
+                styles.inputContainer,
+                nameError && touched.name && styles.inputError,
+                !nameError && name && touched.name && styles.inputSuccess,
+              ]}>
+                <View style={styles.inputIconContainer}>
+                  <User size={20} color={nameError && touched.name ? Colors.error : Colors.textSecondary} />
+                </View>
+                <TextInput
+                  style={styles.input}
+                  placeholder={t.auth?.name || 'Jméno'}
+                  placeholderTextColor={Colors.textLight}
+                  value={name}
+                  onChangeText={(text) => {
+                    setName(text);
+                    setError('');
+                  }}
+                  onBlur={() => setTouched({ ...touched, name: true })}
+                  autoCapitalize="words"
+                  autoComplete="name"
+                  textContentType="name"
+                  editable={!isLoading}
+                />
+                {!nameError && name && touched.name && (
+                  <CheckCircle2 size={20} color={Colors.gold} style={{ marginLeft: 8 }} />
                 )}
-              </Pressable>
-            </View>
-
-            <View style={styles.inputContainer}>
-              <View style={styles.inputIconContainer}>
-                <Lock size={20} color={Colors.textSecondary} />
               </View>
-              <TextInput
-                style={styles.input}
-                placeholder={t.auth?.confirmPassword || 'Potvrdit heslo'}
-                placeholderTextColor={Colors.textLight}
-                value={confirmPassword}
-                onChangeText={(text) => {
-                  setConfirmPassword(text);
-                  setError('');
-                }}
-                secureTextEntry={!showConfirmPassword}
-                autoCapitalize="none"
-                autoComplete="password-new"
-                textContentType="newPassword"
-                editable={!isLoading}
-              />
-              <Pressable
-                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                style={styles.eyeButton}
-                disabled={isLoading}
-              >
-                {showConfirmPassword ? (
-                  <EyeOff size={20} color={Colors.textSecondary} />
-                ) : (
-                  <Eye size={20} color={Colors.textSecondary} />
-                )}
-              </Pressable>
+              {nameError && touched.name && (
+                <Text style={styles.inputErrorText}>{nameError}</Text>
+              )}
             </View>
 
-            <Text style={styles.hint}>
-              {t.auth?.passwordHint || 'Heslo musí mít alespoň 6 znaků'}
-            </Text>
+            <View>
+              <View style={[
+                styles.inputContainer,
+                emailError && touched.email && styles.inputError,
+                !emailError && email && touched.email && styles.inputSuccess,
+              ]}>
+                <View style={styles.inputIconContainer}>
+                  <Mail size={20} color={emailError && touched.email ? Colors.error : Colors.textSecondary} />
+                </View>
+                <TextInput
+                  style={styles.input}
+                  placeholder={t.auth?.email || 'Email'}
+                  placeholderTextColor={Colors.textLight}
+                  value={email}
+                  onChangeText={(text) => {
+                    setEmail(text);
+                    setError('');
+                  }}
+                  onBlur={() => setTouched({ ...touched, email: true })}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  autoComplete="email"
+                  textContentType="emailAddress"
+                  editable={!isLoading}
+                />
+                {!emailError && email && touched.email && (
+                  <CheckCircle2 size={20} color={Colors.gold} style={{ marginLeft: 8 }} />
+                )}
+              </View>
+              {emailError && touched.email && (
+                <Text style={styles.inputErrorText}>{emailError}</Text>
+              )}
+            </View>
+
+            <View>
+              <View style={[
+                styles.inputContainer,
+                passwordError && touched.password && styles.inputError,
+                !passwordError && password && touched.password && password.length >= 8 && styles.inputSuccess,
+              ]}>
+                <View style={styles.inputIconContainer}>
+                  <Lock size={20} color={passwordError && touched.password ? Colors.error : Colors.textSecondary} />
+                </View>
+                <TextInput
+                  style={styles.input}
+                  placeholder={t.auth?.password || 'Heslo'}
+                  placeholderTextColor={Colors.textLight}
+                  value={password}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    setError('');
+                  }}
+                  onBlur={() => setTouched({ ...touched, password: true })}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  autoComplete="password-new"
+                  textContentType="newPassword"
+                  editable={!isLoading}
+                />
+                <Pressable
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.eyeButton}
+                  disabled={isLoading}
+                >
+                  {showPassword ? (
+                    <EyeOff size={20} color={Colors.textSecondary} />
+                  ) : (
+                    <Eye size={20} color={Colors.textSecondary} />
+                  )}
+                </Pressable>
+              </View>
+              {passwordError && touched.password && (
+                <Text style={styles.inputErrorText}>{passwordError}</Text>
+              )}
+              {!passwordError && password && password.length >= 6 && password.length < 8 && touched.password && (
+                <Text style={styles.inputWarningText}>Pro lepší zabezpečení doporučujeme alespoň 8 znaků</Text>
+              )}
+            </View>
+
+            <View>
+              <View style={[
+                styles.inputContainer,
+                confirmPasswordError && touched.confirmPassword && styles.inputError,
+                !confirmPasswordError && confirmPassword && touched.confirmPassword && styles.inputSuccess,
+              ]}>
+                <View style={styles.inputIconContainer}>
+                  <Lock size={20} color={confirmPasswordError && touched.confirmPassword ? Colors.error : Colors.textSecondary} />
+                </View>
+                <TextInput
+                  style={styles.input}
+                  placeholder={t.auth?.confirmPassword || 'Potvrdit heslo'}
+                  placeholderTextColor={Colors.textLight}
+                  value={confirmPassword}
+                  onChangeText={(text) => {
+                    setConfirmPassword(text);
+                    setError('');
+                  }}
+                  onBlur={() => setTouched({ ...touched, confirmPassword: true })}
+                  secureTextEntry={!showConfirmPassword}
+                  autoCapitalize="none"
+                  autoComplete="password-new"
+                  textContentType="newPassword"
+                  editable={!isLoading}
+                />
+                <Pressable
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  style={styles.eyeButton}
+                  disabled={isLoading}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff size={20} color={Colors.textSecondary} />
+                  ) : (
+                    <Eye size={20} color={Colors.textSecondary} />
+                  )}
+                </Pressable>
+              </View>
+              {confirmPasswordError && touched.confirmPassword && (
+                <Text style={styles.inputErrorText}>{confirmPasswordError}</Text>
+              )}
+            </View>
           </View>
 
           <View style={styles.buttonsContainer}>
@@ -377,6 +518,28 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 16,
     height: 56,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  inputError: {
+    borderColor: Colors.error,
+    backgroundColor: '#FEF2F2',
+  },
+  inputSuccess: {
+    borderColor: Colors.gold,
+    backgroundColor: '#FFFBEB',
+  },
+  inputErrorText: {
+    fontSize: 13,
+    color: Colors.error,
+    marginTop: 6,
+    marginLeft: 16,
+  },
+  inputWarningText: {
+    fontSize: 13,
+    color: '#D97706',
+    marginTop: 6,
+    marginLeft: 16,
   },
   inputIconContainer: {
     marginRight: 12,
@@ -390,11 +553,7 @@ const styles = StyleSheet.create({
     padding: 8,
     marginLeft: 8,
   },
-  hint: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    marginTop: -8,
-  },
+
   buttonsContainer: {
     gap: 16,
     marginBottom: 24,
