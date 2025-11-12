@@ -15,18 +15,23 @@ export const createContext = async (opts: FetchCreateContextFnOptions) => {
     const token = authHeader.replace('Bearer ', '');
     
     userSupabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          authorization: `Bearer ${token}`,
-        },
-      },
       auth: {
         autoRefreshToken: false,
         persistSession: false,
       },
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
     });
 
-    const { data: { user } } = await userSupabase.auth.getUser();
+    const { data: { user }, error } = await userSupabase.auth.getUser(token);
+    if (error) {
+      console.error('[tRPC Context] Error getting user:', error);
+    } else {
+      console.log('[tRPC Context] User authenticated:', user?.id);
+    }
     userId = user?.id || null;
   } else {
     userSupabase = createClient(supabaseUrl, supabaseAnonKey, {

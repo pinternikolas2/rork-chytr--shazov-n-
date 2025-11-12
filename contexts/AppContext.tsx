@@ -1155,16 +1155,6 @@ export const [AppProvider, useApp] = createContextHook(() => {
 
   const signOut = useCallback(async () => {
     console.log('[AppContext] Signing out...');
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('[AppContext] Supabase signOut error:', error);
-      } else {
-        console.log('[AppContext] Successfully signed out from Supabase');
-      }
-    } catch (error) {
-      console.error('[AppContext] Error signing out from Supabase:', error);
-    }
     
     console.log('[AppContext] Clearing local state...');
     setProfile(null);
@@ -1192,6 +1182,20 @@ export const [AppProvider, useApp] = createContextHook(() => {
     
     console.log('[AppContext] Resetting onboarding...');
     await updateSettings({ hasCompletedOnboarding: false });
+    
+    try {
+      const { error } = await supabase.auth.signOut({ scope: 'local' });
+      if (error) {
+        console.error('[AppContext] Supabase signOut error:', error);
+        throw error;
+      } else {
+        console.log('[AppContext] Successfully signed out from Supabase');
+      }
+    } catch (error) {
+      console.error('[AppContext] Error signing out from Supabase:', error);
+      throw error;
+    }
+    
     console.log('[AppContext] Sign out complete - local data cleared, onboarding reset, subscription state cleared');
   }, [updateSettings]);
 
