@@ -25,10 +25,26 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
+    flowType: 'pkce',
   },
   global: {
     headers: {
       'x-client-info': `rork-app-${Platform.OS}`,
+    },
+    fetch: (url, options = {}) => {
+      console.log('[Supabase Fetch] URL:', url);
+      console.log('[Supabase Fetch] Method:', options.method || 'GET');
+      
+      return fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+        },
+      }).catch((error) => {
+        console.error('[Supabase Fetch] Network error:', error);
+        console.error('[Supabase Fetch] URL was:', url);
+        throw error;
+      });
     },
   },
 });
