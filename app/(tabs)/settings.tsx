@@ -212,11 +212,11 @@ export default function SettingsScreen() {
                       console.log('[Settings] Sign out confirmed, starting signOut process...');
                       try {
                         await signOut();
-                        console.log('[Settings] signOut completed, navigating to welcome...');
+                        console.log('[Settings] signOut completed successfully');
                         router.replace('/welcome');
-                        console.log('[Settings] Navigation to welcome complete');
                       } catch (error) {
                         console.error('[Settings] Error during sign out:', error);
+                        Alert.alert('Chyba', 'Nepodařilo se odhlásit. Zkuste to prosím znovu.');
                       }
                     },
                   },
