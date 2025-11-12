@@ -194,7 +194,8 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Pressable 
             style={styles.signOutButton} 
-            onPress={async () => {
+            onPress={() => {
+              console.log('[Settings] Sign out button pressed');
               Alert.alert(
                 t.settings.confirmSignOut,
                 t.settings.signOutMessage,
@@ -202,13 +203,21 @@ export default function SettingsScreen() {
                   {
                     text: t.common.cancel,
                     style: 'cancel',
+                    onPress: () => console.log('[Settings] Sign out cancelled'),
                   },
                   {
                     text: t.settings.signOut,
                     style: 'destructive',
                     onPress: async () => {
-                      await signOut();
-                      router.replace('/welcome');
+                      console.log('[Settings] Sign out confirmed, starting signOut process...');
+                      try {
+                        await signOut();
+                        console.log('[Settings] signOut completed, navigating to welcome...');
+                        router.replace('/welcome');
+                        console.log('[Settings] Navigation to welcome complete');
+                      } catch (error) {
+                        console.error('[Settings] Error during sign out:', error);
+                      }
                     },
                   },
                 ]

@@ -1156,12 +1156,17 @@ export const [AppProvider, useApp] = createContextHook(() => {
   const signOut = useCallback(async () => {
     console.log('[AppContext] Signing out...');
     try {
-      await supabase.auth.signOut();
-      console.log('[AppContext] Successfully signed out from Supabase');
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('[AppContext] Supabase signOut error:', error);
+      } else {
+        console.log('[AppContext] Successfully signed out from Supabase');
+      }
     } catch (error) {
       console.error('[AppContext] Error signing out from Supabase:', error);
     }
     
+    console.log('[AppContext] Clearing local state...');
     setProfile(null);
     setFights([]);
     setWeightLogs([]);
@@ -1176,9 +1181,18 @@ export const [AppProvider, useApp] = createContextHook(() => {
     setBodyCompositionLogs([]);
     setDangerBannerDismissed(false);
     setWeighInRecords([]);
-    await AsyncStorage.multiRemove(['profile', 'fights', 'weightLogs', 'hydrationLogs', 'mealLogs', 'customFoods', 'supplementLogs', 'regenerationLogs', 'sleepLogs', 'dailyNotes', 'trainingLogs', 'bodyCompositionLogs', 'subscriptionState', 'dangerBannerDismissed', 'weighInRecords']);
+    
+    console.log('[AppContext] Clearing AsyncStorage...');
+    try {
+      await AsyncStorage.multiRemove(['profile', 'fights', 'weightLogs', 'hydrationLogs', 'mealLogs', 'customFoods', 'supplementLogs', 'regenerationLogs', 'sleepLogs', 'dailyNotes', 'trainingLogs', 'bodyCompositionLogs', 'subscriptionState', 'dangerBannerDismissed', 'weighInRecords']);
+      console.log('[AppContext] AsyncStorage cleared successfully');
+    } catch (error) {
+      console.error('[AppContext] Error clearing AsyncStorage:', error);
+    }
+    
+    console.log('[AppContext] Resetting onboarding...');
     await updateSettings({ hasCompletedOnboarding: false });
-    console.log('[AppContext] Local data cleared, onboarding reset, subscription state cleared');
+    console.log('[AppContext] Sign out complete - local data cleared, onboarding reset, subscription state cleared');
   }, [updateSettings]);
 
   const t = useMemo(() => translations[settings.language], [settings.language]);
