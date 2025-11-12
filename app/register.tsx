@@ -16,12 +16,14 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { supabase } from '@/lib/supabase';
 
 export default function RegisterScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useApp();
+  const { markWelcomeSeen, markOnboardingSeen } = useSubscription();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -195,6 +197,8 @@ export default function RegisterScreen() {
 
       if (data.user) {
         console.log('[Register] Successfully signed up, user ID:', data.user.id);
+        await markOnboardingSeen();
+        await markWelcomeSeen();
         
         if (data.session) {
           console.log('[Register] User is automatically signed in, redirecting to profile setup');

@@ -16,12 +16,14 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { supabase } from '@/lib/supabase';
 
 export default function LoginScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useApp();
+  const { markWelcomeSeen, markOnboardingSeen } = useSubscription();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -104,6 +106,8 @@ export default function LoginScreen() {
 
       if (data.user) {
         console.log('[Login] Successfully signed in, user ID:', data.user.id);
+        await markOnboardingSeen();
+        await markWelcomeSeen();
         console.log('[Login] Navigation will be handled by AppContext');
       }
     } catch (err) {
