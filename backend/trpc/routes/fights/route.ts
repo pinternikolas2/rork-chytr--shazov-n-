@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { publicProcedure } from '@/backend/trpc/create-context';
+import { protectedProcedure } from '@/backend/trpc/create-context';
 
 const fightSchema = z.object({
   id: z.string(),
@@ -13,7 +13,7 @@ const fightSchema = z.object({
   notes: z.string().optional(),
 });
 
-export const addFightProcedure = publicProcedure
+export const addFightProcedure = protectedProcedure
   .input(fightSchema.omit({ id: true }))
   .mutation(async ({ input, ctx }) => {
     const { supabase } = ctx;
@@ -50,7 +50,7 @@ export const addFightProcedure = publicProcedure
     };
   });
 
-export const updateFightProcedure = publicProcedure
+export const updateFightProcedure = protectedProcedure
   .input(z.object({
     id: z.string(),
     userId: z.string(),
@@ -93,7 +93,7 @@ export const updateFightProcedure = publicProcedure
     };
   });
 
-export const deleteFightProcedure = publicProcedure
+export const deleteFightProcedure = protectedProcedure
   .input(z.object({ id: z.string(), userId: z.string() }))
   .mutation(async ({ input, ctx }) => {
     const { supabase } = ctx;
@@ -112,7 +112,7 @@ export const deleteFightProcedure = publicProcedure
     return { success: true };
   });
 
-export const getFightsProcedure = publicProcedure
+export const getFightsProcedure = protectedProcedure
   .input(z.object({ userId: z.string() }))
   .query(async ({ input, ctx }) => {
     const { supabase } = ctx;

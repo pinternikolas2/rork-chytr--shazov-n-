@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { publicProcedure } from '@/backend/trpc/create-context';
+import { protectedProcedure } from '@/backend/trpc/create-context';
 
 const sleepLogSchema = z.object({
   id: z.string(),
@@ -10,7 +10,7 @@ const sleepLogSchema = z.object({
   notes: z.string().optional(),
 });
 
-export const addSleepLogProcedure = publicProcedure
+export const addSleepLogProcedure = protectedProcedure
   .input(sleepLogSchema.omit({ id: true }))
   .mutation(async ({ input, ctx }) => {
     const { supabase } = ctx;
@@ -41,7 +41,7 @@ export const addSleepLogProcedure = publicProcedure
     };
   });
 
-export const getSleepLogsProcedure = publicProcedure
+export const getSleepLogsProcedure = protectedProcedure
   .input(z.object({ userId: z.string() }))
   .query(async ({ input, ctx }) => {
     const { supabase } = ctx;
@@ -66,7 +66,7 @@ export const getSleepLogsProcedure = publicProcedure
     }));
   });
 
-export const deleteSleepLogProcedure = publicProcedure
+export const deleteSleepLogProcedure = protectedProcedure
   .input(z.object({ id: z.string() }))
   .mutation(async ({ input, ctx }) => {
     const { supabase } = ctx;

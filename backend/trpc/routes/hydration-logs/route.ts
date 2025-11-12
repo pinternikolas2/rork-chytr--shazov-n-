@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { publicProcedure } from '@/backend/trpc/create-context';
+import { protectedProcedure } from '@/backend/trpc/create-context';
 
 const hydrationLogSchema = z.object({
   id: z.string(),
@@ -9,7 +9,7 @@ const hydrationLogSchema = z.object({
   sodiumMg: z.number().optional(),
 });
 
-export const addHydrationLogProcedure = publicProcedure
+export const addHydrationLogProcedure = protectedProcedure
   .input(hydrationLogSchema.omit({ id: true }))
   .mutation(async ({ input, ctx }) => {
     const { supabase } = ctx;
@@ -38,7 +38,7 @@ export const addHydrationLogProcedure = publicProcedure
     };
   });
 
-export const getHydrationLogsProcedure = publicProcedure
+export const getHydrationLogsProcedure = protectedProcedure
   .input(z.object({ userId: z.string() }))
   .query(async ({ input, ctx }) => {
     const { supabase } = ctx;
@@ -62,7 +62,7 @@ export const getHydrationLogsProcedure = publicProcedure
     }));
   });
 
-export const deleteHydrationLogProcedure = publicProcedure
+export const deleteHydrationLogProcedure = protectedProcedure
   .input(z.object({ id: z.string() }))
   .mutation(async ({ input, ctx }) => {
     const { supabase } = ctx;

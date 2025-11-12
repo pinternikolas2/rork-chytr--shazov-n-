@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { publicProcedure } from '@/backend/trpc/create-context';
+import { protectedProcedure } from '@/backend/trpc/create-context';
 
 const weightLogSchema = z.object({
   id: z.string(),
@@ -11,7 +11,7 @@ const weightLogSchema = z.object({
   notes: z.string().optional(),
 });
 
-export const addWeightLogProcedure = publicProcedure
+export const addWeightLogProcedure = protectedProcedure
   .input(weightLogSchema.omit({ id: true }))
   .mutation(async ({ input, ctx }) => {
     const { supabase } = ctx;
@@ -44,7 +44,7 @@ export const addWeightLogProcedure = publicProcedure
     };
   });
 
-export const getWeightLogsProcedure = publicProcedure
+export const getWeightLogsProcedure = protectedProcedure
   .input(z.object({ userId: z.string() }))
   .query(async ({ input, ctx }) => {
     const { supabase } = ctx;
@@ -70,7 +70,7 @@ export const getWeightLogsProcedure = publicProcedure
     }));
   });
 
-export const deleteWeightLogProcedure = publicProcedure
+export const deleteWeightLogProcedure = protectedProcedure
   .input(z.object({ id: z.string() }))
   .mutation(async ({ input, ctx }) => {
     const { supabase } = ctx;

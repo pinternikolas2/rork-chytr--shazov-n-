@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { publicProcedure } from '@/backend/trpc/create-context';
+import { protectedProcedure } from '@/backend/trpc/create-context';
 
 const mealTypeSchema = z.enum(['breakfast', 'lunch', 'dinner', 'snack']);
 
@@ -18,7 +18,7 @@ const mealLogSchema = z.object({
   notes: z.string().optional(),
 });
 
-export const addMealLogProcedure = publicProcedure
+export const addMealLogProcedure = protectedProcedure
   .input(mealLogSchema)
   .mutation(async ({ input, ctx }) => {
     const { supabase } = ctx;
@@ -50,7 +50,7 @@ export const addMealLogProcedure = publicProcedure
     return data;
   });
 
-export const getMealLogsProcedure = publicProcedure
+export const getMealLogsProcedure = protectedProcedure
   .input(z.object({ userId: z.string() }))
   .query(async ({ input, ctx }) => {
     const { supabase } = ctx;
@@ -84,7 +84,7 @@ export const getMealLogsProcedure = publicProcedure
     }));
   });
 
-export const updateMealLogProcedure = publicProcedure
+export const updateMealLogProcedure = protectedProcedure
   .input(
     z.object({
       id: z.string(),
@@ -121,7 +121,7 @@ export const updateMealLogProcedure = publicProcedure
     return data;
   });
 
-export const deleteMealLogProcedure = publicProcedure
+export const deleteMealLogProcedure = protectedProcedure
   .input(z.object({ id: z.string() }))
   .mutation(async ({ input, ctx }) => {
     const { supabase } = ctx;

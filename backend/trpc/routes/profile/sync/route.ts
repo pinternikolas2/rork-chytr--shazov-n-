@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { publicProcedure } from '@/backend/trpc/create-context';
+import { protectedProcedure } from '@/backend/trpc/create-context';
 
 const profileSchema = z.object({
   id: z.string(),
@@ -22,7 +22,7 @@ const profileSchema = z.object({
   profilePhotoUri: z.string().optional(),
 });
 
-export const syncProfileProcedure = publicProcedure
+export const syncProfileProcedure = protectedProcedure
   .input(profileSchema)
   .mutation(async ({ input, ctx }) => {
     const { supabase } = ctx;
@@ -61,7 +61,7 @@ export const syncProfileProcedure = publicProcedure
     return data;
   });
 
-export const getProfileProcedure = publicProcedure
+export const getProfileProcedure = protectedProcedure
   .input(z.object({ userId: z.string() }))
   .query(async ({ input, ctx }) => {
     const { supabase } = ctx;

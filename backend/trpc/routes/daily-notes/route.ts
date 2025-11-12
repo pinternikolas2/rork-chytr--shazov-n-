@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { publicProcedure } from '@/backend/trpc/create-context';
+import { protectedProcedure } from '@/backend/trpc/create-context';
 
 const dailyNoteSchema = z.object({
   id: z.string(),
@@ -10,7 +10,7 @@ const dailyNoteSchema = z.object({
   waterRetention: z.number().min(1).max(5).optional(),
 });
 
-export const addDailyNoteProcedure = publicProcedure
+export const addDailyNoteProcedure = protectedProcedure
   .input(dailyNoteSchema.omit({ id: true }))
   .mutation(async ({ input, ctx }) => {
     const { supabase } = ctx;
@@ -41,7 +41,7 @@ export const addDailyNoteProcedure = publicProcedure
     };
   });
 
-export const updateDailyNoteProcedure = publicProcedure
+export const updateDailyNoteProcedure = protectedProcedure
   .input(dailyNoteSchema)
   .mutation(async ({ input, ctx }) => {
     const { supabase } = ctx;
@@ -72,7 +72,7 @@ export const updateDailyNoteProcedure = publicProcedure
     };
   });
 
-export const getDailyNotesProcedure = publicProcedure
+export const getDailyNotesProcedure = protectedProcedure
   .input(z.object({ userId: z.string() }))
   .query(async ({ input, ctx }) => {
     const { supabase } = ctx;
@@ -97,7 +97,7 @@ export const getDailyNotesProcedure = publicProcedure
     }));
   });
 
-export const deleteDailyNoteProcedure = publicProcedure
+export const deleteDailyNoteProcedure = protectedProcedure
   .input(z.object({ id: z.string() }))
   .mutation(async ({ input, ctx }) => {
     const { supabase } = ctx;
