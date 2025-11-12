@@ -63,23 +63,29 @@ export const [AppProvider, useApp] = createContextHook(() => {
   const loadProfileFromBackend = async (userId: string) => {
     try {
       console.log('[AppContext] Loading profile from backend for user:', userId);
-      const backendProfile = await trpcClient.profile.get.query({ userId });
+      
+      const [backendProfile, backendWeightLogs] = await Promise.all([
+        trpcClient.profile.get.query({ userId }),
+        trpcClient.weightLogs.list.query({ userId })
+      ]);
       
       if (backendProfile) {
         console.log('[AppContext] Profile loaded from backend:', backendProfile.id);
         setProfile(backendProfile);
-        await AsyncStorage.setItem('profile', JSON.stringify(backendProfile));
+        
         const currentSettings = await AsyncStorage.getItem('settings');
         const parsedSettings = currentSettings ? JSON.parse(currentSettings) : DEFAULT_SETTINGS;
         const updatedSettings = { ...parsedSettings, hasCompletedOnboarding: true };
         setSettings(updatedSettings);
-        await AsyncStorage.setItem('settings', JSON.stringify(updatedSettings));
+        
+        await Promise.all([
+          AsyncStorage.setItem('profile', JSON.stringify(backendProfile)),
+          AsyncStorage.setItem('settings', JSON.stringify(updatedSettings))
+        ]);
       } else {
         console.log('[AppContext] No profile found in backend for user:', userId);
       }
 
-      console.log('[AppContext] Loading weight logs from backend');
-      const backendWeightLogs = await trpcClient.weightLogs.list.query({ userId });
       if (backendWeightLogs && backendWeightLogs.length > 0) {
         console.log('[AppContext] Loaded', backendWeightLogs.length, 'weight logs from backend');
         setWeightLogs(backendWeightLogs);
@@ -214,7 +220,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
       
       if (session?.user) {
         console.log('[AppContext] User is signed in, loading data from backend');
-        await loadProfileFromBackend(session.user.id);
+        loadProfileFromBackend(session.user.id);
       }
     } catch (error) {
       console.error('[AppContext] Error loading stored data:', error);

@@ -13,7 +13,7 @@ SplashScreen.preventAutoHideAsync();
 const queryClient = new QueryClient();
 
 function RootLayoutNav() {
-  const { settings, isLoading: appLoading } = useApp();
+  const { settings, profile, isLoading: appLoading } = useApp();
   const { hasSeenWelcome, hasSeenOnboarding, isLoading: subLoading } = useSubscription();
   const segments = useSegments();
   const router = useRouter();
@@ -26,35 +26,43 @@ function RootLayoutNav() {
     const currentSegment = segments[0];
     const inOnboarding = currentSegment === 'onboarding';
     const inWelcome = currentSegment === 'welcome';
+    const inAuth = currentSegment === 'login' || currentSegment === 'register' || currentSegment === 'profile-setup';
     const inModal = currentSegment === 'add-meal' || currentSegment === 'subscription' || currentSegment === 'support' || currentSegment === 'privacy' || currentSegment === 'terms' || currentSegment === 'tracking-detail' || currentSegment === 'wellness';
     const isRoot = !currentSegment;
 
     console.log('[RootLayoutNav] Navigation check:', { 
       hasSeenOnboarding,
       hasSeenWelcome, 
+      hasProfile: !!profile,
       hasCompletedOnboarding: settings.hasCompletedOnboarding, 
       currentSegment,
       isRoot,
       allSegments: segments 
     });
 
-    if (!hasSeenOnboarding && !inOnboarding && !inWelcome && !inModal) {
+    if (!hasSeenOnboarding && !inOnboarding && !inWelcome && !inAuth && !inModal) {
       console.log('[RootLayoutNav] Redirecting to onboarding - user has not seen onboarding');
       router.replace('/onboarding');
       return;
     }
 
-    if (hasSeenOnboarding && !hasSeenWelcome && !inWelcome && !inModal) {
+    if (hasSeenOnboarding && !hasSeenWelcome && !inWelcome && !inAuth && !inModal) {
       console.log('[RootLayoutNav] Redirecting to welcome - user has not seen welcome screen');
       router.replace('/welcome');
       return;
     }
 
-    if (hasSeenWelcome && isRoot) {
-      console.log('[RootLayoutNav] Redirecting to tabs - user has seen welcome, going to app');
+    if (hasSeenWelcome && !profile && !inAuth && !inModal && !inOnboarding && !inWelcome) {
+      console.log('[RootLayoutNav] User logged in but no profile, redirecting to profile setup');
+      router.replace('/profile-setup');
+      return;
+    }
+
+    if (hasSeenWelcome && profile && isRoot) {
+      console.log('[RootLayoutNav] Redirecting to tabs - user has profile');
       router.replace('/(tabs)');
     }
-  }, [isLoading, hasSeenOnboarding, hasSeenWelcome, settings.hasCompletedOnboarding, segments, router]);
+  }, [isLoading, hasSeenOnboarding, hasSeenWelcome, profile, settings.hasCompletedOnboarding, segments, router]);
 
   useEffect(() => {
     if (!isLoading) {
