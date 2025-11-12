@@ -317,13 +317,16 @@ export const [AppProvider, useApp] = createContextHook(() => {
       setFights(updated);
       await AsyncStorage.setItem('fights', JSON.stringify(updated));
 
+      const isFirstFight = fights.length === 0;
       const updatedProfile = { 
         ...profile, 
         targetWeight: fight.targetWeightForFight,
-        startingWeight: profile.startingWeight || profile.currentWeight,
-        targetFightDate: fight.date
+        startingWeight: isFirstFight ? profile.currentWeight : profile.startingWeight,
+        weightClass: fight.weightClass,
+        targetFightDate: fight.date,
+        cuttingStartDate: isFirstFight ? new Date() : profile.cuttingStartDate,
       } as UserProfile;
-      console.log('[AppContext] New fight created - startingWeight:', updatedProfile.startingWeight, 'currentWeight:', profile.currentWeight, 'targetWeight:', fight.targetWeightForFight);
+      console.log('[AppContext] Fight added - isFirstFight:', isFirstFight, 'startingWeight:', updatedProfile.startingWeight, 'currentWeight:', profile.currentWeight, 'targetWeight:', fight.targetWeightForFight);
       setProfile(updatedProfile);
       await AsyncStorage.setItem('profile', JSON.stringify(updatedProfile));
       

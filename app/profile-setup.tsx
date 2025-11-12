@@ -29,6 +29,7 @@ export default function ProfileSetupScreen() {
   const [height, setHeight] = useState('');
   const [gender, setGender] = useState<Gender>('male');
   const [currentWeight, setCurrentWeight] = useState('');
+  const [isFirstTimeSetup, setIsFirstTimeSetup] = useState(true);
   const [discipline, setDiscipline] = useState<Discipline>('mma');
   const [dietType, setDietType] = useState<DietType>('standard');
   const [trainingIntensity, setTrainingIntensity] = useState<TrainingIntensity>('moderate');
@@ -68,7 +69,9 @@ export default function ProfileSetupScreen() {
         height: parseInt(height, 10),
         gender,
         currentWeight: parseFloat(currentWeight),
+        targetWeight: parseFloat(currentWeight),
         startingWeight: parseFloat(currentWeight),
+        weightClass: '',
         discipline,
         dietType,
         trainingIntensity,
@@ -108,7 +111,7 @@ export default function ProfileSetupScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Text style={styles.title}>{t.profile.title}</Text>
-          <Text style={styles.subtitle}>{t.profile.personalInfo}</Text>
+          <Text style={styles.subtitle}>Vyplňte své základní údaje pro nastavení profilu</Text>
 
           <View style={styles.form}>
             <View style={styles.inputGroup}>
@@ -174,7 +177,8 @@ export default function ProfileSetupScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t.profile.currentWeight}</Text>
+              <Text style={styles.label}>Aktuální váha (kg)</Text>
+              <Text style={styles.hint}>Toto je výchozí váha. Při vytvoření zápasu zadáte cílovou váhu.</Text>
               <TextInput
                 style={styles.input}
                 value={currentWeight}
@@ -461,5 +465,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.black,
     fontWeight: '700' as const,
+  },
+  hint: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginBottom: 8,
+    fontStyle: 'italic' as const,
   },
 });
