@@ -30,14 +30,7 @@ export default function WelcomeScreen() {
     }
   };
 
-  const handleContinueWithoutAccount = async () => {
-    await skipWelcome();
-    if (!profile) {
-      router.replace('/profile-setup');
-    } else {
-      router.replace('/(tabs)');
-    }
-  };
+
 
   const handleLogin = () => {
     router.push('/login');
@@ -105,16 +98,6 @@ export default function WelcomeScreen() {
               onPress={handleTryFree}
             >
               <Text style={styles.tryFreeText}>{t.welcome.tryFree}</Text>
-            </Pressable>
-
-            <Pressable
-              style={({ pressed }) => [
-                styles.continueButton,
-                pressed && styles.buttonPressed,
-              ]}
-              onPress={handleContinueWithoutAccount}
-            >
-              <Text style={styles.continueText}>{t.welcome.continueWithoutAccount}</Text>
             </Pressable>
 
             <Pressable onPress={handleLogin} style={styles.loginLink}>
@@ -259,15 +242,7 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 4,
   },
-  continueButton: {
-    backgroundColor: 'transparent',
-    borderRadius: 16,
-    paddingVertical: 18,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: Colors.black,
-  },
+
   buttonPressed: {
     opacity: 0.7,
     transform: [{ scale: 0.98 }],
@@ -277,11 +252,7 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     color: Colors.black,
   },
-  continueText: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: Colors.black,
-  },
+
   loginLink: {
     paddingVertical: 12,
     alignItems: 'center',
