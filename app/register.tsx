@@ -59,22 +59,38 @@ export default function RegisterScreen() {
       console.log('[Register] Supabase URL:', process.env.EXPO_PUBLIC_SUPABASE_URL);
       console.log('[Register] Has API key:', !!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY);
       
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: email.trim(),
-        password: password,
-        options: {
-          data: {
-            name: name.trim(),
+      let signUpResult;
+      try {
+        signUpResult = await supabase.auth.signUp({
+          email: email.trim(),
+          password: password,
+          options: {
+            data: {
+              name: name.trim(),
+            },
           },
-        },
-      });
+        });
+      } catch (networkError: any) {
+        console.error('[Register] Network error:', networkError);
+        console.error('[Register] Network error type:', typeof networkError);
+        console.error('[Register] Network error message:', networkError?.message);
+        console.error('[Register] Network error stack:', networkError?.stack);
+        
+        setError('Chyba připojení k serveru. Zkontrolujte připojení k internetu.');
+        return;
+      }
+
+      const { data, error: signUpError } = signUpResult;
 
       if (signUpError) {
         console.error('[Register] Sign up error:', signUpError);
         console.error('[Register] Error details:', JSON.stringify(signUpError, null, 2));
+        console.error('[Register] Error status:', (signUpError as any).status);
         
         if (signUpError.message.includes('Invalid API key') || signUpError.message.includes('API key')) {
           setError('Chyba konfigurace aplikace. Kontaktujte podporu.');
+        } else if (signUpError.message.toLowerCase().includes('email')) {
+          setError('Tento email je již zaregistrován nebo neplatný.');
         } else {
           setError(signUpError.message);
         }
