@@ -49,7 +49,11 @@ export const [AppProvider, useApp] = createContextHook(() => {
       
       if (event === 'SIGNED_IN' && session?.user) {
         console.log('[AppContext] User signed in, loading profile from backend');
-        await loadProfileFromBackend(session.user.id);
+        try {
+          await loadProfileFromBackend(session.user.id);
+        } catch (error) {
+          console.error('[AppContext] Error loading profile after sign in:', error);
+        }
       } else if (event === 'SIGNED_OUT') {
         console.log('[AppContext] User signed out');
       }
@@ -220,12 +224,17 @@ export const [AppProvider, useApp] = createContextHook(() => {
       
       if (session?.user) {
         console.log('[AppContext] User is signed in, loading data from backend');
-        loadProfileFromBackend(session.user.id);
+        try {
+          await loadProfileFromBackend(session.user.id);
+        } catch (error) {
+          console.error('[AppContext] Error loading profile during initial load:', error);
+        }
       }
     } catch (error) {
       console.error('[AppContext] Error loading stored data:', error);
     } finally {
       setIsLoading(false);
+      console.log('[AppContext] App loading completed');
     }
   };
 
