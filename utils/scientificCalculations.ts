@@ -190,7 +190,7 @@ export class WeightCuttingScience {
     const waterSchedule = this.generateWaterLoadingSchedule(daysUntilFight, profile.currentWeight);
 
     const plan: DailyWeightCutPlan[] = [];
-    const waterCutStartDay = 5;
+    const waterCutStartDay = 7;
     
     const fatLossDays = daysUntilFight > waterCutStartDay ? daysUntilFight - waterCutStartDay : 0;
     const dailyFatLoss = fatLossDays > 0 ? totalWeightToCut * 0.4 / fatLossDays : 0;
@@ -217,27 +217,45 @@ export class WeightCuttingScience {
       );
 
       const recommendations: string[] = [];
-      if (daysOut > 7) {
-        recommendations.push('Maintain training intensity and normal nutrition');
-        recommendations.push('Focus on technique and conditioning');
-      } else if (daysOut > 5) {
-        recommendations.push('Start water loading protocol');
-        recommendations.push('Keep sodium normal to retain water');
-      } else if (daysOut > 3) {
-        recommendations.push('Continue water loading at peak levels');
-        recommendations.push('Monitor body weight daily');
+      if (daysOut > 56) {
+        recommendations.push('DESCENT FÁZE: Max. 1-1.5% ztráta váhy týdně');
+        recommendations.push('Vysoký příjem bílkovin (2.0-2.2g/kg)');
+        recommendations.push('Metabolická flexibilita: Sacharidy jen kolem tréninku');
+      } else if (daysOut > 7) {
+        recommendations.push('Pokračování Descent - kontrola tempa hubnutí');
+        recommendations.push('Začněte redukovat intenzitu tréninku');
+      } else if (daysOut === 7) {
+        recommendations.push('FIGHT WEEK: Den -7 (Pondělí)');
+        recommendations.push('WATER LOADING: 100ml vody na 1kg váhy (8-10L)');
+        recommendations.push('HIGH SODIUM: 4000-5000mg (normálně solit + navíc)');
+      } else if (daysOut === 6) {
+        recommendations.push('FIGHT WEEK: Den -6 (Úterý)');
+        recommendations.push('WATER LOADING: 100ml vody na 1kg váhy');
+        recommendations.push('HIGH SODIUM: 4000-5000mg');
+      } else if (daysOut === 5) {
+        recommendations.push('FIGHT WEEK: Den -5 (Středa)');
+        recommendations.push('WATER TAPER: 50ml vody na 1kg váhy (4-5L)');
+        recommendations.push('ZAČÁTEK BEZEZBYTKOVÁ DIETA: Vláknina <10g');
+      } else if (daysOut === 4) {
+        recommendations.push('FIGHT WEEK: Den -4 (Čtvrtek)');
+        recommendations.push('WATER TAPER: 20-30ml vody na 1kg (2L). PÍT POUZE DO 18:00!');
+        recommendations.push('BEZEZBYTKOVÁ DIETA: Bílá rýže, kuře, vejce, med');
+        recommendations.push('ZAKÁZAT: Oves, zelenina, ovoce se slupkou, ořechy');
       } else if (daysOut === 3) {
-        recommendations.push('Begin sodium reduction immediately');
-        recommendations.push('Start carbohydrate depletion');
+        recommendations.push('FIGHT WEEK: Den -3 (Pátek)');
+        recommendations.push('WATER CUT: Max 500ml (pouze svlažovat rty)');
+        recommendations.push('ZERO SODIUM - vysadit veškerou sůl');
+        recommendations.push('BEZEZBYTKOVÁ DIETA pokračuje');
       } else if (daysOut === 2) {
-        recommendations.push('Minimal sodium intake');
-        recommendations.push('Light training only - preserve energy');
+        recommendations.push('THE CUT: 24h do vážení');
+        recommendations.push('HORKÁ VANA: 40-42°C, 15-20min intervaly');
+        recommendations.push('Max 5-8% váhy pocením - NE VÍCE!');
       } else if (daysOut === 1) {
-        recommendations.push('Final water cut - sipping only if needed');
-        recommendations.push('Consider hot bath or sauna if needed');
+        recommendations.push('DEN VÁŽENÍ - žádná voda až do vážení');
+        recommendations.push('Po vážení: 3 P\'s Strategy (Phytonutrients, Protein, Power)');
       } else {
-        recommendations.push('Weigh-in day - no food or water until after weigh-in');
-        recommendations.push('Have rehydration plan ready immediately after');
+        recommendations.push('Po vážení: Ihned ORS roztok (voda + 1-2g soli + 30-50g glukózy)');
+        recommendations.push('První jídlo: Kuřecí prsa + bílá rýže (žádný tuk!)');
       }
 
       plan.push({

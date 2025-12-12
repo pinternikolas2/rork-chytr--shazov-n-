@@ -336,6 +336,19 @@ export const [AppProvider, useApp] = createContextHook(() => {
       } catch (error) {
         console.error('[AppContext] Failed to sync updated profile to backend:', error);
       }
+
+      console.log('[AppContext] Checking if user is in Green Zone (8% tělesné hmotnosti nad limitem)');
+      const now = new Date();
+      const daysUntilFight = Math.ceil((fight.date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      const percentageAboveTarget = ((profile.currentWeight - fight.targetWeightForFight) / fight.targetWeightForFight) * 100;
+      
+      if (daysUntilFight <= 7 && percentageAboveTarget > 10) {
+        console.warn('[AppContext] ⚠️ VAROVÁNÍ: Uživatel má více než 10% nad limitem při vstupu do Fight Week!');
+      } else if (daysUntilFight <= 7 && percentageAboveTarget <= 10 && percentageAboveTarget >= 8) {
+        console.log('[AppContext] ✓ ZELENÁ ZÓNA: Uživatel je v optimálním rozmezí 8-10% nad limitem');
+      } else if (daysUntilFight <= 7 && percentageAboveTarget < 8) {
+        console.log('[AppContext] ✓ Uživatel je pod 8% nad limitem - velmi dobrá pozice');
+      }
     } catch (error) {
       console.error('[AppContext] Failed to sync fight to backend:', error);
       const newFight: Fight = {
@@ -738,14 +751,26 @@ export const [AppProvider, useApp] = createContextHook(() => {
 
     let calorieTarget = metabolicData.tdee;
     let sodiumTarget = 2300;
+    let fiberTarget = 25;
 
     if (daysUntilFight && daysUntilFight <= 7) {
-      if (daysUntilFight <= 3) {
-        calorieTarget = metabolicData.tdee * 0.6;
-        sodiumTarget = 500;
-      } else {
+      if (daysUntilFight === 7 || daysUntilFight === 6) {
+        sodiumTarget = 5000;
+      } else if (daysUntilFight === 5) {
+        sodiumTarget = 2500;
+        fiberTarget = 10;
+      } else if (daysUntilFight === 4) {
         calorieTarget = metabolicData.tdee * 0.8;
         sodiumTarget = 1500;
+        fiberTarget = 10;
+      } else if (daysUntilFight === 3) {
+        calorieTarget = metabolicData.tdee * 0.7;
+        sodiumTarget = 500;
+        fiberTarget = 10;
+      } else if (daysUntilFight <= 2) {
+        calorieTarget = metabolicData.tdee * 0.6;
+        sodiumTarget = 0;
+        fiberTarget = 10;
       }
     }
 
@@ -764,7 +789,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
       carbs: Math.round(carbs),
       fat: Math.round(fat),
       sodium: sodiumTarget,
-      fiber: 25,
+      fiber: fiberTarget,
     };
   }, [profile, getMetabolicData, getUpcomingFight]);
 
