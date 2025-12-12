@@ -75,7 +75,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="hydration"
         options={{
-          title: 'Hydratace',
+          title: t.dashboard.hydration,
           tabBarIcon: ({ color, focused }) => (
             <Droplets 
               color={color} 
