@@ -34,10 +34,10 @@ export default function WellnessScreen() {
         stress,
       });
       setShowForm(false);
-      Alert.alert(t.common.success, 'Záznam regenerace byl uložen');
+      Alert.alert(t.common.success, t.nutrition.regenerationSaved);
     } catch (error) {
       console.error('Error saving regeneration log:', error);
-      Alert.alert(t.common.error, 'Nepodařilo se uložit záznam');
+      Alert.alert(t.common.error, t.tracking.failedToSave);
     }
   };
 
@@ -96,7 +96,7 @@ export default function WellnessScreen() {
         <Pressable onPress={() => router.back()} style={styles.backButton}>
           <X size={24} color={Colors.textPrimary} />
         </Pressable>
-        <Text style={styles.headerTitle}>Regenerace & Pohoda</Text>
+        <Text style={styles.headerTitle}>{t.nutrition.regenerationAndWellness}</Text>
         <View style={{ width: 24 }} />
       </View>
       
@@ -109,32 +109,32 @@ export default function WellnessScreen() {
           <View style={styles.statCard}>
             <Battery size={24} color={Colors.gold} />
             <Text style={styles.statValue}>{avgEnergy.toFixed(1)}/5</Text>
-            <Text style={styles.statLabel}>Průměrná energie</Text>
+            <Text style={styles.statLabel}>{t.nutrition.averageEnergy}</Text>
           </View>
           <View style={styles.statCard}>
             <Smile size={24} color="#10B981" />
             <Text style={styles.statValue}>{avgMood.toFixed(1)}/5</Text>
-            <Text style={styles.statLabel}>Průměrná nálada</Text>
+            <Text style={styles.statLabel}>{t.nutrition.averageMood}</Text>
           </View>
           <View style={styles.statCard}>
             <Moon size={24} color="#6366F1" />
             <Text style={styles.statValue}>{avgSleep.toFixed(1)}/5</Text>
-            <Text style={styles.statLabel}>Kvalita spánku</Text>
+            <Text style={styles.statLabel}>{t.nutrition.sleepQualityAvg}</Text>
           </View>
         </View>
 
         {showForm ? (
           <View style={styles.formCard}>
-            <Text style={styles.formTitle}>Dnešní záznam</Text>
+            <Text style={styles.formTitle}>{t.nutrition.todaysRecord}</Text>
             
-            {renderRatingSelector(energyLevel, setEnergyLevel, Battery, 'Úroveň energie', Colors.gold)}
-            {renderRatingSelector(moodLevel, setMoodLevel, Smile, 'Nálada', '#10B981')}
-            {renderRatingSelector(sleepQuality, setSleepQuality, Moon, 'Kvalita spánku', '#6366F1')}
-            {renderRatingSelector(muscleSoreness, setMuscleSoreness, Activity, 'Svalová únava', '#F59E0B')}
-            {renderRatingSelector(stress, setStress, Heart, 'Úroveň stresu', '#ef4444')}
+            {renderRatingSelector(energyLevel, setEnergyLevel, Battery, t.tracking.energyLevel, Colors.gold)}
+            {renderRatingSelector(moodLevel, setMoodLevel, Smile, t.nutrition.mood, '#10B981')}
+            {renderRatingSelector(sleepQuality, setSleepQuality, Moon, t.tracking.sleepQuality, '#6366F1')}
+            {renderRatingSelector(muscleSoreness, setMuscleSoreness, Activity, t.nutrition.muscleSoreness, '#F59E0B')}
+            {renderRatingSelector(stress, setStress, Heart, t.nutrition.stressLevel, '#ef4444')}
 
             <View style={styles.sleepHoursSection}>
-              <Text style={styles.sleepHoursLabel}>Hodiny spánku: {sleepHours}h</Text>
+              <Text style={styles.sleepHoursLabel}>{t.nutrition.hoursOfSleepShort}: {sleepHours}h</Text>
               <View style={styles.sleepHoursButtons}>
                 {[5, 6, 7, 8, 9, 10].map((hours) => (
                   <Pressable
@@ -158,35 +158,35 @@ export default function WellnessScreen() {
 
             <View style={styles.formButtons}>
               <Pressable style={styles.cancelButton} onPress={() => setShowForm(false)}>
-                <Text style={styles.cancelButtonText}>Zrušit</Text>
+                <Text style={styles.cancelButtonText}>{t.common.cancel}</Text>
               </Pressable>
               <Pressable style={styles.saveButton} onPress={handleSave}>
-                <Text style={styles.saveButtonText}>Uložit</Text>
+                <Text style={styles.saveButtonText}>{t.common.save}</Text>
               </Pressable>
             </View>
           </View>
         ) : todayRegeneration ? (
           <View style={styles.todayCard}>
             <View style={styles.todayHeader}>
-              <Text style={styles.todayTitle}>Dnešní záznam</Text>
+              <Text style={styles.todayTitle}>{t.nutrition.todaysRecord}</Text>
               <Pressable onPress={() => setShowForm(true)}>
-                <Text style={styles.editText}>Upravit</Text>
+                <Text style={styles.editText}>{t.nutrition.edit}</Text>
               </Pressable>
             </View>
             <View style={styles.todayStats}>
               <View style={styles.todayStat}>
                 <Battery size={18} color={Colors.gold} />
-                <Text style={styles.todayStatLabel}>Energie</Text>
+                <Text style={styles.todayStatLabel}>{t.tracking.energy}</Text>
                 <Text style={styles.todayStatValue}>{todayRegeneration.energyLevel}/5</Text>
               </View>
               <View style={styles.todayStat}>
                 <Smile size={18} color="#10B981" />
-                <Text style={styles.todayStatLabel}>Nálada</Text>
+                <Text style={styles.todayStatLabel}>{t.nutrition.mood}</Text>
                 <Text style={styles.todayStatValue}>{todayRegeneration.moodLevel}/5</Text>
               </View>
               <View style={styles.todayStat}>
                 <Moon size={18} color="#6366F1" />
-                <Text style={styles.todayStatLabel}>Spánek</Text>
+                <Text style={styles.todayStatLabel}>{t.tracking.sleep}</Text>
                 <Text style={styles.todayStatValue}>{todayRegeneration.sleepQuality}/5</Text>
               </View>
             </View>
@@ -195,7 +195,7 @@ export default function WellnessScreen() {
 
         {recentLogs.length > 0 && (
           <View style={styles.historySection}>
-            <Text style={styles.historyTitle}>Poslední záznamy</Text>
+            <Text style={styles.historyTitle}>{t.nutrition.recentRecords}</Text>
             {recentLogs.map((log) => (
               <View key={log.id} style={styles.historyCard}>
                 <Text style={styles.historyDate}>
